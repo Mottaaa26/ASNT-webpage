@@ -8,118 +8,13 @@
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
     <title>{%block title%}{%endblock%}</title>
     <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js" async></script>
-
     {% tailwind_css %}
+    
 </head>
 
 <body class="min-h-screen flex flex-col bg-base-200 text-black font-serif leading-normal tracking-normal">
 
-  <!--navigation bar-->
-  <div class="navbar bg-base-100 shadow-sm">
-    <div class="flex-1">
-      <a class="btn btn-ghost text-xl">daisyUI</a>
-    </div>
-    <div class="flex gap-2">
-      <div class="dropdown dropdown-end">
-        <div tabindex="0" role="button" class="btn btn-ghost btn-circle avatar">
-          <div class="w-10 rounded-full">
-            <img
-              alt="Tailwind CSS Navbar component"
-              src="https://img.daisyui.com/images/stock/photo-1534528741775-53994a69daeb.webp"/>
-          </div>
-        </div>
-        <ul
-          tabindex="-1"
-          class="menu menu-sm dropdown-content bg-base-100 rounded-box z-1 mt-3 w-52 p-2 shadow">
-          <li><a>Profile</a></li>
-          <li><a>Settings</a></li>
-          <li><a>Logout</a></li>
-        </ul>
-      </div>
-    </div>
-  </div>
-
-  <!--main section-->
-  <main class="flex flex1">
-
-    <!--lateral menu-->
-    <aside class="w-64 bg-stone-50 border-r border-gray-200 p-4 shadow-sm">
-    <h2 class="text-lg font-semibold text-gray-800 mb-4">Formulas</h2>
-    <div class="flex flex-col gap-2">
-      <button class="bg-blue-500 text-white py-2 px-4 rounded hover:bg-blue-600 transition">Minimun thickness calculation for welded tank shell</button>
-      <button class="bg-blue-500 text-white py-2 px-4 rounded hover:bg-blue-600 transition">Formula</button>
-      <button class="bg-blue-500 text-white py-2 px-4 rounded hover:bg-blue-600 transition">Formula</button>
-    </div>
-    </aside>
-
-    <!--formula-->
-    <section class="flex flex-1 items-center justify-center p-6 flex-col">
-
-      <p id='formula' class="text-5xl font-semibold mt-4">\( t_{min} = \frac{2.6 (H - 1) D G}{S E} \)</p>
-
-      <br>
-
-      <div>
-        <p><b>tmin =</b> The minimun acceptable thickness, in inches, for each course as calculated from the above formula; however, tmin shall not be less than 0.1 inch for any tank course.</p>
-
-        <br>
-
-        <p>D = nominal diameter of tank.</p>
-        <p>H = Height from the bottom of the shell course under consideration to the maximun liquid level when evaluating and entire shell course, in ft; or height, from the bottom of the length L from the lowest point of the bottom of L of the locally thinned area to the maximun liquid level, in ft; or height from the lowest point within any location of interest to the maximmun liquid level, in ft.</p>
-
-        <br>
-
-        <p>G = Highest specific gravity of the contents.</p>
-        <p>E = The efficieny of the joint.</p>
-        <p>S = Maximun allowable stress in pounds per square inch; allowable shell stresses are shown in Table 4-1 for materials listed in the current and previous editions of API Std. 12C and Std. 650. Note: For reconstructed tanks, S shall be per the current applicable standard.</p>
-      </div>
-
-      <br>
-
-      <div class="flex flex-1 flex-col justify-center items-center p-2">
-        <span>Params for calculating minimun thickness</span>
-
-          <div class="flex flex-row">
-            <label class="input w-30 m-2">
-              <span class="label">D</span>
-              <input type="number" x-model="D"/>
-            </label>
-
-            <label class="input w-30 m-2">
-              <span class="label">H</span>
-              <input type="number" x-model="H"/>
-            </label>
-    
-            <label class="input w-30 m-2">
-              <span class="label">G</span>
-              <input type="number" x-model="G"/>
-            </label>
-    
-            <label class="input w-30 m-2">
-              <span class="label">E</span>
-              <input type="number" x-model="E"/>
-            </label>
-    
-            <label class="input w-30 m-2">
-              <span class="label">S</span>
-              <input type="number" x-model="S"/>
-            </label>
-
-            <button class="btn btn-neutral m-2">Calculate</button>
-          </div>
-
-        </div>
-
-      <span>
-        
-      </span>
-
-    </section>
-
-  </main>
-
-
-
+  {%block content%}{%endblock%}
 
 </body>
 </html>
