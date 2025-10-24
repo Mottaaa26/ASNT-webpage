@@ -1,14 +1,39 @@
 {%extends 'theme/base.html'%}   
+{%load static%}
 
 {%block title%}Storage Tanks International Institute{%endblock%}
 
+<!--Block navbar-->
+{%block navbar%}
+{%endblock%}
+
+
+<!--Block Content-->
 {%block content%}
 
-<main>
-
-    <!--navbar-->
-    
-
-</main>
+    <div class="hero h-164" style="background-image: url('{% static 'images/hero-industrial.png' %}');">
+        <div class="hero-overlay"></div>
+        <div class="hero-content text-neutral-content text-center">
+            <div class="max-w-md">
+                <p class="mb-5 font-semibold text-3xl">
+                    AMERICAN STRENGTH, PROVIDING CONVENIENCE, TECHNOLOGY AND GLOBAL INFLUENCE
+                </p>
+                <fieldset class="fieldset flex justify-center items-center">
+                    <legend class="fieldset-legend text-white text-lg">EMAIL</legend>
+                    <input type="text" class="input text-black" placeholder="Email" />
+                </fieldset>
+                <fieldset class="fieldset flex justify-center items-center">
+                    <legend class="fieldset-legend text-white text-lg">PASSWORD</legend>
+                    <input type="password" class="input text-black focus:ring-2" placeholder="Password" />
+                </fieldset>
+                <div class="flex flex-col items-center">
+                    <a href="">Forgot Password?</a>
+                    <button class="btn w-25 m-2">Sign in</button>
+                    <p>Are you new?</p>
+                    <button class="btn btn-primary w-25 m-2">Sign up</button>
+                </div>
+            </div>
+        </div>
+    </div>
 
 {%endblock%}
