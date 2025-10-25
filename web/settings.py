@@ -50,6 +50,9 @@ INSTALLED_APPS = [
     'django_browser_reload',
 ]
 
+LOGIN_REDIRECT_URL = '/formula_app/'
+LOGIN_URL = '/'
+LOGOUT_REDIRECT_URL = '/'
 AUTH_USER_MODEL = "accounts.CustomUser"
 TAILWIND_APP_NAME = 'theme'
 NPM_BIN_PATH = r"C:\Program Files\nodejs\npm.cmd"

@@ -24,6 +24,7 @@ urlpatterns = [
     path('', include("core.urls")),
     path("__reload__/", include("django_browser_reload.urls")),
     path('formula_app/', include("formula_app.urls")),
+    path('register/', include("accounts.urls"))
 ]
 
 if settings.DEBUG:
