@@ -1,0 +1,42 @@
+{%extends 'theme/base.html'%}
+{%load static%}
+
+{%block content%}
+
+    <div class="hero h-164" style='background-image: url("{%static "hero-industrial.png" %}");'>
+        <div class="hero-overlay"></div>   
+        <div class="hero-content text-neutral-content flex justify-center items-center">
+
+            <div class="bg-white rounded-sm text-black p-3">
+                <span>Create your account</span>
+
+                <form class="grid grid-cols-2 gap-y-4 gap-x-20" action="" method="post">
+                    <label class="label">First name</label>
+                    <label class="label">Last name</label>
+                    <input type="text" class="input"/>
+                    <input type="text" class="input"  />
+                    <div class="flex flex-col col-span-2">
+                        <label class="label">Email</label>
+                        <input type="email" class="input w-100"/>
+                    </div>
+                    <label class="label">Password</label>
+                    <input type="email" class="input"  />
+                    <label class="label">Country</label>
+                    <input type="email" class="input"  />
+                    <label class="label">City</label>
+                    <input type="email" class="input"  />
+                    <label class="label">Address</label>
+                    <input type="email" class="input"  />
+                    <label class="label">Birthday</label>
+                    <input type="email" class="input"  />
+                </form>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+{% endblock %}
