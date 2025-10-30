@@ -1,86 +1,347 @@
 {%extends 'theme/base.html'%}
 
+{%block title%}Cálculo de Espesores Mínimos{%endblock%}
+
+{% block nav_content %}
+    <!-- Contenedor flex para empujar los botones a la derecha del navbar --><div class="flex justify-end items-center h-full"> 
+        <ul class="menu menu-horizontal p-0 hidden lg:flex text-white space-x-2">
+            <!-- La URL 'logout' requiere el tag {% url 'logout' %} para Django --><li><a href="{% url 'logout' %}" class="btn btn-ghost text-white hover:bg-blue-800 transition duration-200">Log out</a></li>
+            <li><a href="#" class="btn btn-ghost text-white hover:bg-blue-800 transition duration-200">Account</a></li>
+        </ul>
+
+        <!-- Botón de menú HAMBURGUESA para móvil/drawer. Abre el drawer lateral. --><label for="my-drawer" class="btn btn-square btn-ghost text-white lg:hidden">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" class="inline-block w-6 h-6 stroke-current"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path></svg>
+        </label>
+    </div>
+{% endblock %}
+
 {%block content%}
 
-<!--main section-->
-<main class="flex flex1">
+<div class="drawer h-full overflow-hidden">
+    <input id="my-drawer" type="checkbox" class="drawer-toggle" />
+    
+    <div class="drawer-content flex flex-col h-full overflow-hidden">
+        
+        <main class="flex flex-1 h-full overflow-hidden">
 
-  <!--lateral menu-->
-  <aside class="w-64 bg-stone-50 border-r border-gray-200 p-4 shadow-sm">
-  <h2 class="text-lg font-semibold text-gray-800 mb-4">Formulas</h2>
-  <div class="flex flex-col gap-2">
-      <button class="bg-blue-500 text-white py-2 px-4 rounded hover:bg-blue-600 transition">Minimun thickness calculation for welded tank shell</button>
-      <button class="bg-blue-500 text-white py-2 px-4 rounded hover:bg-blue-600 transition">Formula</button>
-      <button class="bg-blue-500 text-white py-2 px-4 rounded hover:bg-blue-600 transition">Formula</button>
-  </div>
-  </aside>
+        <!-- SIDEBAR -->
+          <aside class="hidden lg:block w-64 bg-white p-6 shadow-xl border-r border-gray-200 flex-shrink-0 overflow-y-auto">
+              <h2 class="text-xl font-bold text-blue-950 mb-4 border-b pb-2">Formulas</h2>
+              <div class="flex flex-col gap-3">
+                  <a href="#" class="btn btn-block bg-blue-950 text-white hover:bg-blue-800 hover-lift text-wrap h-auto min-h-0 py-3 text-sm border-none">
+                      Calculation of thinning DF
+                  </a>
+                  <a href="#" class="btn btn-block btn-outline border-blue-950 text-blue-950 hover:bg-blue-950 hover:text-white hover-lift text-wrap h-auto min-h-0 py-3 text-sm">
+                      Fórmula (Espesores)
+                  </a>
+                  <a href="#" class="btn btn-block btn-outline border-blue-950 text-blue-950 hover:bg-blue-950 hover:text-white hover-lift text-wrap h-auto min-h-0 py-3 text-sm">
+                      Fórmula (Presiones)
+                  </a>
+              </div>
+          </aside>
+          <!-- END SIDEBAR -->
 
-  <!--formula-->
-  <section class="flex flex-1 items-center justify-center p-6 flex-col">
 
-    <p id='formula' class="text-5xl font-semibold mt-4">\( t_{min} = \frac{2.6 (H - 1) D G}{S E} \)</p>
+          <section id="main-content-section" class="flex flex-1 flex-col bg-gray-50 h-full overflow-hidden p-6 lg:p-10">
+              
+            <!-- SELECT BAR FOR MOBILE -->
+            <div class="flex lg:hidden w-full mb-6 flex-shrink-0 animate-fade-in">
+                <div class="dropdown dropdown-bottom w-full">
+                    <div tabindex="0" role="button" class="btn btn-block justify-between bg-blue-950 text-white hover:bg-blue-800 hover-lift text-lg">
+                        Formulas
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
+                    </div>
+                    
+                    
+                    <ul tabindex="0" class="dropdown-content z-[1] menu p-2 shadow-xl bg-white rounded-box w-full space-y-2 mt-2">
+                        <li>
+                            <a href="#" class="btn btn-block bg-blue-50 text-blue-950 hover:bg-blue-100 hover-lift text-wrap h-auto min-h-0 py-3 text-sm border-none justify-start">
+                              Calculation of thinning DF
+                            </a>
+                        </li>
+                        <li>
+                            <a href="#" class="btn btn-block bg-white text-blue-950 hover:bg-blue-100 hover-lift text-wrap h-auto min-h-0 py-3 text-sm border-none justify-start">
+                                Fórmula (Espesores)
+                            </a>
+                        </li>
+                        <li>
+                            <a href="#" class="btn btn-block bg-white text-blue-950 hover:bg-blue-100 hover-lift text-wrap h-auto min-h-0 py-3 text-sm border-none justify-start">
+                                Fórmula (Presiones)
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </div>
 
-    <br>
 
-    <div>
-      <p><b>tmin =</b> The minimun acceptable thickness, in inches, for each course as calculated from the above formula; however, tmin shall not be less than 0.1 inch for any tank course.</p>
+            <h1 class="text-2xl sm:text-3xl font-extrabold text-blue-800 mb-6 animate-fade-in flex-shrink-0">
+              Calculation of thinning DF  
+            </h1>
 
-      <br>
+              
+              <div id="content-scroller" class="w-full flex-1 overflow-y-auto rounded-box bg-gray-50 space-y-8 p-2">
 
-      <p>D = nominal diameter of tank.</p>
-      <p>H = Height from the bottom of the shell course under consideration to the maximun liquid level when evaluating and entire shell course, in ft; or height, from the bottom of the length L from the lowest point of the bottom of L of the locally thinned area to the maximun liquid level, in ft; or height from the lowest point within any location of interest to the maximmun liquid level, in ft.</p>
+                  <div id="slide1" class="flex flex-col w-full h-auto p-2 sm:p-4 lg:p-6">
+                      <div class="w-full h-full">
+                          <div class="card bg-white shadow-2xl border border-gray-100 p-6 sm:p-8 hover-lift">
+                              
+                              <h2 class="text-xl font-semibold text-blue-950 mb-4 border-b pb-2">Intro</h2>
+                              
+                              <p>
+                                The following procedure may be used to determine the DF for thinning. This procedure assumes that if cladding 
+                                assumes that the liner prevents corrosion during the internal liner life.
+                                is present, it corrodes prior to any corrosion of the base material. If an internal liner is used, the procedure.
+                              </p>
 
-      <br>
+                              <br>
 
-      <p>G = Highest specific gravity of the contents.</p>
-      <p>E = The efficieny of the joint.</p>
-      <p>S = Maximun allowable stress in pounds per square inch; allowable shell stresses are shown in Table 4-1 for materials listed in the current and previous editions of API Std. 12C and Std. 650. Note: For reconstructed tanks, S shall be per the current applicable standard.</p>
+                              <p>
+                                Before continuing with the procedure, all the data will be placed in the following tables to facilitate the solving of the formulas:
+                              </p>
+                              
+                              <br>
+
+                              <div class="overflow-x-auto flex justify-center items-center">
+                                <table class="table table-xs">
+                                <thead>
+                                  <tr>
+                                    <th></th>
+                                    <th>Basic Data</th>
+                                    <th>Comments</th>
+                                    <th>input</th>
+                                  </tr>
+                                </thead>
+                                <tbody>
+                                  <tr>
+                                    <th></th>
+                                    <td>Cy Ganderton</td>
+                                    <td>Quality Control Specialist</td>
+                                    <td>Littel, Schaden and Vandervort</td>
+                                  </tr>
+                                  <tr>
+                                    <th></th>
+                                    <td>Hart Hagerty</td>
+                                    <td>Desktop Support Technician</td>
+                                    <td>Zemlak, Daniel and Leannon</td>
+                                  </tr>
+                                  <tr>
+                                    <th></th>
+                                    <td>Brice Swyre</td>
+                                    <td>Tax Accountant</td>
+                                    <td>Carroll Group</td>
+                                  </tr>
+                                  <tr>
+                                    <th></th>
+                                    <td>Marjy Ferencz</td>
+                                    <td>Office Assistant I</td>
+                                    <td>Rowe-Schoen</td>
+                                  </tr>
+                                  <tr>
+                                    <th></th>
+                                    <td>Yancy Tear</td>
+                                    <td>Community Outreach Specialist</td>
+                                    <td>Wyman-Ledner</td>
+                                  </tr>
+                                  <tr>
+                                    <th></th>
+                                    <td>Irma Vasilik</td>
+                                    <td>Editor</td>
+                                    <td>Wiza, Bins and Emard</td>
+                                  </tr>
+                                  <tr>
+                                    <th></th>
+                                    <td>Meghann Durtnal</td>
+                                    <td>Staff Accountant IV</td>
+                                    <td>Schuster-Schimmel</td>
+                                  </tr>
+                                  <tr>
+                                    <th></th>
+                                    <td>Sammy Seston</td>
+                                    <td>Accountant I</td>
+                                    <td>O'Hara, Welch and Keebler</td>
+                                  </tr>
+                                  <tr>
+                                    <th></th>
+                                    <td>Lesya Tinham</td>
+                                    <td>Safety Technician IV</td>
+                                    <td>Turner-Kuhlman</td>
+                                  </tr>
+                                  <tr>
+                                    <th></th>
+                                    <td>Zaneta Tewkesbury</td>
+                                    <td>VP Marketing</td>
+                                    <td>Sauer LLC</td>
+                                  </tr>
+                                  <tr>
+                                    <th></th>
+                                    <td>Andy Tipple</td>
+                                    <td>Librarian</td>
+                                    <td>Hilpert Group</td>
+                                  </tr>
+                                  <tr>
+                                    <th></th>
+                                    <td>Sophi Biles</td>
+                                    <td>Recruiting Manager</td>
+                                    <td>Gutmann Inc</td>
+                                  </tr>
+                                  <tr>
+                                    <th></th>
+                                    <td>Florida Garces</td>
+                                    <td>Web Developer IV</td>
+                                    <td>Gaylord, Pacocha and Baumbach</td>
+                                  </tr>
+                                  <tr>
+                                    <th></th>
+                                    <td>Maribeth Popping</td>
+                                    <td>Analyst Programmer</td>
+                                    <td>Deckow-Pouros</td>
+                                  </tr>
+                                  <tr>
+                                    <th></th>
+                                    <td>Moritz Dryburgh</td>
+                                    <td>Dental Hygienist</td>
+                                    <td>Schiller, Cole and Hackett</td>
+                                  </tr>
+                                  <tr>
+                                    <th></th>
+                                    <td>Reid Semiras</td>
+                                    <td>Teacher</td>
+                                    <td>Sporer, Sipes and Rogahn</td>
+                                  </tr>
+                                </tbody>
+                                </table>
+                              </div>
+                          </div>
+                      </div>
+                  </div>
+                  
+                  <!-- Sección 2: Parámetros de Cálculo --><div id="slide2" class="flex flex-col w-full h-auto p-2 sm:p-4 lg:p-6">
+                      <div class="w-full h-full">
+                          <div class="card bg-white shadow-xl p-6 sm:p-8 hover-lift">
+                              <h2 class="text-xl font-semibold text-blue-950 mb-4 border-b pb-2">2. ⚙️ Parámetros de Cálculo</h2>
+
+                              <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4 mb-6">
+                                  
+                                  <!-- Campos de entrada --><label class="form-control w-full">
+                                      <div class="label"><span class="label-text font-medium">D (in)</span></div>
+                                      <input id="input-D" type="number" placeholder="Diámetro" class="input input-bordered input-sm sm:input-md w-full" value="100"/>
+                                  </label>
+                                  
+                                  <label class="form-control w-full">
+                                      <div class="label"><span class="label-text font-medium">H (ft)</span></div>
+                                      <input id="input-H" type="number" placeholder="Altura" class="input input-bordered input-sm sm:input-md w-full" value="30"/>
+                                  </label>
+                                  
+                                  <label class="form-control w-full">
+                                      <div class="label"><span class="label-text font-medium">G</span></div>
+                                      <input id="input-G" type="number" placeholder="Gravedad Específica" class="input input-bordered input-sm sm:input-md w-full" value="1"/>
+                                  </label>
+
+                                  <label class="form-control w-full">
+                                      <div class="label"><span class="label-text font-medium">E</span></div>
+                                      <input id="input-E" type="number" placeholder="Eficiencia" class="input input-bordered input-sm sm:input-md w-full" value="0.7"/>
+                                  </label>
+
+                                  <label class="form-control w-full">
+                                      <div class="label"><span class="label-text font-medium">S (psi)</span></div>
+                                      <input id="input-S" type="number" placeholder="Esfuerzo Máx." class="input input-bordered input-sm sm:input-md w-full" value="21000"/>
+                                  </label>
+                                  
+                                  <div class="flex items-end pt-4 sm:pt-0">
+                                      <!-- Botón de Cálculo --><button id="calculate-btn" class="btn btn-neutral btn-block h-full hover-lift bg-blue-950 text-white hover:bg-blue-800">Calcular</button>
+                                  </div>
+
+                              </div>
+
+                              <!-- Área de resultados para mostrar tmin --><div class="mt-8 p-4 bg-blue-50 border border-blue-200 rounded-lg shadow-inner">
+                                  <h3 class="text-lg font-bold text-blue-950 mb-2">Resultado del Cálculo</h3>
+                                  <p id="tmin-result" class="text-2xl font-mono text-gray-700">
+                                      $t_{min} = \text{0.149}$ in (Valor precalculado de ejemplo)
+                                  </p>
+                                  <p id="tmin-min-check" class="text-sm text-gray-500 mt-1">
+                                      (El valor mínimo aceptable es de 0.1 pulgadas)
+                                  </p>
+                              </div>
+                          </div>
+                      </div>
+                  </div>
+
+                  <!-- Sección 3: Contenido Adicional --><div id="slide3" class="flex flex-col w-full h-auto p-2 sm:p-4 lg:p-6">
+                      <div class="w-full h-full">
+                          <div class="p-8 h-full text-center bg-white shadow-lg rounded-lg border border-gray-100 flex flex-col justify-center">
+                              <h3 class="text-xl font-bold text-gray-700">3. Contenido Adicional</h3>
+                              <p class="mt-4 text-gray-500">Aquí puedes agregar tablas de consulta, gráficos o notas sobre los factores de seguridad.</p>
+                              <p class="mt-2 text-gray-500">Este es un espacio perfecto para información secundaria que no necesita estar siempre visible.</p>
+                              <p class="mt-20 text-blue-500 font-bold">¡Fin del contenido principal!</p>
+                          </div>
+                      </div>
+                  </div>
+                  
+              </div>
+          </section>
+      
+      </main>
     </div>
 
-    <br>
+    <!-- Contenido Lateral (Sidebar Mobile/Drawer): Se mantiene como opción de navegación secundaria. -->
+    <div class="drawer-side z-40">
+        <label for="my-drawer" aria-label="close sidebar" class="drawer-overlay"></label>
+        <aside class="w-64 bg-white p-4 shadow-2xl flex-shrink-0">
+            <h2 class="text-xl font-bold text-blue-950 mb-4 border-b pb-2">Fórmulas (Menú Lateral Móvil)</h2>
+            <div class="flex flex-col gap-3">
+                <a href="#" class="btn btn-block bg-blue-950 text-white hover:bg-blue-800 hover-lift text-wrap h-auto min-h-0 py-3 text-sm border-none">
+                    Minimun thickness calculation for welded tank shell
+                </a>
+                <a href="#" class="btn btn-block btn-outline border-blue-950 text-blue-950 hover:bg-blue-950 hover:text-white hover-lift text-wrap h-auto min-h-0 py-3 text-sm">
+                    Fórmula (Espesores)
+                </a>
+                <a href="#" class="btn btn-block btn-outline border-blue-950 text-blue-950 hover:bg-blue-950 hover:text-white hover-lift text-wrap h-auto min-h-0 py-3 text-sm">
+                    Fórmula (Presiones)
+                </a>
+            </div>
+        </aside>
+    </div>
+</div>
 
-    <div class="flex flex-1 flex-col justify-center items-center p-2">
-      <span>Params for calculating minimun thickness</span>
+<script>
+    // La lógica de cálculo se mantiene en JavaScript.
+    
+    const calculateButton = document.getElementById('calculate-btn');
+    if (calculateButton) {
+        calculateButton.addEventListener('click', () => {
+            const resultElement = document.getElementById('tmin-result');
+            if (resultElement) {
+                // Se agrega un delay para simular el cálculo
+                resultElement.textContent = "Calculando...";
+                
+                setTimeout(() => {
+                    const D = parseFloat(document.getElementById('input-D').value) || 0;
+                    const H = parseFloat(document.getElementById('input-H').value) || 0;
+                    const G = parseFloat(document.getElementById('input-G').value) || 0;
+                    const E = parseFloat(document.getElementById('input-E').value) || 0;
+                    const S = parseFloat(document.getElementById('input-S').value) || 0;
 
-        <div class="flex flex-row">
-          <label class="input w-30 m-2">
-            <span class="label">D</span>
-            <input type="number" x-model="D"/>
-          </label>
+                    if (S > 0 && E > 0) {
+                        let tmin_calc = (2.6 * (H - 1) * D * G) / (S * E);
+                        
+                        // Regla API 650: tmin no debe ser menor a 0.1 in
+                        tmin_calc = Math.max(tmin_calc, 0.1); 
+                        
+                        // Mostrar resultado usando sintaxis MathJax
+                        resultElement.innerHTML = `$t_{min} = \\text{${tmin_calc.toFixed(3)}}$ in`;
+                        
+                        // Forzar el re-renderizado de MathJax para el resultado (Asumiendo que MathJax está cargado en base.html)
+                        if (typeof MathJax !== 'undefined' && MathJax.typeset) {
+                            MathJax.typeset([resultElement]);
+                        }
+                    } else {
+                         resultElement.textContent = "Error: S y E deben ser mayores a cero.";
+                    }
+                }, 500);
+            }
+        });
+    }
 
-          <label class="input w-30 m-2">
-            <span class="label">H</span>
-            <input type="number" x-model="H"/>
-          </label>
-  
-          <label class="input w-30 m-2">
-            <span class="label">G</span>
-            <input type="number" x-model="G"/>
-          </label>
-  
-          <label class="input w-30 m-2">
-            <span class="label">E</span>
-            <input type="number" x-model="E"/>
-          </label>
-  
-          <label class="input w-30 m-2">
-            <span class="label">S</span>
-            <input type="number" x-model="S"/>
-          </label>
-
-          <button class="btn btn-neutral m-2">Calculate</button>
-        </div>
-
-      </div>
-
-    <span>
-      
-    </span>
-
-  </section>
-
-  <a href="{% url 'logout' %}">regresar</a>
-
-</main>
+</script>
 
 {%endblock%}

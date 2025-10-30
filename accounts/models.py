@@ -22,13 +22,9 @@ class CustomUserManager(BaseUserManager):
 class CustomUser(AbstractBaseUser, PermissionsMixin):
 
     first_name = models.CharField(max_length=40, unique=False, blank=False, null=False)
-    last_name = models.CharField(max_length=40, unique=False, blank=False, null=False)
+    last_name = models.CharField(max_length=40, unique=False, blank=False, null=False)  
     email = models.EmailField(max_length=40, unique=True, blank=False, null=False)
-    photo = models.ImageField(upload_to='accounts/profile_photos/', null=True, blank=True)
-    password = models.CharField(max_length=20, unique=False, blank=False, null=False)
-    country = models.CharField(max_length=40, unique=False, blank=False, null=True)
-    city = models.CharField(max_length=50, unique=False, blank=False, null=True)
-    birth_day = models.DateTimeField(null=True, blank=False)
+    password = models.CharField(max_length=128, unique=False, blank=False, null=False)
     subscription = models.BooleanField(verbose_name="Premium")
 
     is_active = models.BooleanField(default=True)
