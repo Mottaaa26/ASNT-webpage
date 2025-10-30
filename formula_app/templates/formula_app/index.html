@@ -108,105 +108,125 @@
                                     <th></th>
                                     <th>Basic Data</th>
                                     <th>Comments</th>
-                                    <th>input</th>
+                                    <th>Value</th>
                                   </tr>
                                 </thead>
                                 <tbody>
                                   <tr>
                                     <th></th>
-                                    <td>Cy Ganderton</td>
-                                    <td>Quality Control Specialist</td>
-                                    <td>Littel, Schaden and Vandervort</td>
+                                    <td>Start date</td>
+                                    <td>The date the component was placed in service.</td>
+                                    <td><input class="input input-ghost" placeholder="type here" type="text" name="start_date" id="start_date"></td>
                                   </tr>
                                   <tr>
                                     <th></th>
-                                    <td>Hart Hagerty</td>
-                                    <td>Desktop Support Technician</td>
-                                    <td>Zemlak, Daniel and Leannon</td>
+                                    <td>Thickness, in. (mm)</td>
+                                    <td>
+                                      The thickness used for the DF calculation, either the furnished thickness or the 
+                                      measured thickness
+                                    </td>
+                                    <td><input class="input input-ghost" placeholder="type here" type="text" name="thickness" id="thickness"></td>
                                   </tr>
                                   <tr>
                                     <th></th>
-                                    <td>Brice Swyre</td>
-                                    <td>Tax Accountant</td>
-                                    <td>Carroll Group</td>
+                                    <td>Corrosion Allowance, in. (mm)</td>
+                                    <td>
+                                      The corrosion allowance is the specified design or actual corrosion allowance upon 
+                                      being placed in the current service.
+                                    </td>
+                                    <td><input class="input input-ghost" placeholder="type here" type="text" name="corrosion_allowance" id="corrosion_allowance"></td>
                                   </tr>
                                   <tr>
                                     <th></th>
-                                    <td>Marjy Ferencz</td>
-                                    <td>Office Assistant I</td>
-                                    <td>Rowe-Schoen</td>
+                                    <td>Design temperature, °F (°C)</td>
+                                    <td>The design temperature, shell side and tube side for a heat exchanger.</td>
+                                    <td><input class="input input-ghost" placeholder="type here" type="text" name="design_temperature" id="design_temperature"></td>
                                   </tr>
                                   <tr>
                                     <th></th>
-                                    <td>Yancy Tear</td>
-                                    <td>Community Outreach Specialist</td>
-                                    <td>Wyman-Ledner</td>
+                                    <td>Design pressure, psi (MPa)</td>
+                                    <td>The design pressure, shell side and tube side for a heat exchanger.</td>
+                                    <td><input class="input input-ghost" placeholder="type here" type="text" name="design_pressure" id="design_pressure"></td>
                                   </tr>
                                   <tr>
                                     <th></th>
-                                    <td>Irma Vasilik</td>
-                                    <td>Editor</td>
-                                    <td>Wiza, Bins and Emard</td>
+                                    <td>Operating temperature, °F (°C)</td>
+                                    <td>
+                                      The highest expected operating temperature expected during operation including 
+                                      normal and unusual operating conditions, shell side and tube side for a heat 
+                                      exchanger.
+                                    </td>
+                                    <td><input class="input input-ghost" placeholder="type here" type="text" name="operating_temperature" id="operating_temperature"></td>
                                   </tr>
                                   <tr>
                                     <th></th>
-                                    <td>Meghann Durtnal</td>
-                                    <td>Staff Accountant IV</td>
-                                    <td>Schuster-Schimmel</td>
+                                    <td>Operating pressure, psi (MPa)</td>
+                                    <td>
+                                      The highest expected operating pressure expected during operation including 
+                                      normal and unusual operating conditions, shell side and tube side for a heat 
+                                      exchanger.
+                                    </td>
+                                    <td><input class="input input-ghost" placeholder="type here" type="text" name="operating_pressure" id="operating_pressure"></td>
                                   </tr>
                                   <tr>
                                     <th></th>
-                                    <td>Sammy Seston</td>
-                                    <td>Accountant I</td>
-                                    <td>O'Hara, Welch and Keebler</td>
+                                    <td>Design code</td>
+                                    <td>The design code of the component containing the component.</td>
+                                    <td><input class="input input-ghost" placeholder="type here" type="text" name="design_code" id="design_code"></td>
                                   </tr>
                                   <tr>
                                     <th></th>
-                                    <td>Lesya Tinham</td>
-                                    <td>Safety Technician IV</td>
-                                    <td>Turner-Kuhlman</td>
+                                    <td>Equipment type</td>
+                                    <td>The type of equipment.</td>
+                                    <td><input class="input input-ghost" placeholder="type here" type="text" name="equipment_type" id="equipment_type"></td>
                                   </tr>
                                   <tr>
                                     <th></th>
-                                    <td>Zaneta Tewkesbury</td>
-                                    <td>VP Marketing</td>
-                                    <td>Sauer LLC</td>
+                                    <td>Component type</td>
+                                    <td>The type of component; see Table 4.2.</td>
+                                    <td><input class="input input-ghost" placeholder="type here" type="text" name="component_type" id="component_type"></td>
                                   </tr>
                                   <tr>
                                     <th></th>
-                                    <td>Andy Tipple</td>
-                                    <td>Librarian</td>
-                                    <td>Hilpert Group</td>
+                                    <td>Component geometry data</td>
+                                    <td>Component geometry data depending on the type of component (see Table 4.3).</td>
+                                    <td><input class="input input-ghost" placeholder="type here" type="text" name="component_geometry_data" id="component_geometry_data"></td>
                                   </tr>
                                   <tr>
                                     <th></th>
-                                    <td>Sophi Biles</td>
-                                    <td>Recruiting Manager</td>
-                                    <td>Gutmann Inc</td>
+                                    <td>Material specification</td>
+                                    <td>
+                                      The specification of the material of construction, the ASME SA or SB specification 
+                                      for pressure vessel components or of ASTM specification for piping and tankage 
+                                      components. Data entry is based on material specification, grade, year, UNS 
+                                      number, and class/condition/temper/size/thickness; these data are readily available 
+                                      in the ASME Code [12].
+                                    </td>
+                                    <td><input class="input input-ghost" placeholder="type here" type="text" name="material_especification" id="material_especification"></td>
                                   </tr>
                                   <tr>
                                     <th></th>
-                                    <td>Florida Garces</td>
-                                    <td>Web Developer IV</td>
-                                    <td>Gaylord, Pacocha and Baumbach</td>
+                                    <td>Yield strength, psi (MPa)</td>
+                                    <td>The design yield strength of the material based on material specification.</td>
+                                    <td><input class="input input-ghost" placeholder="type here" type="text" name="yield_strength" id="yield_strength"></td>
                                   </tr>
                                   <tr>
                                     <th></th>
-                                    <td>Maribeth Popping</td>
-                                    <td>Analyst Programmer</td>
-                                    <td>Deckow-Pouros</td>
+                                    <td>Tensile strength, psi (MPa)</td>
+                                    <td>The design tensile strength of the material based on material specification.</td>
+                                    <td><input class="input input-ghost" placeholder="type here" type="text" name="tensile_strength" id="tensile_strength"></td>
                                   </tr>
                                   <tr>
                                     <th></th>
-                                    <td>Moritz Dryburgh</td>
-                                    <td>Dental Hygienist</td>
-                                    <td>Schiller, Cole and Hackett</td>
+                                    <td>Weld joint efficiency</td>
+                                    <td>Weld joint efficiency per the code of construction.</td>
+                                    <td><input class="input input-ghost" placeholder="type here" type="text" name="weld_joint_efficiency" id="weld_joint_efficiency"></td>
                                   </tr>
                                   <tr>
                                     <th></th>
-                                    <td>Reid Semiras</td>
-                                    <td>Teacher</td>
-                                    <td>Sporer, Sipes and Rogahn</td>
+                                    <td>Heat tracing</td>
+                                    <td>Is the component heat traced? (Yes or No)</td>
+                                    <td><input class="input input-ghost" placeholder="type here" type="text" name="heat_tracing" id="heat_tracing"></td>
                                   </tr>
                                 </tbody>
                                 </table>
@@ -304,43 +324,8 @@
 </div>
 
 <script>
-    // La lógica de cálculo se mantiene en JavaScript.
     
-    const calculateButton = document.getElementById('calculate-btn');
-    if (calculateButton) {
-        calculateButton.addEventListener('click', () => {
-            const resultElement = document.getElementById('tmin-result');
-            if (resultElement) {
-                // Se agrega un delay para simular el cálculo
-                resultElement.textContent = "Calculando...";
-                
-                setTimeout(() => {
-                    const D = parseFloat(document.getElementById('input-D').value) || 0;
-                    const H = parseFloat(document.getElementById('input-H').value) || 0;
-                    const G = parseFloat(document.getElementById('input-G').value) || 0;
-                    const E = parseFloat(document.getElementById('input-E').value) || 0;
-                    const S = parseFloat(document.getElementById('input-S').value) || 0;
-
-                    if (S > 0 && E > 0) {
-                        let tmin_calc = (2.6 * (H - 1) * D * G) / (S * E);
-                        
-                        // Regla API 650: tmin no debe ser menor a 0.1 in
-                        tmin_calc = Math.max(tmin_calc, 0.1); 
-                        
-                        // Mostrar resultado usando sintaxis MathJax
-                        resultElement.innerHTML = `$t_{min} = \\text{${tmin_calc.toFixed(3)}}$ in`;
-                        
-                        // Forzar el re-renderizado de MathJax para el resultado (Asumiendo que MathJax está cargado en base.html)
-                        if (typeof MathJax !== 'undefined' && MathJax.typeset) {
-                            MathJax.typeset([resultElement]);
-                        }
-                    } else {
-                         resultElement.textContent = "Error: S y E deben ser mayores a cero.";
-                    }
-                }, 500);
-            }
-        });
-    }
+    
 
 </script>
 
