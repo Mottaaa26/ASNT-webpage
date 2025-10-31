@@ -1403,8 +1403,17 @@
   .w-10 {
     width: calc(var(--spacing) * 10);
   }
+  .w-15 {
+    width: calc(var(--spacing) * 15);
+  }
+  .w-20 {
+    width: calc(var(--spacing) * 20);
+  }
   .w-64 {
     width: calc(var(--spacing) * 64);
+  }
+  .w-auto {
+    width: auto;
   }
   .w-full {
     width: 100%;
@@ -1810,9 +1819,11 @@
       --btn-fg: var(--color-neutral-content);
     }
   }
-  .outline-solid {
-    --tw-outline-style: solid;
-    outline-style: solid;
+  @layer daisyui.modifier.color {
+    .btn-primary {
+      --btn-color: var(--color-primary);
+      --btn-fg: var(--color-primary-content);
+    }
   }
   @media (hover: hover) {
     .hover\:bg-blue-100:hover {

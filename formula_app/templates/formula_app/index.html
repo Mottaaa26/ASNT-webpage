@@ -1,15 +1,16 @@
 {%extends 'theme/base.html'%}
+{% load static %}
 
 {%block title%}Cálculo de Espesores Mínimos{%endblock%}
 
 {% block nav_content %}
-    <!-- Contenedor flex para empujar los botones a la derecha del navbar --><div class="flex justify-end items-center h-full"> 
+    <div class="flex justify-end items-center h-full"> 
         <ul class="menu menu-horizontal p-0 hidden lg:flex text-white space-x-2">
-            <!-- La URL 'logout' requiere el tag {% url 'logout' %} para Django --><li><a href="{% url 'logout' %}" class="btn btn-ghost text-white hover:bg-blue-800 transition duration-200">Log out</a></li>
+            <li><a href="{% url 'logout' %}" class="btn btn-ghost text-white hover:bg-blue-800 transition duration-200">Log out</a></li>
             <li><a href="#" class="btn btn-ghost text-white hover:bg-blue-800 transition duration-200">Account</a></li>
         </ul>
 
-        <!-- Botón de menú HAMBURGUESA para móvil/drawer. Abre el drawer lateral. --><label for="my-drawer" class="btn btn-square btn-ghost text-white lg:hidden">
+        <label for="my-drawer" class="btn btn-square btn-ghost text-white lg:hidden">
             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" class="inline-block w-6 h-6 stroke-current"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path></svg>
         </label>
     </div>
@@ -81,171 +82,171 @@
               
               <div id="content-scroller" class="w-full flex-1 overflow-y-auto rounded-box bg-gray-50 space-y-8 p-2">
 
-                  <div id="slide1" class="flex flex-col w-full h-auto p-2 sm:p-4 lg:p-6">
-                      <div class="w-full h-full">
-                          <div class="card bg-white shadow-2xl border border-gray-100 p-6 sm:p-8 hover-lift">
-                              
-                              <h2 class="text-xl font-semibold text-blue-950 mb-4 border-b pb-2">Intro</h2>
-                              
-                              <p>
-                                The following procedure may be used to determine the DF for thinning. This procedure assumes that if cladding 
-                                assumes that the liner prevents corrosion during the internal liner life.
-                                is present, it corrodes prior to any corrosion of the base material. If an internal liner is used, the procedure.
-                              </p>
+                <div id="slide1" class="flex flex-col w-full h-auto p-2 sm:p-4 lg:p-6">
+                    <div class="w-full h-full">
+                        <div class="card bg-white shadow-2xl border border-gray-100 p-6 sm:p-8 hover-lift">
+                            
+                          <h2 class="text-xl font-semibold text-blue-950 mb-4 border-b pb-2">Intro</h2>
+                          
+                          <p>
+                            The following procedure may be used to determine the DF for thinning. This procedure assumes that if cladding 
+                            assumes that the liner prevents corrosion during the internal liner life.
+                            is present, it corrodes prior to any corrosion of the base material. If an internal liner is used, the procedure.
+                          </p>
 
-                              <br>
+                            <br>
 
-                              <p>
-                                Before continuing with the procedure, all the data will be placed in the following tables to facilitate the solving of the formulas:
-                              </p>
-                              
-                              <br>
+                            <p>
+                              Before continuing with the procedure, all the data will be placed in the following tables to facilitate the solving of the formulas:
+                            </p>
+                            
+                            <br>
 
-                              <div class="overflow-x-auto flex justify-center items-center">
-                                <table class="table table-xs">
-                                <thead>
-                                  <tr>
-                                    <th></th>
-                                    <th>Basic Data</th>
-                                    <th>Comments</th>
-                                    <th>Value</th>
-                                  </tr>
-                                </thead>
-                                <tbody>
-                                  <tr>
-                                    <th></th>
-                                    <td>Start date</td>
-                                    <td>The date the component was placed in service.</td>
-                                    <td><input class="input input-ghost" placeholder="type here" type="text" name="start_date" id="start_date"></td>
-                                  </tr>
-                                  <tr>
-                                    <th></th>
-                                    <td>Thickness, in. (mm)</td>
-                                    <td>
-                                      The thickness used for the DF calculation, either the furnished thickness or the 
-                                      measured thickness
-                                    </td>
-                                    <td><input class="input input-ghost" placeholder="type here" type="text" name="thickness" id="thickness"></td>
-                                  </tr>
-                                  <tr>
-                                    <th></th>
-                                    <td>Corrosion Allowance, in. (mm)</td>
-                                    <td>
-                                      The corrosion allowance is the specified design or actual corrosion allowance upon 
-                                      being placed in the current service.
-                                    </td>
-                                    <td><input class="input input-ghost" placeholder="type here" type="text" name="corrosion_allowance" id="corrosion_allowance"></td>
-                                  </tr>
-                                  <tr>
-                                    <th></th>
-                                    <td>Design temperature, °F (°C)</td>
-                                    <td>The design temperature, shell side and tube side for a heat exchanger.</td>
-                                    <td><input class="input input-ghost" placeholder="type here" type="text" name="design_temperature" id="design_temperature"></td>
-                                  </tr>
-                                  <tr>
-                                    <th></th>
-                                    <td>Design pressure, psi (MPa)</td>
-                                    <td>The design pressure, shell side and tube side for a heat exchanger.</td>
-                                    <td><input class="input input-ghost" placeholder="type here" type="text" name="design_pressure" id="design_pressure"></td>
-                                  </tr>
-                                  <tr>
-                                    <th></th>
-                                    <td>Operating temperature, °F (°C)</td>
-                                    <td>
-                                      The highest expected operating temperature expected during operation including 
-                                      normal and unusual operating conditions, shell side and tube side for a heat 
-                                      exchanger.
-                                    </td>
-                                    <td><input class="input input-ghost" placeholder="type here" type="text" name="operating_temperature" id="operating_temperature"></td>
-                                  </tr>
-                                  <tr>
-                                    <th></th>
-                                    <td>Operating pressure, psi (MPa)</td>
-                                    <td>
-                                      The highest expected operating pressure expected during operation including 
-                                      normal and unusual operating conditions, shell side and tube side for a heat 
-                                      exchanger.
-                                    </td>
-                                    <td><input class="input input-ghost" placeholder="type here" type="text" name="operating_pressure" id="operating_pressure"></td>
-                                  </tr>
-                                  <tr>
-                                    <th></th>
-                                    <td>Design code</td>
-                                    <td>The design code of the component containing the component.</td>
-                                    <td><input class="input input-ghost" placeholder="type here" type="text" name="design_code" id="design_code"></td>
-                                  </tr>
-                                  <tr>
-                                    <th></th>
-                                    <td>Equipment type</td>
-                                    <td>The type of equipment.</td>
-                                    <td><input class="input input-ghost" placeholder="type here" type="text" name="equipment_type" id="equipment_type"></td>
-                                  </tr>
-                                  <tr>
-                                    <th></th>
-                                    <td>Component type</td>
-                                    <td>The type of component; see Table 4.2.</td>
-                                    <td><input class="input input-ghost" placeholder="type here" type="text" name="component_type" id="component_type"></td>
-                                  </tr>
-                                  <tr>
-                                    <th></th>
-                                    <td>Component geometry data</td>
-                                    <td>Component geometry data depending on the type of component (see Table 4.3).</td>
-                                    <td><input class="input input-ghost" placeholder="type here" type="text" name="component_geometry_data" id="component_geometry_data"></td>
-                                  </tr>
-                                  <tr>
-                                    <th></th>
-                                    <td>Material specification</td>
-                                    <td>
-                                      The specification of the material of construction, the ASME SA or SB specification 
-                                      for pressure vessel components or of ASTM specification for piping and tankage 
-                                      components. Data entry is based on material specification, grade, year, UNS 
-                                      number, and class/condition/temper/size/thickness; these data are readily available 
-                                      in the ASME Code [12].
-                                    </td>
-                                    <td><input class="input input-ghost" placeholder="type here" type="text" name="material_especification" id="material_especification"></td>
-                                  </tr>
-                                  <tr>
-                                    <th></th>
-                                    <td>Yield strength, psi (MPa)</td>
-                                    <td>The design yield strength of the material based on material specification.</td>
-                                    <td><input class="input input-ghost" placeholder="type here" type="text" name="yield_strength" id="yield_strength"></td>
-                                  </tr>
-                                  <tr>
-                                    <th></th>
-                                    <td>Tensile strength, psi (MPa)</td>
-                                    <td>The design tensile strength of the material based on material specification.</td>
-                                    <td><input class="input input-ghost" placeholder="type here" type="text" name="tensile_strength" id="tensile_strength"></td>
-                                  </tr>
-                                  <tr>
-                                    <th></th>
-                                    <td>Weld joint efficiency</td>
-                                    <td>Weld joint efficiency per the code of construction.</td>
-                                    <td><input class="input input-ghost" placeholder="type here" type="text" name="weld_joint_efficiency" id="weld_joint_efficiency"></td>
-                                  </tr>
-                                  <tr>
-                                    <th></th>
-                                    <td>Heat tracing</td>
-                                    <td>Is the component heat traced? (Yes or No)</td>
-                                    <td><input class="input input-ghost" placeholder="type here" type="text" name="heat_tracing" id="heat_tracing"></td>
-                                  </tr>
-                                </tbody>
-                                </table>
-                              </div>
-                          </div>
+                            <div class="overflow-x-auto flex justify-center items-center">
+                              <table class="table table-xs" id="table4.1_data">
+                              <thead>
+                                <tr>
+                                  <th></th>
+                                  <th>Basic Data</th>
+                                  <th>Comments</th>
+                                  <th>Value</th>
+                                </tr>
+                              </thead>
+                              <tbody>
+                                <tr>
+                                  <th></th>
+                                  <td>Start date</td>
+                                  <td>The date the component was placed in service.</td>
+                                  <td><input class="input input-ghost" placeholder="type here" type="text" name="start_date" id="start_date"></td>
+                                </tr>
+                                <tr>
+                                  <th></th>
+                                  <td>Thickness, in. (mm)</td>
+                                  <td>
+                                    The thickness used for the DF calculation, either the furnished thickness or the 
+                                    measured thickness
+                                  </td>
+                                  <td><input class="input input-ghost" placeholder="type here" type="text" name="thickness" id="thickness"></td>
+                                </tr>
+                                <tr>
+                                  <th></th>
+                                  <td>Corrosion Allowance, in. (mm)</td>
+                                  <td>
+                                    The corrosion allowance is the specified design or actual corrosion allowance upon 
+                                    being placed in the current service.
+                                  </td>
+                                  <td><input class="input input-ghost" placeholder="type here" type="text" name="corrosion_allowance" id="corrosion_allowance"></td>
+                                </tr>
+                                <tr>
+                                  <th></th>
+                                  <td>Design temperature, °F (°C)</td>
+                                  <td>The design temperature, shell side and tube side for a heat exchanger.</td>
+                                  <td><input class="input input-ghost" placeholder="type here" type="text" name="design_temperature" id="design_temperature"></td>
+                                </tr>
+                                <tr>
+                                  <th></th>
+                                  <td>Design pressure, psi (MPa)</td>
+                                  <td>The design pressure, shell side and tube side for a heat exchanger.</td>
+                                  <td><input class="input input-ghost" placeholder="type here" type="text" name="design_pressure" id="design_pressure"></td>
+                                </tr>
+                                <tr>
+                                  <th></th>
+                                  <td>Operating temperature, °F (°C)</td>
+                                  <td>
+                                    The highest expected operating temperature expected during operation including 
+                                    normal and unusual operating conditions, shell side and tube side for a heat 
+                                    exchanger.
+                                  </td>
+                                  <td><input class="input input-ghost" placeholder="type here" type="text" name="operating_temperature" id="operating_temperature"></td>
+                                </tr>
+                                <tr>
+                                  <th></th>
+                                  <td>Operating pressure, psi (MPa)</td>
+                                  <td>
+                                    The highest expected operating pressure expected during operation including 
+                                    normal and unusual operating conditions, shell side and tube side for a heat 
+                                    exchanger.
+                                  </td>
+                                  <td><input class="input input-ghost" placeholder="type here" type="text" name="operating_pressure" id="operating_pressure"></td>
+                                </tr>
+                                <tr>
+                                  <th></th>
+                                  <td>Design code</td>
+                                  <td>The design code of the component containing the component.</td>
+                                  <td><input class="input input-ghost" placeholder="type here" type="text" name="design_code" id="design_code"></td>
+                                </tr>
+                                <tr>
+                                  <th></th>
+                                  <td>Equipment type</td>
+                                  <td>The type of equipment.</td>
+                                  <td><input class="input input-ghost" placeholder="type here" type="text" name="equipment_type" id="equipment_type"></td>
+                                </tr>
+                                <tr>
+                                  <th></th>
+                                  <td>Component type</td>
+                                  <td>The type of component; see Table 4.2.</td>
+                                  <td><input class="input input-ghost" placeholder="type here" type="text" name="component_type" id="component_type"></td>
+                                </tr>
+                                <tr>
+                                  <th></th>
+                                  <td>Component geometry data</td>
+                                  <td>Component geometry data depending on the type of component (see Table 4.3).</td>
+                                  <td><input class="input input-ghost" placeholder="type here" type="text" name="component_geometry_data" id="component_geometry_data"></td>
+                                </tr>
+                                <tr>
+                                  <th></th>
+                                  <td>Material specification</td>
+                                  <td>
+                                    The specification of the material of construction, the ASME SA or SB specification 
+                                    for pressure vessel components or of ASTM specification for piping and tankage 
+                                    components. Data entry is based on material specification, grade, year, UNS 
+                                    number, and class/condition/temper/size/thickness; these data are readily available 
+                                    in the ASME Code [12].
+                                  </td>
+                                  <td><input class="input input-ghost" placeholder="type here" type="text" name="material_especification" id="material_especification"></td>
+                                </tr>
+                                <tr>
+                                  <th></th>
+                                  <td>Yield strength, psi (MPa)</td>
+                                  <td>The design yield strength of the material based on material specification.</td>
+                                  <td><input class="input input-ghost" placeholder="type here" type="text" name="yield_strength" id="yield_strength"></td>
+                                </tr>
+                                <tr>
+                                  <th></th>
+                                  <td>Tensile strength, psi (MPa)</td>
+                                  <td>The design tensile strength of the material based on material specification.</td>
+                                  <td><input class="input input-ghost" placeholder="type here" type="text" name="tensile_strength" id="tensile_strength"></td>
+                                </tr>
+                                <tr>
+                                  <th></th>
+                                  <td>Weld joint efficiency</td>
+                                  <td>Weld joint efficiency per the code of construction.</td>
+                                  <td><input class="input input-ghost" placeholder="type here" type="text" name="weld_joint_efficiency" id="weld_joint_efficiency"></td>
+                                </tr>
+                                <tr>
+                                  <th></th>
+                                  <td>Heat tracing</td>
+                                  <td>Is the component heat traced? (Yes or No)</td>
+                                  <td><input class="input input-ghost" placeholder="type here" type="text" name="heat_tracing" id="heat_tracing"></td>
+                                </tr>
+                              </tbody>
+                              </table>
+                            </div>
+                            <button id="btn_table4.1" class="btn btn-primary w-auto">Save table data</button>
+                        </div>
                       </div>
                   </div>
                   
-                  <!-- Sección 2: Parámetros de Cálculo --><div id="slide2" class="flex flex-col w-full h-auto p-2 sm:p-4 lg:p-6">
+                  <div id="slide2" class="flex flex-col w-full h-auto p-2 sm:p-4 lg:p-6">
                       <div class="w-full h-full">
                           <div class="card bg-white shadow-xl p-6 sm:p-8 hover-lift">
-                              <h2 class="text-xl font-semibold text-blue-950 mb-4 border-b pb-2">2. ⚙️ Parámetros de Cálculo</h2>
+                              <h2 class="text-xl font-semibold text-blue-950 mb-4 border-b pb-2">Steps</h2>
 
                               <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4 mb-6">
                                   
-                                  <!-- Campos de entrada --><label class="form-control w-full">
-                                      <div class="label"><span class="label-text font-medium">D (in)</span></div>
-                                      <input id="input-D" type="number" placeholder="Diámetro" class="input input-bordered input-sm sm:input-md w-full" value="100"/>
-                                  </label>
+                                  <!--STEP 1-->
+                                  <span class="text-bold">Step 1.</span>
+                                  <p></p>
                                   
                                   <label class="form-control w-full">
                                       <div class="label"><span class="label-text font-medium">H (ft)</span></div>
@@ -268,12 +269,12 @@
                                   </label>
                                   
                                   <div class="flex items-end pt-4 sm:pt-0">
-                                      <!-- Botón de Cálculo --><button id="calculate-btn" class="btn btn-neutral btn-block h-full hover-lift bg-blue-950 text-white hover:bg-blue-800">Calcular</button>
+                                    <button id="calculate-btn" class="btn btn-neutral btn-block h-full hover-lift bg-blue-950 text-white hover:bg-blue-800">Calcular</button>
                                   </div>
 
                               </div>
 
-                              <!-- Área de resultados para mostrar tmin --><div class="mt-8 p-4 bg-blue-50 border border-blue-200 rounded-lg shadow-inner">
+                              <div class="mt-8 p-4 bg-blue-50 border border-blue-200 rounded-lg shadow-inner">
                                   <h3 class="text-lg font-bold text-blue-950 mb-2">Resultado del Cálculo</h3>
                                   <p id="tmin-result" class="text-2xl font-mono text-gray-700">
                                       $t_{min} = \text{0.149}$ in (Valor precalculado de ejemplo)
@@ -286,7 +287,7 @@
                       </div>
                   </div>
 
-                  <!-- Sección 3: Contenido Adicional --><div id="slide3" class="flex flex-col w-full h-auto p-2 sm:p-4 lg:p-6">
+                  <div id="slide3" class="flex flex-col w-full h-auto p-2 sm:p-4 lg:p-6">
                       <div class="w-full h-full">
                           <div class="p-8 h-full text-center bg-white shadow-lg rounded-lg border border-gray-100 flex flex-col justify-center">
                               <h3 class="text-xl font-bold text-gray-700">3. Contenido Adicional</h3>
@@ -303,7 +304,6 @@
       </main>
     </div>
 
-    <!-- Contenido Lateral (Sidebar Mobile/Drawer): Se mantiene como opción de navegación secundaria. -->
     <div class="drawer-side z-40">
         <label for="my-drawer" aria-label="close sidebar" class="drawer-overlay"></label>
         <aside class="w-64 bg-white p-4 shadow-2xl flex-shrink-0">
@@ -323,10 +323,6 @@
     </div>
 </div>
 
-<script>
-    
-    
-
-</script>
+<script src="{% static 'formula_app/table4-1.js' %}"></script>
 
 {%endblock%}
