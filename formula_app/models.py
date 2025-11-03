@@ -9,10 +9,10 @@ class EquipmentType(models.Model):
 
 class ComponentType(models.Model):
     equipment = models.ForeignKey(EquipmentType, on_delete=models.CASCADE, related_name="components")
-    name = models.CharField(max_length= 30, unique=True)
+    name = models.CharField(max_length= 30)
 
     def __str__(self):
-        return f"{self.equipment.name} - {self.name}"
+        return f"{self.name}"
 
 
 class ComponentGff(models.Model):
