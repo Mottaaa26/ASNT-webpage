@@ -13,7 +13,7 @@ class ComponentType(models.Model):
 
     def __str__(self):
         return f"{self.name}"
-
+    
 
 class ComponentGff(models.Model):
     component = models.ForeignKey(ComponentType, on_delete=models.CASCADE, related_name="gffs")
@@ -25,4 +25,6 @@ class ComponentGff(models.Model):
 
     def __str__(self):
         return f"GFF for {self.component.name}"
+
+
 

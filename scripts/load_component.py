@@ -4,7 +4,7 @@ from formula_app.models import ComponentType, EquipmentType
 data = {
     'compressor': ['COMPC', 'COMPR'],
     'heat exchanger': ['HEXSS', 'HEXTS'],
-    'pipe': ['PIPE-1', 'PIPE-2,', 'PIPE-4', 'PIPE-6', 'PIPE-8', 'PIPE-10', 'PIPE-12', 'PIPE-16', 'PIPEGT16'],
+    'pipe': ['PIPE-1', 'PIPE-2', 'PIPE-4', 'PIPE-6', 'PIPE-8', 'PIPE-10', 'PIPE-12', 'PIPE-16', 'PIPEGT16'],
     'pump': ['PUMP2S', 'PUMPR', 'PUMP1S'],
     'tank620': ['TANKBOTTOM', 'TANKBOTEDGE', 'COURSE-1-10'],
     'tank650': ['TANKBOTTOM', 'TANKBOTEDGE', 'COURSE-1-10'],
