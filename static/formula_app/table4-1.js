@@ -2,14 +2,19 @@
 document.getElementById("btn_table4.1").addEventListener("click", () => {
 
     //
-    const requiredInputs = document.getElementById("table4.1_data").querySelectorAll('input[required]');
-    
-    for (let input of requiredInputs)
+    const requiredFields = document.getElementById("table4.1_data").querySelectorAll('input[required], select[required]');
+
+    for (let field of requiredFields)
     {
-        if(!input.reportValidity())
+
+        if(!field.value || field.value === "")
         {
-            return;
-        }
+            if(!field.reportValidity())
+            {
+                return;
+            }
+        } 
+
     }
 
     // Dict with all the data table
@@ -23,14 +28,14 @@ document.getElementById("btn_table4.1").addEventListener("click", () => {
         operating_temp: parseFloat(document.getElementById('operating_temperature').value),
         operating_press: parseFloat(document.getElementById('operating_pressure').value),
         design_code: document.getElementById('design_code').value,
-        equip_type: document.getElementById('equipment_type').value,
-        comp_type: document.getElementById('component_type').value,
+        equip_type: document.getElementById('equipment').value,
+        comp_type: document.getElementById('component').value,
         comp_geom_data: document.getElementById('component_geometry_data').value,
         material_especification: document.getElementById('material_especification').value,
         yield_strength: parseFloat(document.getElementById('yield_strength').value),
         tensile_strength: parseFloat(document.getElementById('tensile_strength').value),
         weld_joint_efficiency: parseFloat(document.getElementById('weld_joint_efficiency').value),
-        heat_tracing: parseFloat(document.getElementById('heat_tracing').value),
+        heat_tracing: document.getElementById('heat_tracing').value,
     }
 
     document.getElementById("table4.1_confirmation").classList.remove("hidden");

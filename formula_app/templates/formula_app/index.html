@@ -179,13 +179,29 @@
                                   <th></th>
                                   <td>Equipment type</td>
                                   <td>The type of equipment.</td>
-                                  <td><input required class="input input-ghost" placeholder="type here" type="text" name="equipment_type" id="equipment_type"></td>
+                                  <td>
+
+                                    <select required id="equipment" class="w-full rounded-lg border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                      <option value="" disabled selected>Select equipment</option>
+                                      <option value="pipe">pipe</option>
+                                  
+                                    </select>
+
+                                  </td>
                                 </tr>
                                 <tr>
                                   <th></th>
                                   <td>Component type</td>
                                   <td>The type of component; see Table 4.2.</td>
-                                  <td><input required class="input input-ghost" placeholder="type here" type="text" name="component_type" id="component_type"></td>
+                                  <td>
+
+                                    <select required id="component" class="w-full rounded-lg border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                      <option value="" disabled selected>Select component</option>
+                                      <option value="1">hola</option>
+                                  
+                                    </select>
+
+                                  </td>
                                 </tr>
                                 <tr>
                                   <th></th>
@@ -227,7 +243,13 @@
                                   <th></th>
                                   <td>Heat tracing</td>
                                   <td>Is the component heat traced? (Yes or No)</td>
-                                  <td><input required class="input input-ghost" placeholder="type here" type="number" name="heat_tracing" id="heat_tracing"></td>
+                                  <td>
+                                    <select required id="heat_tracing" class="w-full rounded-lg border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                      <option value="" disabled selected>Yes or no</option>
+                                      <option value="yes">yes</option>
+                                      <option value="no">no</option>
+                                    </select>
+                                  </td>
                                 </tr>
                               </tbody>
                               </table>
