@@ -1,7 +1,7 @@
+
+var table_data;
+
 // validate table fields and save it in a dict
-
-const table_data = {};
-
 document.getElementById("btn_table4.1").addEventListener("click", () => {
 
     //
@@ -35,6 +35,8 @@ document.getElementById("btn_table4.1").addEventListener("click", () => {
         comp_type: document.getElementById('component').value,
         has_cladding: document.getElementById('has_cladding').value,
         cladding: document.getElementById('cladding_input').value,
+        has_internal_liner: document.getElementById('has_internal_liner').value,
+        internal_liner:  new Date(document.getElementById('internal_liner_input').value),
         comp_geom_data: document.getElementById('component_geometry_data').value,
         material_especification: document.getElementById('material_especification').value,
         yield_strength: parseFloat(document.getElementById('yield_strength').value),
@@ -43,14 +45,9 @@ document.getElementById("btn_table4.1").addEventListener("click", () => {
         heat_tracing: document.getElementById('heat_tracing').value,
     }
 
+    console.log("todo correcto");
+    window.API_581_INPUTDATA = table_data;
+    calcs_thinningDF();
     document.getElementById("table4.1_confirmation").classList.remove("hidden");
 
-    var table41_confirmation = document.getElementById("step1_confirmation");
-    table41_confirmation.classList.remove("hidden");
-    table41_confirmation.textContent = `We already have those values from the table above: t = ${table_data.thickness}; age = ${table_data.start_date.toLocaleDateString()}`;
-
-    console.log("Todo correcto");
-
 });
-
-Window.API_581_INPUTDATA = table_data;
