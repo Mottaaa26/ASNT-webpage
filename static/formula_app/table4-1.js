@@ -1,4 +1,7 @@
 // validate table fields and save it in a dict
+
+const table_data = {};
+
 document.getElementById("btn_table4.1").addEventListener("click", () => {
 
     //
@@ -18,7 +21,7 @@ document.getElementById("btn_table4.1").addEventListener("click", () => {
     }
 
     // Dict with all the data table
-    const table_data = 
+    table_data = 
     {
         start_date: new Date(document.getElementById('start_date').value),
         thickness: parseFloat(document.getElementById('thickness').value),
@@ -30,6 +33,8 @@ document.getElementById("btn_table4.1").addEventListener("click", () => {
         design_code: document.getElementById('design_code').value,
         equip_type: document.getElementById('equipment').value,
         comp_type: document.getElementById('component').value,
+        has_cladding: document.getElementById('has_cladding').value,
+        cladding: document.getElementById('cladding_input').value,
         comp_geom_data: document.getElementById('component_geometry_data').value,
         material_especification: document.getElementById('material_especification').value,
         yield_strength: parseFloat(document.getElementById('yield_strength').value),
@@ -47,3 +52,5 @@ document.getElementById("btn_table4.1").addEventListener("click", () => {
     console.log("Todo correcto");
 
 });
+
+Window.API_581_INPUTDATA = table_data;

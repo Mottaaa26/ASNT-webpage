@@ -1,0 +1,221 @@
+<div id="slide1" class="flex flex-col w-full h-auto p-2 sm:p-4 lg:p-6">
+<div class="w-full h-full">
+    <div class="card bg-white shadow-2xl border border-gray-100 p-6 sm:p-8 hover-lift">
+        
+        <h2 class="text-xl font-semibold text-blue-950 mb-4 border-b pb-2">Intro</h2>
+        
+        <p>
+        The following procedure may be used to determine the DF for thinning. This procedure assumes that if cladding 
+        assumes that the liner prevents corrosion during the internal liner life.
+        is present, it corrodes prior to any corrosion of the base material. If an internal liner is used, the procedure.
+        </p>
+
+        <br>
+
+        <p>
+            Before continuing with the procedure, all the data will be placed in the following tables to facilitate the solving of the formulas:
+        </p>
+        
+        <br>
+
+        <div class="overflow-x-auto flex justify-center items-center">
+            <table class="table table-xs" id="table4.1_data">
+            <thead>
+            <tr>
+                <th></th>
+                <th>Basic Data</th>
+                <th>Comments</th>
+                <th>Value</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr>
+                <th></th>
+                <td>Start date</td>
+                <td>The date the component was placed in service.</td>
+                <td><input required class="input input-ghost" placeholder="type here" type="date" name="start_date" id="start_date"></td>
+            </tr>
+            <tr>
+                <th></th>
+                <td>Thickness, in. (mm)</td>
+                <td>
+                The thickness used for the DF calculation, either the furnished thickness or the 
+                measured thickness
+                </td>
+                <td><input required class="input input-ghost" placeholder="type here" type="number" name="thickness" id="thickness"></td>
+            </tr>
+            <tr>
+                <th></th>
+                <td>Corrosion Allowance, in. (mm)</td>
+                <td>
+                The corrosion allowance is the specified design or actual corrosion allowance upon 
+                being placed in the current service.
+                </td>
+                <td><input required class="input input-ghost" placeholder="type here" type="number" name="corrosion_allowance" id="corrosion_allowance"></td>
+            </tr>
+            <tr>
+                <th></th>
+                <td>Design temperature, °F (°C)</td>
+                <td>The design temperature, shell side and tube side for a heat exchanger.</td>
+                <td><input required class="input input-ghost" placeholder="type here" type="number" name="design_temperature" id="design_temperature"></td>
+            </tr>
+            <tr>
+                <th></th>
+                <td>Design pressure, psi (MPa)</td>
+                <td>The design pressure, shell side and tube side for a heat exchanger.</td>
+                <td><input required class="input input-ghost" placeholder="type here" type="number" name="design_pressure" id="design_pressure"></td>
+            </tr>
+            <tr>
+                <th></th>
+                <td>Operating temperature, °F (°C)</td>
+                <td>
+                The highest expected operating temperature expected during operation including 
+                normal and unusual operating conditions, shell side and tube side for a heat 
+                exchanger.
+                </td>
+                <td><input required class="input input-ghost" placeholder="type here" type="number" name="operating_temperature" id="operating_temperature"></td>
+            </tr>
+            <tr>
+                <th></th>
+                <td>Operating pressure, psi (MPa)</td>
+                <td>
+                The highest expected operating pressure expected during operation including 
+                normal and unusual operating conditions, shell side and tube side for a heat 
+                exchanger.
+                </td>
+                <td><input required class="input input-ghost" placeholder="type here" type="number" name="operating_pressure" id="operating_pressure"></td>
+            </tr>
+            <tr>
+                <th></th>
+                <td>Design code</td>
+                <td>The design code of the component containing the component.</td>
+                <td><input required class="input input-ghost" placeholder="type here" type="text" name="design_code" id="design_code"></td>
+            </tr>
+            <tr>
+                <th></th>
+                <td>Equipment type</td>
+                <td>The type of equipment.</td>
+                <td>
+
+                <select required id="equipment" class="w-full rounded-lg border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    <option value="" disabled selected>Select equipment</option>
+                    {% for equipment in equipments %}
+                    <option value="{{equipment.id}}">{{equipment.name}}</option>
+                    {% endfor%}
+                </select>
+
+                </td>
+            </tr>
+            <tr>
+                <th></th>
+                <td>Component type</td>
+                <td>The type of component; see Table 4.2.</td>
+                <td>
+
+                <select required id="component" class="w-full rounded-lg border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    <option value="" disabled selected>Select component</option>
+                </select>
+
+                </td>
+            </tr>
+            <tr>
+                <th></th>
+                <td>Cladding</td>
+                <td>The selected component has cladding?</td>
+                <td>
+
+                <select required id="has_cladding" class="w-full rounded-lg border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    <option value="" disabled selected>Cladding?</option>
+                    <option value="yes">yes</option>
+                    <option value="no">no</option>
+                </select>
+
+                </td>
+            </tr>
+            <tr class="hidden" id="cladding_row">
+                <th></th>
+                <td>Cladding value</td>
+                <td>Enter the value of the cladding for the component.</td>
+                <td>
+                    <input type="number" name="cladding" id="cladding_input" class="input input-ghost" placeholder="type here">
+                </td>
+            </tr>
+            <tr>
+                <th></th>
+                <td>Internal liner</td>
+                <td>The selected component has internal liner?</td>
+                <td>
+
+                <select required id="has_internal_liner" class="w-full rounded-lg border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    <option value="" disabled selected>Internal liner?</option>
+                    <option value="yes">yes</option>
+                    <option value="no">no</option>
+                </select>
+
+                </td>
+            </tr>
+            <tr class="hidden" id="internal_liner_row">
+                <th></th>
+                <td>Internal liner value</td>
+                <td>Enter the value of the internal liner for the component.</td>
+                <td>
+                    <input type="number" name="internal_liner" id="internal_liner_input" class="input input-ghost" placeholder="type here">
+                </td>
+            </tr>
+            <tr>
+                <th></th>
+                <td>Component geometry data</td>
+                <td>Component geometry data depending on the type of component (see Table 4.3).</td>
+                <td><input required class="input input-ghost" placeholder="type here" type="text" name="component_geometry_data" id="component_geometry_data"></td>
+            </tr>
+            <tr>
+                <th></th>
+                <td>Material specification</td>
+                <td>
+                The specification of the material of construction, the ASME SA or SB specification 
+                for pressure vessel components or of ASTM specification for piping and tankage 
+                components. Data entry is based on material specification, grade, year, UNS 
+                number, and class/condition/temper/size/thickness; these data are readily available 
+                in the ASME Code [12].
+                </td>
+                <td><input required class="input input-ghost" placeholder="type here" type="text" name="material_especification" id="material_especification"></td>
+            </tr>
+            <tr>
+                <th></th>
+                <td>Yield strength, psi (MPa)</td>
+                <td>The design yield strength of the material based on material specification.</td>
+                <td><input required class="input input-ghost" placeholder="type here" type="number" name="yield_strength" id="yield_strength"></td>
+            </tr>
+            <tr>
+                <th></th>
+                <td>Tensile strength, psi (MPa)</td>
+                <td>The design tensile strength of the material based on material specification.</td>
+                <td><input required class="input input-ghost" placeholder="type here" type="number" name="tensile_strength" id="tensile_strength"></td>
+            </tr>
+            <tr>
+                <th></th>
+                <td>Weld joint efficiency</td>
+                <td>Weld joint efficiency per the code of construction.</td>
+                <td><input required class="input input-ghost" placeholder="type here" type="number" name="weld_joint_efficiency" id="weld_joint_efficiency"></td>
+            </tr>
+            <tr>
+                <th></th>
+                <td>Heat tracing</td>
+                <td>Is the component heat traced? (Yes or No)</td>
+                <td>
+                <select required id="heat_tracing" class="w-full rounded-lg border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    <option value="" disabled selected>Yes or no</option>
+                    <option value="yes">yes</option>
+                    <option value="no">no</option>
+                </select>
+                </td>
+            </tr>
+            </tbody>
+            </table>
+        </div>
+        <button id="btn_table4.1" class="btn btn-primary w-auto">Save table data</button>
+        <br>
+        <p id="table4.1_confirmation" class="hidden text-bold text-center">Data stored succesfully!</p>
+    </div>
+    </div>
+</div>
