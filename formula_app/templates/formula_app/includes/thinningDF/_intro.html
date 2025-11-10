@@ -97,7 +97,7 @@
                 <td>The type of equipment.</td>
                 <td>
 
-                <select required id="equipment" class="w-full rounded-lg border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                <select required id="equipment" class="select w-full rounded-lg border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
                     <option value="" disabled selected>Select equipment</option>
                     {% for equipment in equipments %}
                     <option value="{{equipment.id}}">{{equipment.name}}</option>
@@ -112,7 +112,7 @@
                 <td>The type of component; see Table 4.2.</td>
                 <td>
 
-                <select required id="component" class="w-full rounded-lg border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                <select required id="component" class="select w-full rounded-lg border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
                     <option value="" disabled selected>Select component</option>
                 </select>
 
@@ -124,7 +124,7 @@
                 <td>The selected component has cladding?</td>
                 <td>
 
-                <select required id="has_cladding" class="w-full rounded-lg border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                <select required id="has_cladding" class="select w-full rounded-lg border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
                     <option value="" disabled selected>Cladding?</option>
                     <option value="yes">yes</option>
                     <option value="no">no</option>
@@ -146,7 +146,7 @@
                 <td>The selected component has internal liner?</td>
                 <td>
 
-                <select required id="has_internal_liner" class="w-full rounded-lg border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                <select required id="has_internal_liner" class="select w-full rounded-lg border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
                     <option value="" disabled selected>Internal liner?</option>
                     <option value="yes">yes</option>
                     <option value="no">no</option>
@@ -203,7 +203,7 @@
                 <td>Heat tracing</td>
                 <td>Is the component heat traced? (Yes or No)</td>
                 <td>
-                <select required id="heat_tracing" class="w-full rounded-lg border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                <select required id="heat_tracing" class="select w-full rounded-lg border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
                     <option value="" disabled selected>Yes or no</option>
                     <option value="yes">yes</option>
                     <option value="no">no</option>

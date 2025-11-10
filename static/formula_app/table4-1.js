@@ -20,7 +20,7 @@ document.getElementById("btn_table4.1").addEventListener("click", () => {
 
     }
 
-    // Dict with all the data table
+    // Dict with all the data table and we use sessionStorage to keep these values and use them later in other scripts.
     table_data = 
     {
         start_date: new Date(document.getElementById('start_date').value),
@@ -45,9 +45,10 @@ document.getElementById("btn_table4.1").addEventListener("click", () => {
         heat_tracing: document.getElementById('heat_tracing').value,
     }
 
-    console.log("todo correcto");
-    window.API_581_INPUTDATA = table_data;
-    calcs_thinningDF();
-    document.getElementById("table4.1_confirmation").classList.remove("hidden");
+    const result_JSON = JSON.stringify(table_data);
 
+    console.log("todo correcto");
+    sessionStorage.setItem('table4.1_data', result_JSON);
+    step1_calculations();
+    document.getElementById("table4.1_confirmation").classList.remove("hidden");
 });
