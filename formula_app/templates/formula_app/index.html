@@ -81,22 +81,10 @@
 
               
               <div id="content-scroller" class="w-full flex-1 overflow-y-auto rounded-box bg-gray-50 space-y-8 p-2">
-
                 
                 {% include 'formula_app/includes/thinningDF/_intro.html' %}
                   
                 {% include 'formula_app/includes/thinningDF/_steps.html' %}
-
-                  <div id="slide3" class="flex flex-col w-full h-auto p-2 sm:p-4 lg:p-6">
-                      <div class="w-full h-full">
-                          <div class="p-8 h-full text-center bg-white shadow-lg rounded-lg border border-gray-100 flex flex-col justify-center">
-                              <h3 class="text-xl font-bold text-gray-700">3. Contenido Adicional</h3>
-                              <p class="mt-4 text-gray-500">Aquí puedes agregar tablas de consulta, gráficos o notas sobre los factores de seguridad.</p>
-                              <p class="mt-2 text-gray-500">Este es un espacio perfecto para información secundaria que no necesita estar siempre visible.</p>
-                              <p class="mt-20 text-blue-500 font-bold">¡Fin del contenido principal!</p>
-                          </div>
-                      </div>
-                  </div>
                   
               </div>
           </section>
@@ -123,10 +111,10 @@
     </div>
 </div>
 
-<script src="{% static 'formula_app/table4-1.js' %}"></script>
-<script src="{% static 'formula_app/get-elements.js' %}"></script>
-<script src="{% static 'formula_app/step1_calcs.js' %}"></script>
-<script src="{% static 'formula_app/step2_calcs.js' %}"></script>
-<script src="{% static 'formula_app/storage_manager.js' %}"></script>
+<script src="{% static 'formula_app/components/table4-1.js' %}"></script>
+<script src="{% static 'formula_app/data/get-elements.js' %}"></script>
+<script src="{% static 'formula_app/components/step1_calcs.js' %}"></script>
+<script src="{% static 'formula_app/components/step2_calcs.js' %}"></script>
+<script src="{% static 'formula_app/data/app_main_loader.js' %}"></script>
 
 {%endblock%}
