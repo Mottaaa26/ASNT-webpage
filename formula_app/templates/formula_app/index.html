@@ -110,11 +110,13 @@
         </aside>
     </div>
 </div>
+{%endblock%}
 
+{% block scripts %}
 <script src="{% static 'formula_app/components/table4-1.js' %}"></script>
 <script src="{% static 'formula_app/data/get-elements.js' %}"></script>
 <script src="{% static 'formula_app/components/step1_calcs.js' %}"></script>
 <script src="{% static 'formula_app/components/step2_calcs.js' %}"></script>
 <script src="{% static 'formula_app/data/app_main_loader.js' %}"></script>
-
-{%endblock%}
+<script src="{% static 'formula_app/components/steps_handler.js' %}"></script>
+{% endblock %}

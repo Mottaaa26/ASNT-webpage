@@ -1,0 +1,68 @@
+<!--STEP 2-->
+<span class="font-bold">Step 2.</span>
+<p>
+    Determine the base material corrosion rate, <b>C<sub>r,bm</sub></b>, and the cladding corrosion rate, <b>C<sub>r,cm</sub></b>, as 
+    applicable, based on the material of construction and process environment, using guidance from 
+    Section 4.5.2 and examples in Annex 2.B for establishing corrosion rates.
+</p>
+<br>
+<p>
+
+    According to API 581, the corrosion rate should be obtained following a preference order: Measured (based on inspection history) is the most accurate. If the history is not reliable, use Calculated (based on models from Annex 2.B). Estimated should only be used as a last resort by a specialist.
+
+</p>
+<br>
+<select class="select" name="corr_method" id="corr_method">
+    <option value="" selected disabled>Select method</option>
+    <option value="calculated">Calculated</option>
+    <option value="measured">Measured</option>
+    <option value="estimated">Estimated</option>
+</select>
+
+<br>
+
+    <!--CALCULATED-->
+    <div id="calc_method" class="hidden">
+        <span class="font-bold">Calculated method.</span>
+        <p>
+            
+        </p>
+
+        <br>
+    </div>
+
+    <!--MEASURED-->
+    <div id="measured_method" class="hidden">
+        <span class="font-bold">Measured method.</span>
+        <div class="overflow-x-auto">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Actual thickness, in. (mm)</th>
+                        <th>Date from the measure</th>
+                        <th>Anterior thickness, in. (mm)</th>
+                        <th>Date from the measure</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><input class="input input-ghost" type="number" name="act_thickness" id="act_thickness" placeholder="type here"></td>
+                        <td><input class="input input-ghost" type="date" name="act_date" id="act_date" placeholder="type here"></td>
+                        <td><input class="input input-ghost" type="number" name="ant_thickness" id="ant_thickness" placeholder="type here"></td>
+                        <td><input class="input input-ghost" type="date" name="ant_date" id="ant_date" placeholder="type here"></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        <button class="btn btn-primary" id="cr_measured_btn">Calculate</button>
+
+        <br>
+        <p class="hidden" id="message_error"></p>
+        <br>
+        <span class="alert hidden" id="cr_result"></span>
+    </div>
+
+    <!--ESTIMATED-->
+    <div id="est_method" class="hidden">
+
+    </div>
