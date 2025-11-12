@@ -1,101 +1,44 @@
-
 /**
- * step2_calcs.js: Contains all the logic for validation, calculation, and persistence (saving and loading) for Step 2 (Corrosion Rate - CR).
+ * This file contains the calculations and functions necessary to make step 2 work correctly.
  */
 
-document.getElementById("corr_method").addEventListener("change", function(){
+/**
+ * This function provides functionality to the dropdown, as well as allowing calls to the URLs defined in the views.py file to obtain the different templates for the available options
+ */
+document.addEventListener("DOMContentLoaded", () => {
 
-    var selected = document.getElementById("corr_method").value;
-    sessionStorage.setItem('corrosion_method', selected);
-    document.getElementById("calc_method").classList.add("hidden");
-    document.getElementById("measured_method").classList.add("hidden");
-    document.getElementById("est_method").classList.add("hidden");
+    // Call the necesary objets from the DOM by their id.
+    const content_container = document.getElementById("content_container");
+    const selected_text_span = document.getElementById("selected_text");
+    const options_menu = document.getElementById("options_menu");
+    const dropdown_opener = document.getElementById("dropdown_opener");
 
-    var cr_result = document.getElementById("cr_result");
+    options_menu.addEventListener('click', (e) => {
+        const link = e.target.closest('a');
+        if(!link) return;
 
-    // THE USER HAS TO ESPECIFIE THE METHOD TO GET THE CORROSION RATE OF THE COMPONENT SELECTED.
+        e.preventDefault();
+        const snippetName = link.getAttribute('data-value');
+        const url = `/cargar-cr-snippet/${snippetName}/`;
 
-    switch (selected) {
-        case 'calculated':
-            document.getElementById("calc_method").classList.remove("hidden");
-            break;
-        case 'measured':
-            document.getElementById("measured_method").classList.remove("hidden");
+        selected_text_span.textContent = link.textContent.trim();
+        
+        content_container.classList.remove("hidden");
 
-            load_measured_data();
-
-            document.getElementById("cr_measured_btn").onclick = function(){
-
-                const step2Data = {
-                    'current_thickness': document.getElementById("act_thickness").value,
-                    'current_date': document.getElementById("act_date").value,
-                    'previous_thickness': document.getElementById("ant_thickness").value,
-                    'previous_date': document.getElementById("ant_date").value,
-                }
-
-                const current_t = parseFloat(step2Data.current_thickness);
-                const previous_t = parseFloat(step2Data.previous_thickness);
-                const current_date = new Date(step2Data.current_date);
-                const previous_date = new Date(step2Data.previous_date);
-
-                var message = document.getElementById("message_error");
-                message.classList.add("hidden");
-                
-                //validations
-                if(isNaN(step2Data.current_thickness) || isNaN(step2Data.previous_thickness) || isNaN(current_date.getTime()) || isNaN(previous_date.getTime()))
+        fetch(url)
+            .then (response => {
+                if(!response.ok)
                 {
-                    console.Error("Error. Check if all the values are correct.");
-                    message.classList.remove("hidden");
-                    message.textContent = `Error. Check if all the values are correct. (including dates)`;
-                    return;
+                    throw new Error("The response wasn't okay");
                 }
-
-                if(previous_date > current_date)
-                {
-                    console.error("Error. Previous date must be earlier than the current date.");
-                    message.classList.remove("hidden");
-                    message.textContent = `Error. The previous date can't be earlier than current date.`;
-                    return;
-                }
-
-                if(step2Data.previous_thickness < step2Data.current_thickness)
-                {
-                    sessionStorage.setItem('comp_corrosion_rate', 0);
-                    cr_result.classList.remove("hidden");
-                    cr_result.innerHTML = `C<sub>r</sub> = 0 (thickness without loss)`;
-                    return;
-                }
-
-                //Calculation of Cr.
-
-                const MS_PER_YEAR = 1000 * 60 * 60 * 24 * 365.25;
-
-                let time_diff_ms = current_date.getTime() - previous_date.getTime();
-                let time_in_years = time_diff_ms/ MS_PER_YEAR;
-
-                if (time_in_years <= 0)
-                {
-                    console.error("Error. The time interval must be greater than zero.");
-                    message.classList.remove("hidden");
-                    message.textContent = `Error. The time interval must be greater than zero.`;
-                    return;
-                }
-
-                let delta_thickness = previous_t - current_t;
-                let result = delta_thickness / time_in_years;
-
-                sessionStorage.setItem('comp_corrosion_rate', result.toFixed(3));
-                sessionStorage.setItem('step2_data', JSON.stringify(step2Data));
-
-                cr_result.classList.remove("hidden");
-                cr_result.innerHTML = `Corrosion rate = ${sessionStorage.getItem('comp_corrosion_rate')} mm/year`; 
-            };
-
-            break;
-        case 'estimated':
-            document.getElementById("est_method").classList.remove("hidden");
-            break;
-        default:
-            break;
-    }
-})
+                return response.text();   
+            })
+            .then(html => {
+                content_container.innerHTML = html;
+            })
+            .catch(error => {
+                content_container.innerHTML = `<p class="text-error text-center py-4">Error al cargar: ${error.message}</p>`
+                console.error("Error fetching snippet: ", error);
+            });
+    });
+});

@@ -6,63 +6,32 @@
     Section 4.5.2 and examples in Annex 2.B for establishing corrosion rates.
 </p>
 <br>
-<p>
-
-    According to API 581, the corrosion rate should be obtained following a preference order: Measured (based on inspection history) is the most accurate. If the history is not reliable, use Calculated (based on models from Annex 2.B). Estimated should only be used as a last resort by a specialist.
-
-</p>
-<br>
-<select class="select" name="corr_method" id="corr_method">
-    <option value="" selected disabled>Select method</option>
-    <option value="calculated">Calculated</option>
-    <option value="measured">Measured</option>
-    <option value="estimated">Estimated</option>
-</select>
-
-<br>
-
-    <!--CALCULATED-->
-    <div id="calc_method" class="hidden">
-        <span class="font-bold">Calculated method.</span>
-        <p>
+<details class="dropdown w-full">
             
-        </p>
+    <summary id="dropdown_opener" class="btn btn-lg btn-block justify-between normal-case shadow-md 
+                    bg-blue-950 text-white hover:bg-blue-900 
+                    text-xs sm:text-sm md:text-base h-auto min-h-12 py-3 border-none">
+        
+        <span id="selected_text">select the environment that the component is in contact with</span>
+    </summary>
+    
+    <ul id="options_menu" class="dropdown-content z-[1] menu p-2 shadow-xl bg-white rounded-box w-full mt-2 text-sm space-y-1">
+        
+        <li><a href="#" data-value="hci_corrosion" class="environment-option">HCI Corrosion</a></li>
+        <li><a href="#" data-value="ht_SNA_corrosion" class="environment-option">High-temperature Sulfidic and Naphthenic Acid Corrosion</a></li>
+        <li><a href="#" data-value="ht-H2sS/H2_corrosion" class="environment-option">High-temperature H<sub>2</sub>S/H<sub>2</sub> Corrosion</a></li>
+        <li><a href="#" data-value="SA_corrosion" class="environment-option">Sulfuric Acid Corrosion</a></li>
+        <li><a href="#" data-value="HF_corrosion" class="environment-option">HF Corrosion</a></li>
+        <li><a href="#" data-value="Alkaline_SW_corrosion" class="environment-option">Alkaline Sour Water Corrosion</a></li>
+        <li><a href="#" data-value="amine_corrosion" class="environment-option">Amine Corrosion</a></li>
+        <li><a href="#" data-value="HT_oxidation" class="environment-option">High-temperature Oxidation</a></li>
+        <li><a href="#" data-value="Acid_SW_corrosion" class="environment-option">Acid Sour Water Corrosion</a></li>
+        <li><a href="#" data-value="cooling_water_corrosion" class="environment-option">Cooling Water Corrosion</a></li>
+        <li><a href="#" data-value="soil_side_corrosion" class="environment-option">Soil Side Corrosion</a></li>
+        <li><a href="#" data-value="CO2_corrosion" class="environment-option">CO<sub>2</sub> Corrosion</a></li>
 
-        <br>
-    </div>
+    </ul>
+</details>
+<div class="hidden" id="content_container">
 
-    <!--MEASURED-->
-    <div id="measured_method" class="hidden">
-        <span class="font-bold">Measured method.</span>
-        <div class="overflow-x-auto">
-            <table class="table">
-                <thead>
-                    <tr>
-                        <th>Actual thickness, in. (mm)</th>
-                        <th>Date from the measure</th>
-                        <th>Anterior thickness, in. (mm)</th>
-                        <th>Date from the measure</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr>
-                        <td><input class="input input-ghost" type="number" name="act_thickness" id="act_thickness" placeholder="type here"></td>
-                        <td><input class="input input-ghost" type="date" name="act_date" id="act_date" placeholder="type here"></td>
-                        <td><input class="input input-ghost" type="number" name="ant_thickness" id="ant_thickness" placeholder="type here"></td>
-                        <td><input class="input input-ghost" type="date" name="ant_date" id="ant_date" placeholder="type here"></td>
-                    </tr>
-                </tbody>
-            </table>
-        </div>
-        <button class="btn btn-primary" id="cr_measured_btn">Calculate</button>
-
-        <br>
-        <p class="hidden" id="message_error"></p>
-        <br>
-        <span class="alert hidden" id="cr_result"></span>
-    </div>
-
-    <!--ESTIMATED-->
-    <div id="est_method" class="hidden">
-
-    </div>
+</div>
