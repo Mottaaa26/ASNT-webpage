@@ -35,3 +35,4 @@ def get_components(request):
 def load_step_content(request, step_number):
     template_name = f'formula_app/includes/thinningDF/steps_includes/step{step_number}.html'
     return render(request, template_name, {})
+
