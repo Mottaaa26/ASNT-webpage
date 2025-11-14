@@ -11,7 +11,7 @@ from .models import EquipmentType, ComponentType
 def home(request):
 
     # get all equipments
-    equipments = EquipmentType.objects.all();
+    equipments = EquipmentType.objects.all()
 
     context = {
         'equipments': equipments,
@@ -25,14 +25,19 @@ def logout_view(request):
     django_logout(request)
     return redirect("/")
 
-# get components and gff based on equipment
 @login_required
 def get_components(request):
     equipment_id = request.GET.get("equipment_id")
     components = ComponentType.objects.filter(equipment_id=equipment_id).values('id', 'name')
     return JsonResponse(list(components), safe=False)
 
+@login_required
 def load_step_content(request, step_number):
     template_name = f'formula_app/includes/thinningDF/steps_includes/step{step_number}.html'
+    return render(request, template_name, {})
+
+@login_required
+def load_cr_snippets(request, snippet_name):
+    template_name = f'formula_app/snippets_step2/{snippet_name}.html'
     return render(request, template_name, {})
 

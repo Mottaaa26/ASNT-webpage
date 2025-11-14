@@ -6,4 +6,5 @@ urlpatterns = [
     path('logout/', views.logout_view, name="logout"),
     path('get-components/', views.get_components, name="get_components"),
     path('load-step/<int:step_number>/', views.load_step_content, name="load_step_content"),
+    path('load-cr-snippet/<str:snippet_name>/', views.load_cr_snippets, name="load_cr_snippets"),
 ]
