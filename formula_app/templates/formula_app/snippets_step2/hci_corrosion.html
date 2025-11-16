@@ -25,9 +25,13 @@
     <div id="ci_concentration_container" class="hidden flex flex-col gap-3">
       <label for="ci_concentration">Insert the CI concentration (wppm)</label>
       <input type="number" class="input" id="ci_concentration">
-      <p id="ph_calculated"></p>
+      <label for="temp_in_f">Insert the temperature in F°</label>
+      <input type="number" class="input" id="temp_in_f">
+      <p id="message_error" class="hidden"></p>
+      <button id="ph_calc_1" class="btn hover:bg-blue-800 hover:text-white">Calculate ph of the component</button>
+      <p id="ph_calculated" class="hidden"></p>
+      <p id="corrosion_rate_result" class="hidden"></p>
     </div>
   </div>
-
 
 </div>

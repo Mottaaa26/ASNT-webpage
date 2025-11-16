@@ -40,4 +40,3 @@ def load_step_content(request, step_number):
 def load_cr_snippets(request, snippet_name):
     template_name = f'formula_app/snippets_step2/{snippet_name}.html'
     return render(request, template_name, {})
-
