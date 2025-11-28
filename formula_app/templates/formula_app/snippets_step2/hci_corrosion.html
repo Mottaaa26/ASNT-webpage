@@ -6,32 +6,99 @@
   <p class="m-5">Answer the following questions in order to continue with the calculation of the corrosion rate.</p>
 
   <div class="flex flex-col gap-3">
-    <label for="cs_300_series">Is the material C.S or 300 series S.S?</label>
-    <select required name="cs_300_series" class="select" id="cs_300_series">
-      <option value="" selected disabled>Is the material C.S or 300 series S.S?</option>
+  <label for="cs_300_series">Is the material C.S or 300 series S.S?</label>
+  <select required name="cs_300_series" class="select" id="cs_300_series">
+    <option value="" selected disabled>Select one</option>
+    <option value="yes">yes</option>
+    <option value="no">no</option>
+  </select>
+
+  <div id="ph_known_container" class="hidden flex flex-col">
+    <label for="ph_known">Do you know the ph?</label>
+    <select required name="ph_known" class="select" id="ph_known">
+      <option value="" selected disabled>Select one</option>
       <option value="yes">yes</option>
       <option value="no">no</option>
     </select>
-  
-    <div id="ph_known_container" class="hidden flex flex-col">
-      <label for="ph_known">Do you know the ph?</label>
-      <select name="ph_known" class="select" id="ph_known">
-        <option value="" selected disabled>Do you know the ph?</option>
-        <option value="yes">yes</option>
-        <option value="no">no</option>
-      </select>
-    </div>
+  </div>
 
-    <div id="ci_concentration_container" class="hidden flex flex-col gap-3">
-      <label for="ci_concentration">Insert the CI concentration (wppm)</label>
-      <input type="number" class="input" id="ci_concentration">
-      <label for="temp_in_f">Insert the temperature in F°</label>
-      <input type="number" class="input" id="temp_in_f">
-      <p id="message_error" class="hidden"></p>
-      <button id="ph_calc_1" class="btn hover:bg-blue-800 hover:text-white">Calculate ph of the component</button>
-      <p id="ph_calculated" class="hidden"></p>
-      <p id="corrosion_rate_result" class="hidden"></p>
-    </div>
+  <div id="ci_concentration_container" class="hidden flex flex-col gap-3">
+    <label for="ci_concentration">Insert the CI concentration (wppm)</label>
+    <input required type="number" class="input" id="ci_concentration">
+    <p id="message_error" class="hidden"></p>
+    <button id="ph_calc_1" class="btn hover:bg-blue-800 hover:text-white">Calculate ph of the component</button>
+    <p id="ph_calculated" class="hidden"></p>
+    <p id="corrosion_rate_result" class="hidden"></p>
+  </div>
+
+  <div id="ci_concentration_acidicwater_container" class="hidden flex flex-col gap-3">
+    <label for="ci_conc_acidicwater">Do you know the Cl concentration of the Acidic water?</label>
+    <select required name="ci_conc_acidicwater" class="select" id="ci_conc_acidicwater">
+      <option value="" selected disabled>Select one</option>
+      <option value="yes">yes</option>
+      <option value="no">no</option>
+    </select>
+  </div>
+
+  <div id="ph_acidicwater_container" class="hidden flex flex-col gap-3">
+    <label for="ph_acidicwater">Insert the ph of the component</label>
+    <input required type="number" name="ph_acidicwater" id="ph_acidicwater" class="input">
+    <p id="message_error_phacidicwater" class="hidden"></p>
+    <button id="cl_acidicwater_calc" class="btn hover:bg-blue-800 hover:text-white">Calculate Cl concentration of the acidic water</button>
+    <p id="message_error" class="hidden"></p>
+    <p id="cl_acidicwater" class="hidden"></p>
+    <p id="cl_acidicwater_info" class="hidden"></p>
+  </div>
+
+  <div id="material_container" class="hidden flex flex-col gap-3">
+    <label for="material">Is the material Alloy 400 or Alloy B-2?</label>
+    <select required name="material" class="select" id="material">
+      <option value="" selected disabled>Select one</option>
+      <option value="yes">yes</option>
+      <option value="no">no</option>
+    </select>
+  </div>
+
+  <div id="data_table2b25" class="hidden flex flex-col gap-3">
+	  <label for="material_selected_tab2b25">Select the material</label>
+    <select class="select" name="material_selected_tab2b25" id="material_selected_tab2b25">
+      <option value="" disabled selected>Select one</option>
+      <option value="ALLOY 825 AND ALLOY 20">alloy 825 and alloy 20</option>
+      <option value="ALLOY 625">alloy 625</option>
+      <option value="ALLOY C-276">alloy C-276</option>
+    </select>
+
+    <label for="temp_selected_tab2b25">Select the representation of the temperature.</label>
+    <select class="select" name="temp_selected_tab2b25" id="temp_selected_tab2b25">
+      <option value="" disabled selected>Select one</option>
+      <option value="farenheit">F°</option>
+      <option value="celsius">C°</option>
+    </select>
+    <p id="estimated_cr_tab2b25" class="hidden alert alert-info alert-soft"></p>
+  </div>
+
+  <div id="data_table2b26" class="hidden flex flex-col gap-3">
+    <label for="material_selected_tab2b26">which one?</label>
+    <select required name="material_selected_tab2b26" class="select" id="material_selected_tab2b26">
+      <option value="" selected disabled>Select one</option>
+      <option value="alloy_b-2">alloy b-2</option>
+      <option value="alloy_400">alloy 400</option>
+    </select>
+    <label for="cl_concentration_tab2b26">Cl concentration (wt%)</label>
+    <select required name="cl_concentration_tab2b26" class="select" id="cl_concentration_tab2b26">
+      <option value="" selected disabled>Select one</option>
+      <option value="50">0.50</option>
+      <option value="75">0.75</option>
+      <option value="100">1.0</option>
+    </select>
+    <label for="temp_table2b26">Temperature</label>
+    <input type="number" name="temp_table2b26" id="temp_table2b26" class="input">
+    <label for="ox_od_present">Oxygen/Oxidant present?</label>
+    <select required name="ox_od_present" class="select" id="ox_od_present">
+      <option value="" selected disabled>Select one</option>
+      <option value="yes">yes</option>
+      <option value="no">no</option>
+    </select>
   </div>
 
 </div>

@@ -8,6 +8,7 @@
     --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono",
       "Courier New", monospace;
     --color-red-100: oklch(93.6% 0.032 17.717);
+    --color-red-500: oklch(63.7% 0.237 25.331);
     --color-red-700: oklch(50.5% 0.213 27.518);
     --color-blue-50: oklch(97% 0.014 254.604);
     --color-blue-100: oklch(93.2% 0.032 255.585);
@@ -1712,6 +1713,18 @@
   .flex-shrink-0 {
     flex-shrink: 0;
   }
+  @layer daisyui.modifier {
+    .alert-vertical {
+      justify-content: center;
+      justify-items: center;
+      grid-auto-flow: row;
+      grid-template-columns: auto;
+      text-align: center;
+    }
+    .alert-vertical:has(:nth-child(2)) {
+      grid-template-columns: auto;
+    }
+  }
   .grid-cols-1 {
     grid-template-columns: repeat(1, minmax(0, 1fr));
   }
@@ -1831,6 +1844,9 @@
   .border-gray-700 {
     border-color: var(--color-gray-700);
   }
+  .border-red-500 {
+    border-color: var(--color-red-500);
+  }
   .bg-base-100 {
     background-color: var(--color-base-100);
   }
@@ -1871,6 +1887,29 @@
   }
   .bg-white {
     background-color: var(--color-white);
+  }
+  @layer daisyui.style {
+    .alert-soft {
+      color: var(--alert-color, var(--color-base-content));
+      background: var(--alert-color, var(--color-base-content));
+      --alert-border-color: var(--alert-color, var(--color-base-content));
+      box-shadow: none;
+      background-image: none;
+    }
+    @supports (color: color-mix(in lab, red, red)) {
+      .alert-soft {
+        background: color-mix( in oklab, var(--alert-color, var(--color-base-content)) 8%, var(--color-base-100) );
+      }
+    }
+    @supports (color: color-mix(in lab, red, red)) {
+      .alert-soft {
+        --alert-border-color: color-mix(
+      in oklab,
+      var(--alert-color, var(--color-base-content)) 10%,
+      var(--color-base-100)
+    );
+      }
+    }
   }
   .bg-cover {
     background-size: cover;
@@ -1986,6 +2025,13 @@
   }
   .text-wrap {
     text-wrap: wrap;
+  }
+  @layer daisyui.modifier {
+    .alert-info {
+      color: var(--color-info-content);
+      --alert-border-color: var(--color-info);
+      --alert-color: var(--color-info);
+    }
   }
   .text-black {
     color: var(--color-black);
@@ -2158,6 +2204,20 @@
   @media (width >= 40rem) {
     .sm\:max-w-sm {
       max-width: var(--container-sm);
+    }
+  }
+  @media (width >= 40rem) {
+    @layer daisyui.modifier {
+      .sm\:alert-horizontal {
+        justify-content: start;
+        justify-items: start;
+        grid-auto-flow: column;
+        grid-template-columns: auto;
+        text-align: start;
+      }
+      .sm\:alert-horizontal:has(:nth-child(2)) {
+        grid-template-columns: auto minmax(auto, 1fr);
+      }
     }
   }
   @media (width >= 40rem) {
