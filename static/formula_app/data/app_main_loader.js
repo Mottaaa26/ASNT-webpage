@@ -3,7 +3,7 @@
     the user enters in the inputs.
 */ 
 
-document.addEventListener('DOMContentLoaded', function(){
+document.addEventListener('DOMContentLoaded', async function(){
     console.log("INFO: initializing the loading of persistent data");
 
     // CHECK IF TABLE4.1_DATA HAS DATA
@@ -11,7 +11,9 @@ document.addEventListener('DOMContentLoaded', function(){
     {
         // CHECK THAT THE INSTANTIATED FUNCTION IS OF TYPE 'FUNCTION
         // IF SO, IT LOADS.
-        if(typeof loadTable41 === 'function') {loadTable41();}
+        if(typeof loadTable41 === 'function') {
+           await loadTable41();
+        }
     }
     
 })

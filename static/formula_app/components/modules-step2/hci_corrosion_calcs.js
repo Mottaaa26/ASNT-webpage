@@ -8,32 +8,35 @@ import {tables} from "../step2_calcs.js";
 
 export function hci_corrosion_calc()
 {
-
     const {ci_conc_table} = tables;
 
     const select = document.getElementById("cs_300_series");
     const ph_known_container = document.getElementById("ph_known_container");
     const ph_known = document.getElementById("ph_known");
     const ci_calc_container = document.getElementById("ci_concentration_container");
-    const ci_concentration = document.getElementById("ci_concentration");
     const ph_calculated = document.getElementById("ph_calculated");
     const ci_concentration_acidicwater_container = document.getElementById("ci_concentration_acidicwater_container");
     const ci_conc_acidicwater = document.getElementById("ci_conc_acidicwater");
-    const ph_acidic_water_container = document.getElementById("ph_acidicwater_container");
+    const ph_acidicwater_container = document.getElementById("ph_acidicwater_container");
 
-    var avg_cl_concentration;
+    let avg_cl_concentration;
 
     select.addEventListener("change", function(){
         const op = this.value;
-        if(op === "yes"){
+        if(op == "yes"){
 
             ci_concentration_acidicwater_container.classList.add("hidden");
-            ph_acidicwater_container.classList.add("hidden")
+            ph_acidicwater_container.classList.add("hidden");
+            document.getElementById("material_container").classList.add("hidden");
+            document.getElementById("data_table2b26").classList.add("hidden");
+            document.getElementById("data_table2b25").classList.add("hidden");
+            
 
             ph_known_container.classList.remove("hidden");
             ph_known.addEventListener("change", function(){
-                const op = this.value;
-                if(op === "no")
+                const op = value;
+                ci_calc_container.classList.add("hidden");
+                if(op == "no")
                 {
                     ci_calc_container.classList.remove("hidden");
 
@@ -52,13 +55,13 @@ export function hci_corrosion_calc()
 
                 document.getElementById("material_container").classList.add("hidden");
 
-                if (ci_conc_acidicwater.value === "no")
+                if (ci_conc_acidicwater.value == "no")
                 {
-                    ph_acidic_water_container.classList.remove("hidden");
+                    ph_acidicwater_container.classList.remove("hidden");
                     document.getElementById("cl_acidicwater_calc").addEventListener("click", function(){
 
-                        var input_validation = document.getElementById("ph_acidicwater");
-                        var message_error = document.getElementById("message_error_phacidicwater");
+                        const input_validation = document.getElementById("ph_acidicwater");
+                        const message_error = document.getElementById("message_error_phacidicwater");
 
                         if(input_validation.value.trim() == "")
                         {
@@ -72,12 +75,12 @@ export function hci_corrosion_calc()
                         message_error.classList.add("hidden");
 
                         avg_cl_concentration = calculate_cl_from_ph();
-                        var material_container = document.getElementById("material_container");
+                        const material_container = document.getElementById("material_container");
                         material_container.classList.remove("hidden");
                     })
                     
                 } else {
-                    ph_acidic_water_container.classList.add("hidden");
+                    ph_acidicwater_container.classList.add("hidden");
                     document.getElementById("material_container").classList.remove("hidden");
                 }
 
@@ -86,22 +89,28 @@ export function hci_corrosion_calc()
         }
     });
     
-    var material = document.getElementById("material");
-    var data_table2b26 = document.getElementById("data_table2b26");
-    var data_table2b25 = document.getElementById("data_table2b25");
+    const material = document.getElementById("material");
+    const data_table2b26 = document.getElementById("data_table2b26");
+    const data_table2b25 = document.getElementById("data_table2b25");
 
     material.addEventListener("change", function(){
+        const cl_acidicwater_info = document.getElementById("cl_acidicwater_info");
         switch(material.value)
         {
             case "yes":
                 data_table2b26.classList.remove("hidden");
                 data_table2b25.classList.add("hidden");
+
+                cl_acidicwater_info.classList.remove("hidden");
+                cl_acidicwater_info.textContent = `The average of the range obtained from table 2b22 was calculated to relate the data to those presented in table 2b25. The average result is ${avg_cl_concentration}`;
+
+                operations_crrate_tab2b26(avg_cl_concentration);
+                
                 break;
             case "no":
                 data_table2b25.classList.remove("hidden");
                 data_table2b26.classList.add("hidden");
 
-                var cl_acidicwater_info = document.getElementById("cl_acidicwater_info");
                 cl_acidicwater_info.classList.remove("hidden");
                 cl_acidicwater_info.textContent = `The average of the range obtained from table 2b22 was calculated to relate the data to those presented in table 2b25. The average result is ${avg_cl_concentration}`;
 
@@ -119,60 +128,14 @@ export function hci_corrosion_calc()
     
     document.getElementById("ph_calc_1").addEventListener("click", function(){
 
-        var ci_concentration_value = parseFloat(ci_concentration.value);
-        var temp_value = parseFloat(temp_in_f.value);
-        var message = document.getElementById("message_error");
+        // get the value inputted by the user (cl_concentration in wppm)
+        const cl_concentration = document.getElementById("ci_concentration");
 
-        // VALIDATION (THE VALUE MUST BE A NUMBER).
-        if(isNaN(ci_concentration_value) && !Number.isInteger(ci_concentration_value)) {
-            message.classList.remove("hidden");
-            message.textContent = `The value must be a number!`;
-            return;
-        } else {
-            message.classList.add("hidden");
-        }
-        
-
-        // COMPARE THE VALUE SUBMITTED BY THE USER WITH THE VALUES IN THE TABLE.
-        // IF THE VALUE IS EQUAL TO SOME VALUE IN THE TABLE, THE SAME POSITION OF
-        // THE PH DICT WILL BE SHOWN.
-        for (let i = 0; i<ci_conc_table.ci_concentration.length; i++)
-        {
-            var range = ci_conc_table.ci_concentration[i];
-
-            if(Array.isArray(range))
-            {
-                if(ci_concentration_value >= range[0] && ci_concentration_value <= range[1])
-                {
-                    ph_result = parseFloat(ci_conc_table.ph[i]);
-                    ph_calculated.textContent = `Ph of the component determined by its cl concentration: ${ph_result}`;
-                    calculate_corrosion_rate1(ph_result, temp_value);
-                    break;
-                }
-            }else {
-                if(ci_concentration_value <= range)
-                {
-                    ph_result = parseFloat(ci_conc_table.ph[i]);
-                    calculate_corrosion_rate1(ph_result, temp_value);
-                    ph_calculated.textContent = `Ph of the component determined by its cl concentration: ${ph_result}`;
-                    break;
-                }
-            }
-            
-        }
-
-        // SHOW THE PH RESULT
-        if (ph_calculated.textContent != "")
-        {
-            ph_calculated.classList.remove("hidden");
-        } else {
-            ph_calculated.textContent = "The entered value is not within any valid range. Check table 2.B.2.2 in API 581";
-        }
     })
 
 }
 
-// THIS FUNCTIONS IS USED TO APPLY LINEAR INTERPOLATION TO OBTAIN THE CORRESPONDING VALUES
+// THESE FUNCTIONS ARE USED TO APPLY LINEAR INTERPOLATION TO OBTAIN THE CORRESPONDING VALUES
 // AND TO GET THE RESULT OF THE CORROSION RATE.
 function calculate_corrosion_rate1(ph, temperature)
 {
@@ -190,7 +153,7 @@ function calculate_corrosion_rate1(ph, temperature)
     Object.keys(ci_conc_table_2b23[ph_values[0]]).forEach(temp => {
         temp_values.push(parseFloat(temp));
     })
-    
+
     //GET THE LOWEST AND THE HIGHEST PH VALUE FOR INTERPOLATION
     let lower_ph = ph_values[0];
     let upper_ph = ph_values[ph_values.length -1];
@@ -236,19 +199,19 @@ function calculate_corrosion_rate1(ph, temperature)
     // BILINEAR INTERPOLATION TO APPROXIMATE THE VALUES ENTERED BY THE USER.
     let corrosion_rate;
 
-    if(lower_ph === upper_ph && lower_temp === upper_temp)
+    if(lower_ph == upper_ph && lower_temp == upper_temp)
     {
         corrosion_rate = rate_ph1_t1;
     }
 
-    else if(lower_ph === upper_ph)
+    else if(lower_ph == upper_ph)
     {
         corrosion_rate = rate_ph1_t1 + 
             ((temperature - lower_temp) / (upper_temp - lower_temp)) * 
             (rate_ph1_t2 - rate_ph1_t1);
     }
 
-    else if (lower_temp === upper_temp) {
+    else if (lower_temp == upper_temp) {
         corrosion_rate = rate_ph1_t1 + 
             ((ph - lower_ph) / (upper_ph - lower_ph)) * 
             (rate_ph2_t1 - rate_ph1_t1);
@@ -304,21 +267,21 @@ function operations_crrate_tab2b25(avg_cl_concentration)
     // already have the cl_concentration average value.
 
     // now interpolate the cl_concentration value with the function:
-    var interpolated_clvalue = interpolate_cl_concentration(avg_cl_concentration);
+    let interpolated_clvalue = interpolate_cl_concentration(avg_cl_concentration);
 
     // Relation of the temp inputted by the user in the table and the temps shown in the table2b25.
     
     // Get the representation of the temp by the user (F° o C°)
 
+    let measurement_unit = table_data.measurement_unit;
     let temperature = parseFloat(table_data.operating_temp);
 
-    var temp_selected = document.getElementById("temp_selected_tab2b25");
-    var new_temp_value;
-    var temp_in_f_available = [100, 125, 175, 200];
-    var temp_in_c_available = [38, 52, 79, 93];
+    let new_temp_value;
+    let temp_in_f_available = [100, 125, 175, 200];
+    let temp_in_c_available = [38, 52, 79, 93];
 
-    temp_selected.addEventListener("change", function(){
-        switch (temp_selected.value) {
+    alloy_select.addEventListener("change", function(){
+        switch (measurement_unit) {
             case "farenheit":
             
                 // Compare the value given by the user and round it to the available values.
@@ -355,7 +318,7 @@ function operations_crrate_tab2b25(avg_cl_concentration)
                         // Call the function round_nearest to get the value of the temp in table 2b25
                         new_temp_value = round_nearest(temp_in_c_available, temperature);
                     }
-                
+
                 }
                 break;
             default:
@@ -364,7 +327,7 @@ function operations_crrate_tab2b25(avg_cl_concentration)
 
         // call the function to determine the cr of the component and store it in session storage variable
         let result_corrosion_rate;
-        result_corrosion_rate = calc_corrosion_rate_tab2b25(alloy_select.value, new_temp_value, interpolated_clvalue, temp_selected.value);    
+        result_corrosion_rate = calc_corrosion_rate_tab2b25(alloy_select.value, new_temp_value, interpolated_clvalue, measurement_unit);
         sessionStorage.setItem("corrosion_rate", result_corrosion_rate);
 
         let cr_result_container = document.getElementById("estimated_cr_tab2b25");
@@ -411,7 +374,7 @@ function calculate_cl_from_ph()
         const table_ph = ci_conc_table.ph[i];
 
 
-        if(ph_value === table_ph)
+        if(ph_value == table_ph)
         {
             cl_concentration_range = ci_conc_table.ci_concentration[i];
             break;
@@ -443,7 +406,7 @@ function calculate_cl_from_ph()
         }
     }
 
-    var avg_cl_concentration;
+    let avg_cl_concentration;
 
     if (cl_concentration_range !== null){
         cl_result_element.classList.remove("hidden");
@@ -475,13 +438,13 @@ function round_nearest(array, temperature)
     while(low <= high)
     {
         let mid = Math.floor((low + high)/2);
-        
+
         if (array[mid] == temperature) return array[mid]; // The value is in the array
         if (array[mid] < temperature) low = mid + 1; // Search in right
         else high = mid -1 ; // Search in left
     }
 
-    let min_value = array[high] ?? array[0]; 
+    let min_value = array[high] ?? array[0];
     let max_value = array[low] ?? array[array.length -1];
 
     return Math.abs(temperature - min_value) < Math.abs(temperature - max_value)
@@ -493,11 +456,11 @@ function round_nearest(array, temperature)
 // This function interpolates the values inputted by the user to the ones in the table 2b25.
 function interpolate_cl_concentration(avg_cl_concentration)
 {
-    // wt% available in the table 2b25
-    var cl_concentration_wt = [0.50, 0.75, 1.0];
+    // get the values of cl concentration (wt%)
+    const cl_concentration_wt = [0.50, 0.75, 1.0];
 
     // convert from wppm to wt%
-    var conc_wt = avg_cl_concentration / 10000;
+    const conc_wt = avg_cl_concentration / 10000;
 
     for(let i = 0; i<cl_concentration_wt; ++i)
     {
@@ -524,9 +487,7 @@ function interpolate_cl_concentration(avg_cl_concentration)
     const x1 = cl_concentration_wt[low];
 
     const t = (conc_wt - x0) / (x1-x0);
-    const interpolated = x0 + t * (x1-x0);
-
-    return interpolated;
+    return x0 + t * (x1 - x0);
 
 }
 
@@ -536,7 +497,7 @@ function calc_corrosion_rate_tab2b25(alloy_name, temperature, cl_concentration, 
 
     const {ci_conc_table_2b25} = tables;
     
-    var obt_array;
+    let obt_array;
     let corrosion_rate;
 
     // switch to evaluate the measurement_unit
@@ -585,5 +546,109 @@ function calc_corrosion_rate_tab2b25(alloy_name, temperature, cl_concentration, 
             break;
     }
     
+    return corrosion_rate;
+}
+
+// Function responsible for do all the operations related to get the corrosion rate of the component using the table 2b26
+function operations_crrate_tab2b26(avg_cl_concentration)
+{
+    // get the user inputs
+    const alloy = document.getElementById("material_selected_tab2b26");
+    const ox_od_present = document.getElementById("ox_od_present");
+
+    //interpolate the avg_cl_concentration value
+    let cl_concentration = interpolate_cl_concentration(avg_cl_concentration);
+    // function to get the values of the inputs
+    function process_values()
+    {
+
+        let corrosion_rate_container = document.getElementById("corrosion_rate_result_tab2b26");
+        corrosion_rate_container.classList.add("hidden");
+
+        const alloy_value = alloy.value;
+        const ox_od_present_value = ox_od_present.value;
+
+        if(alloy_value && ox_od_present_value)
+        {
+            // call the function to calc the corrosion rate and keep it in the sessionStorage
+            let corrosion_rate = calc_corrosion_rate_tab2b26(alloy_value, cl_concentration, ox_od_present_value);
+            sessionStorage.setItem("corrosion_rate", corrosion_rate);
+
+            // show the result
+            corrosion_rate_container.classList.remove("hidden");
+            corrosion_rate_container.textContent = `Estimated corrosion rate for this component is: ${corrosion_rate} mpy`;
+
+        }
+
+    }
+
+    alloy.addEventListener("change", process_values);
+    ox_od_present.addEventListener("change", process_values);
+}
+
+// Function to get the corrosion rate using the table 2b26
+function calc_corrosion_rate_tab2b26(alloy_name, cl_concentration, ox_od_present)
+{
+    // get the table 2b26 for the step2_calcs.js file and the table 4.1 to get the temperature value
+    const {ci_conc_table_2b26} = tables;
+
+    // code to handle the temperature value. Get the value from the sessionStorage table4.1 and round it.
+    let table41_string = sessionStorage.getItem("table4.1_data");
+    let table41 = JSON.parse(table41_string);
+    const measurement_unit = table41.measurement_unit;
+
+    let temp_in_f_available = [100, 125, 175, 200];
+    let temp_in_c_available = [38, 52, 79, 93];
+    let temperature_value = table41["operating_temp"];
+    
+    let new_temp_value;
+
+    // Get the array depending on the temperature
+    let operation_array;
+
+    switch (measurement_unit) {
+        case "farenheit":
+            operation_array = ci_conc_table_2b26["temperature in f°"];
+            new_temp_value = round_nearest(temp_in_f_available, temperature_value);
+            break;
+        case "celsius":
+            operation_array = ci_conc_table_2b26["temperature in c°"];
+            new_temp_value = round_nearest(temp_in_c_available, temperature_value);
+            break;
+        default:
+            break;
+    }
+
+    console.log(operation_array);
+
+    let temp_dict;
+
+    for(let i = 0; i<operation_array.length; ++i)
+    {
+        let actual_position = operation_array[i];
+        if(actual_position.alloy == alloy_name)
+        {
+            temp_dict = actual_position.temperature;
+        }
+    }
+
+    let corrosion_rate;
+
+    Object.entries(temp_dict).forEach(([temp, value]) => {
+        if(temp == new_temp_value)
+        {
+            switch (ox_od_present) {
+                case "yes":
+                    corrosion_rate = value["oxygen"];
+                    break;
+                case "no":
+                    corrosion_rate = value["no_oxygen"];
+                    break;
+                default:
+                    break;
+            }
+        }
+    })
+
     return corrosion_rate;
 }

@@ -25,6 +25,7 @@ document.getElementById("btn_table4.1").addEventListener("click", () => {
     {
         start_date: document.getElementById('start_date').value,
         thickness: parseFloat(document.getElementById('thickness').value),
+        measurement_unit: document.getElementById('measurement_unit').value,
         corrosion_allow: parseFloat(document.getElementById('corrosion_allowance').value),
         design_temp: parseFloat(document.getElementById('design_temperature').value),
         design_press: parseFloat(document.getElementById('design_pressure').value),
@@ -53,7 +54,9 @@ document.getElementById("btn_table4.1").addEventListener("click", () => {
     document.getElementById("table4.1_confirmation").classList.remove("hidden");
 });
 
-function loadTable41(){
+window.loadComponents = undefined;
+
+async function loadTable41(){
     const dataString = sessionStorage.getItem('table4.1_data');
     if(!dataString) return;
 
@@ -61,14 +64,13 @@ function loadTable41(){
 
     document.getElementById('start_date').value = table_data.start_date;
     document.getElementById('thickness').value = table_data.thickness;
+    document.getElementById('measurement_unit').value = table_data.measurement_unit;
     document.getElementById('corrosion_allowance').value = table_data.corrosion_allow;
     document.getElementById('design_temperature').value = table_data.design_temp;
     document.getElementById('design_pressure').value = table_data.design_press;
     document.getElementById('operating_temperature').value = table_data.operating_temp;
     document.getElementById('operating_pressure').value = table_data.operating_press;
     document.getElementById('design_code').value = table_data.design_code;
-    document.getElementById('equipment').value = table_data.equip_type;
-    document.getElementById('component').value = table_data.comp_type;
     document.getElementById('has_cladding').value = table_data.has_cladding;
     document.getElementById('cladding_input').value = table_data.cladding;
     document.getElementById('has_internal_liner').value = table_data.has_internal_liner;
@@ -79,4 +81,20 @@ function loadTable41(){
     document.getElementById('tensile_strength').value = table_data.tensile_strength;
     document.getElementById('weld_joint_efficiency').value = table_data.weld_joint_efficiency;
     document.getElementById('heat_tracing').value = table_data.heat_tracing;
+
+    document.getElementById('equipment').value = table_data.equip_type;
+
+    if(table_data.equip_type && typeof window.loadComponents === 'function')
+    {
+        await window.loadComponents(table_data.equip_type);
+    }
+
+    document.getElementById('component').value = table_data.comp_type;
+
 } 
+
+// Delete the sessionStorage data when the log_out button is clicked
+let log_out_btn = document.getElementById("logout_btn");
+log_out_btn.addEventListener("click", function(){
+   sessionStorage.clear();
+});

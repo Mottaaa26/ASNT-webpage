@@ -14,7 +14,8 @@ export const tables_data =
 {
     table_2b22: '/static/formula_app/data/json/table_2-B-2-2.JSON',
     table_2b23: '/static/formula_app/data/json/table_2-B-2-3.JSON',
-    table_2b25: '/static/formula_app/data/json/table_2b25.JSON'
+    table_2b25: '/static/formula_app/data/json/table_2b25.JSON',
+    table_2b26: '/static/formula_app/data/json/table_2b26.JSON'
 }
 
 
@@ -25,7 +26,8 @@ class TableLoader
         this.tables =  {
             ci_conc_table: null,
             ci_conc_table_2b23: null,
-            ci_conc_table_2b25: null
+            ci_conc_table_2b25: null,
+            ci_conc_table_2b26: null,
         }
     }
 
@@ -33,15 +35,17 @@ class TableLoader
     {
         try {
             
-            const [table1, table2, table3] = await Promise.all([
+            const [table1, table2, table3, table4] = await Promise.all([
                 fetch(tables_data.table_2b22).then(r => r.json()),
                 fetch(tables_data.table_2b23).then(r => r.json()),
-                fetch(tables_data.table_2b25).then(r => r.json())
+                fetch(tables_data.table_2b25).then(r => r.json()),
+                fetch(tables_data.table_2b26).then(r => r.json())
             ])
 
             this.tables.ci_conc_table = table1;
             this.tables.ci_conc_table_2b23 = table2;
             this.tables.ci_conc_table_2b25 = table3;
+            this.tables.ci_conc_table_2b26 = table4;
 
         } catch (error) {
             console.error(`failed to load the tables. Error: ${error}`);

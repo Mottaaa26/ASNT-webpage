@@ -6,7 +6,7 @@
 {% block nav_content %}
     <div class="flex justify-end items-center h-full"> 
         <ul class="menu menu-horizontal p-0 hidden lg:flex text-white space-x-2">
-            <li><a href="{% url 'logout' %}" class="btn btn-ghost text-white hover:bg-blue-800 transition duration-200">Log out</a></li>
+            <li><a id="logout_btn" href="{% url 'logout' %}" class="btn btn-ghost text-white hover:bg-blue-800 transition duration-200">Log out</a></li>
             <li><a href="#" class="btn btn-ghost text-white hover:bg-blue-800 transition duration-200">Account</a></li>
         </ul>
 

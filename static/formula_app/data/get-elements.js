@@ -67,27 +67,32 @@ document.addEventListener("DOMContentLoaded", function(){
         }
 
     });
-    
+
+    async function loadComponents(equipmentId)
+    {
+        componentSelect.innerHTML = '<option value="" disabled selected>Select component</option>';
+        if(!equipmentId) return;
+
+        try{
+            const response = await fetch(`get-components/?equipment_id=${equipmentId}`);
+            const data = await response.json();
+
+            data.forEach(component => {
+                const option = document.createElement("option");
+                option.value = component.id;
+                option.textContent = component.name;
+                componentSelect.appendChild(option);
+            });
+        } catch (error){
+            console.error("Error fetching components: ", error);
+        }
+
+    }
 
     equipmentSelect.addEventListener("change", function(){
-        const equipmentId = this.value;
-
-        componentSelect.innerHTML = '<option value="">Select component</option>';
-        if (!equipmentId) return;
-
-
-        fetch(`get-components/?equipment_id=${equipmentId}`)
-            .then(response => response.json())
-            .then(data => {
-                data.forEach(component => {
-                    const option = document.createElement("option");
-                    option.value = component.id;
-                    option.textContent = component.name;
-                    componentSelect.appendChild(option);
-                });
-            })
-            .catch(error => console.error("Error fetching components: ", error));
+        loadComponents(this.value);
     });
 
+    window.loadComponents = loadComponents();
 
 });
