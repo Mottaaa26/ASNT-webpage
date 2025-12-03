@@ -7,45 +7,48 @@
  */
 
 import { hci_corrosion_calc } from "./modules-step2/hci_corrosion_calcs.js";
+import { ht_sna_corrosion_calc } from "./modules-step2/ht_sna_corrosion_calcs.js";
 
 
 // URL TO GET THE JSON WITH THE TABLE
-export const tables_data = 
+export const tables_data =
 {
     table_2b22: '/static/formula_app/data/json/table_2-B-2-2.JSON',
     table_2b23: '/static/formula_app/data/json/table_2-B-2-3.JSON',
+    table_2b24: '/static/formula_app/data/json/table_2b24.JSON',
     table_2b25: '/static/formula_app/data/json/table_2b25.JSON',
     table_2b26: '/static/formula_app/data/json/table_2b26.JSON'
 }
 
 
 // LOAD THE JSON FILES TO USE THEM TROUGHT THE STEP
-class TableLoader
-{
-    constructor(){
-        this.tables =  {
+class TableLoader {
+    constructor() {
+        this.tables = {
             ci_conc_table: null,
             ci_conc_table_2b23: null,
+            ci_conc_table_2b24: null,
             ci_conc_table_2b25: null,
             ci_conc_table_2b26: null,
         }
     }
 
-    async loadAll()
-    {
+    async loadAll() {
         try {
-            
-            const [table1, table2, table3, table4] = await Promise.all([
+
+            const [table1, table2, table3, table4, table5] = await Promise.all([
                 fetch(tables_data.table_2b22).then(r => r.json()),
                 fetch(tables_data.table_2b23).then(r => r.json()),
+                fetch(tables_data.table_2b24).then(r => r.json()),
                 fetch(tables_data.table_2b25).then(r => r.json()),
                 fetch(tables_data.table_2b26).then(r => r.json())
             ])
 
             this.tables.ci_conc_table = table1;
             this.tables.ci_conc_table_2b23 = table2;
-            this.tables.ci_conc_table_2b25 = table3;
-            this.tables.ci_conc_table_2b26 = table4;
+            this.tables.ci_conc_table_2b24 = table3;
+            this.tables.ci_conc_table_2b25 = table4;
+            this.tables.ci_conc_table_2b26 = table5;
 
         } catch (error) {
             console.error(`failed to load the tables. Error: ${error}`);
@@ -53,8 +56,7 @@ class TableLoader
         }
     }
 
-    getTables()
-    {
+    getTables() {
         return this.tables;
     }
 }
@@ -76,8 +78,7 @@ document.addEventListener("click", (e) => {
 
         fetch(`load-cr-snippet/${selected_option}`)
             .then(response => {
-                if(!response.ok)
-                {
+                if (!response.ok) {
                     throw new Error("Error en la respuesta");
                 }
                 return response.text();
@@ -91,7 +92,9 @@ document.addEventListener("click", (e) => {
                     case "hci_corrosion":
                         hci_corrosion_calc();
                         break;
-                
+                    case "ht_sna_corrosion":
+                        ht_sna_corrosion_calc();
+                        break;
                     default:
                         break;
                 }

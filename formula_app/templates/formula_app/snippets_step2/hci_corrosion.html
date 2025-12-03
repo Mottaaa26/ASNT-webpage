@@ -1,4 +1,3 @@
-
 <!-- THIS HTML FILE CONTAINS THE PROCESS TO CARRY OUT STEP 2 BASED ON FIGURE 2.B.2.6 (flowchart explaining the process) -->
 <div class="p-4 bg-gray-100 rounded">
   <h3 class="text-lg font-bold">HCI Corrosion</h3>
@@ -45,7 +44,8 @@
     <label for="ph_acidicwater">Insert the ph of the component</label>
     <input required type="number" name="ph_acidicwater" id="ph_acidicwater" class="input">
     <p id="message_error_phacidicwater" class="hidden"></p>
-    <button id="cl_acidicwater_calc" class="btn hover:bg-blue-800 hover:text-white">Calculate Cl concentration of the acidic water</button>
+    <button id="cl_acidicwater_calc" class="btn hover:bg-blue-800 hover:text-white">Calculate Cl concentration of the
+      acidic water</button>
     <p id="message_error" class="hidden"></p>
     <p id="cl_acidicwater" class="hidden"></p>
     <p id="cl_acidicwater_info" class="hidden"></p>
@@ -61,7 +61,7 @@
   </div>
 
   <div id="data_table2b25" class="hidden flex flex-col gap-3">
-	  <label for="material_selected_tab2b25">Select the material</label>
+    <label for="material_selected_tab2b25">Select the material</label>
     <select class="select" name="material_selected_tab2b25" id="material_selected_tab2b25">
       <option value="" disabled selected>Select one</option>
       <option value="ALLOY 825 AND ALLOY 20">alloy 825 and alloy 20</option>
@@ -86,5 +86,23 @@
     </select>
     <p class="hidden alert alert-info alert-soft" id="corrosion_rate_result_tab2b26"></p>
   </div>
+
+  <div class="hidden flex flex-col gap-3" id="ph_input_tab2b24">
+    <label for="ph_input_tab2b24_value">Insert the pH value of the component</label>
+    <input type="number" id="ph_input_tab2b24_value" class="input" placeholder="Enter pH value">
+    <p id="message_error_ph_input_tab2b24" class="hidden text-red-500"></p>
+    <button id="ph_input_submit_tab2b24" class="btn hover:bg-blue-800 hover:text-white">Continue with pH value</button>
+  </div>
+
+  <div class="hidden flex flex-col gap-3" id="cr_carbonSteel_300series">
+    <label for=" material_selected_tab2b25">Select kind of material</label>
+    <select class="select" name="material_selected_tab2b25" id="material_selected_cs_300series">
+      <option value="" disabled selected>Select one</option>
+      <option value="CARBON STEEL">carbon steel</option>
+      <option value="300 SERIES">300 series</option>
+    </select>
+    <p id="estimated_cr_tab2b23_tab2b24" class="hidden alert alert-info alert-soft"></p>
+  </div>
+
 
 </div>
