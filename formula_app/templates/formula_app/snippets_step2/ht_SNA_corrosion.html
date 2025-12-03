@@ -1,3 +1,89 @@
-<div>
-    <p>hola</p>
+<div class="p-4 bg-gray-100 rounded">
+
+    <h3 class="text-lg font-bold">High-temperature Sulfidic and Naphthenic Acid Corrosion</h3>
+    <p class="m-5">Answer the following questions in order to continue with the calculation of the corrosion rate.</p>
+
+    <div class="overflow-x-auto">
+
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Basic Data</th>
+                    <th>Comments</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>Material of construction</td>
+                    <td>
+                        Determine the material of construction of the equipment/piping.
+                        For 316 SS, if the Mo content is not known, assume it is < 2.5 wt % </td>
+                </tr>
+                <tr>
+                    <td>Maximum temperature</td>
+                    <td>
+                        Determine the maximum temperature of the process stream. ( get from the table 4.1)
+                    </td>
+                </tr>
+                <tr>
+                    <td>Sulfur content of the stream</td>
+                    <td>
+                        Determine the sulfur content of the stream that is in this piece of
+                        equipment. If sulfur content is not known, contact a knowledgeable
+                        process engineer for an estimate.
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        TAN
+                        (TAN = mg KOH/g oil sample)
+                    </td>
+                    <td>
+                        The TAN of importance is that of the liquid hydrocarbon phase present in
+                        the equipment/piping being evaluated. If not known, consult a
+                        knowledgeable process engineer for an estimate.
+                    </td>
+                </tr>
+                <tr>
+                    <td>Velocity</td>
+                    <td>
+                        Determine the maximum velocity in this equipment/piping. Although
+                        conditions in a vessel may be essentially stagnant, the velocity in flowing
+                        nozzles should be considered.
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+
+    </div>
+
+    <div class="flex flex-col gap-3">
+        <label for="material">Material</label>
+        <select class="select" name="material" id="material">
+            <option value="" disabled selected>Select one</option>
+            <option value="carbon steel">carbon steel</option>
+            <option value="1Cr-0.2 Mo">1Cr-0.2 Mo</option>
+            <option value="1Cr-0.5 Mo">1Cr-0.5 Mo</option>
+            <option value="1.25Cr-0.5Mo">1.25Cr-0.5Mo</option>
+            <option value="2.25Cr-1Mo">2.25Cr-1Mo</option>
+            <option value="3Cr-1Mo">3Cr-1Mo</option>
+            <option value="5Cr-0.5Mo">5Cr-0.5Mo</option>
+            <option value="7Cr-1Mo">7Cr-1Mo</option>
+            <option value="9Cr-1Mo">9Cr-1Mo</option>
+            <option value="12 % Cr Steel">12 % Cr Steel</option>
+            <option value="Austenitic SS Without Mo">Austenitic SS Without Mo</option>
+            <option value="316 SS with < 2.5 % Mo">316 SS with < 2.5 % Mo</option>
+            <option value="316 SS with >= 2.5 % Mo">316 SS with >= 2.5 % Mo</option>
+            <option value="317 SS">317 SS</option>
+        </select>
+        <label for="maximum_process_temperature">Maximum process temperature</label>
+        <input type="number" name="maximum_process_temperature" id="maximum_process_temperature" class="input">
+        <label for="sulfur_concentration">Sulfur concentration</label>
+        <input type="number" name="sulfur_concentration" id="sulfur_concentration" class="input">
+        <label for="tan">TAN</label>
+        <input type="number" name="tan" id="tan" class="input">
+        <label for="velocity">Velocity</label>
+        <input type="number" name="velocity" id="velocity" class="input">
+    </div>
+
 </div>
