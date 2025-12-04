@@ -76,14 +76,31 @@
             <option value="316 SS with >= 2.5 % Mo">316 SS with >= 2.5 % Mo</option>
             <option value="317 SS">317 SS</option>
         </select>
-        <label for="maximum_process_temperature">Maximum process temperature</label>
-        <input type="number" name="maximum_process_temperature" id="maximum_process_temperature" class="input">
-        <label for="sulfur_concentration">Sulfur concentration</label>
-        <input type="number" name="sulfur_concentration" id="sulfur_concentration" class="input">
-        <label for="tan">TAN</label>
-        <input type="number" name="tan" id="tan" class="input">
+        <label for="sulfur_concentration">Sulfur concentration (wt%)</label>
+        <select class="select" name="sulfur_concentration" id="sulfur_concentration">
+            <option value="" disabled selected>Select one</option>
+            <option value="0.2">0.2</option>
+            <option value="0.4">0.4</option>
+            <option value="0.8">0.8</option>
+            <option value="1.5">1.5</option>
+            <option value="2.5">2.5</option>
+            <option value="3.0">3.0</option>
+        </select>
+        <label for="tan">TAN (mg KOH/g oil sample)</label>
+        <select class="select" disabled name="tan" id="tan">
+            <option value="" disabled selected>Select first a material and a sulfur concentration</option>
+        </select>
         <label for="velocity">Velocity</label>
-        <input type="number" name="velocity" id="velocity" class="input">
+        <input required type="number" name="velocity" id="velocity" class="input">
+        <label for="maximum_process_temperature">Maximum process temperature</label>
+        <input required type="number" name="maximum_process_temperature" id="maximum_process_temperature" class="input">
     </div>
+
+    <button class="btn btn-primary m-3" id="calculate_corrosion_rate">Calculate corrosion rate</button>
+
+    <div id="error-container" class="gap-3 m-3"></div>
+
+    <p class="hidden alert alert-info alert-soft m-3" id="corrosion_rate"></p>
+    <p class="hidden alert alert-warning alert-soft m-3" id="velocity_message"></p>
 
 </div>

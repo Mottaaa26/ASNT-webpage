@@ -9,7 +9,6 @@
 import { hci_corrosion_calc } from "./modules-step2/hci_corrosion_calcs.js";
 import { ht_sna_corrosion_calc } from "./modules-step2/ht_sna_corrosion_calcs.js";
 
-
 // URL TO GET THE JSON WITH THE TABLE
 export const tables_data =
 {

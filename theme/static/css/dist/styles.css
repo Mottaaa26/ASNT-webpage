@@ -1531,6 +1531,9 @@
       min-width: calc(0.25rem * 0);
     }
   }
+  .m-3 {
+    margin: calc(var(--spacing) * 3);
+  }
   .m-5 {
     margin: calc(var(--spacing) * 5);
   }
@@ -2013,6 +2016,13 @@
   }
   .text-wrap {
     text-wrap: wrap;
+  }
+  @layer daisyui.modifier {
+    .alert-error {
+      color: var(--color-error-content);
+      --alert-border-color: var(--color-error);
+      --alert-color: var(--color-error);
+    }
   }
   @layer daisyui.modifier {
     .alert-info {
