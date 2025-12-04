@@ -245,6 +245,15 @@ function calculate_corrosion_rate(table, measurement_unit, maximum_process_tempe
  */
 export async function ht_sna_corrosion_calc() {
 
+    // Read table41_data from sessionStorage
+    const table41 = sessionStorage.getItem("table4.1_data");
+    const table41_data = JSON.parse(table41);
+
+    // Pre-fill maximum process temperature with operating_temp from Table 4.1
+    const tempInput = document.getElementById("maximum_process_temperature");
+    if (table41_data && table41_data.operating_temp) {
+        tempInput.value = table41_data.operating_temp;
+    }
 
     // get material value
     document.getElementById("material").addEventListener("change", async (e) => {

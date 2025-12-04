@@ -22,7 +22,7 @@
                 <tr>
                     <td>Maximum temperature</td>
                     <td>
-                        Determine the maximum temperature of the process stream. ( get from the table 4.1)
+                        Determine the maximum temperature of the process stream.
                     </td>
                 </tr>
                 <tr>
@@ -91,9 +91,12 @@
             <option value="" disabled selected>Select first a material and a sulfur concentration</option>
         </select>
         <label for="velocity">Velocity</label>
-        <input required type="number" name="velocity" id="velocity" class="input">
+        <input required type="number" step="any" name="velocity" id="velocity" class="input">
         <label for="maximum_process_temperature">Maximum process temperature</label>
-        <input required type="number" name="maximum_process_temperature" id="maximum_process_temperature" class="input">
+        <small class="text-gray-600 -mt-2 mb-2">Pre-filled from Table 4.1 (Operating Temperature). You can modify if
+            needed.</small>
+        <input required type="number" step="any" name="maximum_process_temperature" id="maximum_process_temperature"
+            class="input">
     </div>
 
     <button class="btn btn-primary m-3" id="calculate_corrosion_rate">Calculate corrosion rate</button>
