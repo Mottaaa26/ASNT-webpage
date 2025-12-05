@@ -310,7 +310,7 @@ export async function ht_sna_corrosion_calc() {
 
             // Display velocity message if applicable
             if (isHighVelocity) {
-                velocityMessageElement.textContent = `⚠️ High velocity detected (${velocity} ${velocityUnit} ≥ ${velocityThreshold} ${velocityUnit}). Corrosion rate has been multiplied by 5.`;
+                velocityMessageElement.textContent = `High velocity detected (${velocity} ${velocityUnit} ≥ ${velocityThreshold} ${velocityUnit}). Corrosion rate has been multiplied by 5.`;
                 velocityMessageElement.classList.remove("hidden");
             } else {
                 velocityMessageElement.classList.add("hidden");

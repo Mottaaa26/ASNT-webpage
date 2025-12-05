@@ -61,19 +61,19 @@
         <select class="select" required name="material" id="material">
             <option value="">Select material</option>
             <option value="carbon steel">Carbon steel</option>
-            <option value="1Cr-0.2 Mo">1Cr-0.2 Mo</option>
-            <option value="1Cr-0.5 Mo">1Cr-0.5 Mo</option>
-            <option value="1.25Cr-0.5Mo">1.25Cr-0.5Mo</option>
-            <option value="2.25Cr-1Mo">2.25Cr-1Mo</option>
-            <option value="3Cr-1Mo">3Cr-1Mo</option>
-            <option value="5Cr-0.5Mo">5Cr-0.5Mo</option>
-            <option value="7Cr steel">7Cr steel</option>
-            <option value="9Cr-1Mo">9Cr-1Mo</option>
-            <option value="12Cr Steel">12Cr Steel</option>
+            <option value="1cr-0.2 mo">1Cr-0.2 Mo</option>
+            <option value="1cr-0.5 mo">1Cr-0.5 Mo</option>
+            <option value="1.25cr-0.5mo">1.25Cr-0.5Mo</option>
+            <option value="2.25cr-1mo">2.25Cr-1Mo</option>
+            <option value="3cr-1mo">3Cr-1Mo</option>
+            <option value="5cr-0.5mo">5Cr-0.5Mo</option>
+            <option value="7cr steel">7Cr steel</option>
+            <option value="9cr-1mo">9Cr-1Mo</option>
+            <option value="12cr steel">12Cr Steel</option>
             <option value="304 stainless steel">304 stainless steel</option>
-            <option value="304L stainless steel">304L stainless steel</option>
+            <option value="304l stainless steel">304L stainless steel</option>
             <option value="316 stainless steel">316 stainless steel</option>
-            <option value="316L stainless steel">316L stainless steel</option>
+            <option value="316l stainless steel">316L stainless steel</option>
             <option value="321 stainless steel">321 stainless steel</option>
             <option value="347 stainless steel">347 stainless steel</option>
         </select>
@@ -86,12 +86,22 @@
         <label for="maximum_process_temperature">Maximum process temperature</label>
         <small class="text-gray-600 -mt-2 mb-2">
             Pre-filled from Table 4.1 (Operating Temperature). You can modify if
-            needed.
+            needed. The value will be rounded to the nearest degree available.
         </small>
-        <input class="input" required type="number" step="any" name="maximum_process_temperature"
+        <input required class="input" required type="number" step="any" name="maximum_process_temperature"
             id="maximum_process_temperature">
         <label for="h2s_concentration">H2S concentration of the vapor (mole %)</label>
-        <input class="input" required type="number" step="any" name="h2s_concentration" id="h2s_concentration">
+        <select required class="select" name="h2s_concentration" id="h2s_concentration">
+            <option value="" disabled selected>Select one</option>
+            <option value="0.002">0.002</option>
+            <option value="0.0035">0.0035</option>
+            <option value="0.008">0.008</option>
+            <option value="0.035">0.035</option>
+            <option value="0.08">0.08</option>
+            <option value="0.30">0.30</option>
+            <option value="0.75">0.75</option>
+            <option value="1.00">1.00</option>
+        </select>
     </div>
 
     <button class="btn btn-primary m-3" id="calculate_corrosion_rate">Calculate corrosion rate</button>
