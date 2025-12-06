@@ -9,6 +9,7 @@
 import { hci_corrosion_calc } from "./modules-step2/hci_corrosion_calcs.js";
 import { ht_sna_corrosion_calc } from "./modules-step2/ht_sna_corrosion_calcs.js";
 import { ht_h2sh2_corrosion_calc } from "./modules-step2/ht_h2sh2_corrosion_calcs.js";
+import { sa_corrosion_calc } from "./modules-step2/sa_corrosion_calcs.js";
 
 // URL TO GET THE JSON WITH THE TABLE
 export const tables_data =
@@ -97,6 +98,9 @@ document.addEventListener("click", (e) => {
                         break;
                     case "ht_h2sh2_corrosion":
                         ht_h2sh2_corrosion_calc();
+                        break;
+                    case "sa_corrosion":
+                        sa_corrosion_calc();
                         break;
                     default:
                         break;
