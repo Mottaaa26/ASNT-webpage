@@ -12,6 +12,8 @@ import { ht_h2sh2_corrosion_calc } from "./modules-step2/ht_h2sh2_corrosion_calc
 import { sa_corrosion_calc } from "./modules-step2/sa_corrosion_calcs.js";
 import { hf_corrosion_calc } from "./modules-step2/hf_corrosion_calcs.js";
 import { alkaline_sw_corrosion_calc } from "./modules-step2/alkaline_sw_corrosion_calcs.js";
+import { amine_corrosion_calc } from "./modules-step2/amine_corrosion_calcs.js";
+import { ht_oxidation_calc } from "./modules-step2/ht_oxidation_calcs.js";
 
 // URL TO GET THE JSON WITH THE TABLE
 export const tables_data =
@@ -109,6 +111,12 @@ document.addEventListener("click", (e) => {
                         break;
                     case "alkaline_sw_corrosion":
                         alkaline_sw_corrosion_calc();
+                        break;
+                    case "amine_corrosion":
+                        amine_corrosion_calc();
+                        break;
+                    case "ht_oxidation":
+                        ht_oxidation_calc();
                         break;
                     default:
                         break;
