@@ -14,6 +14,7 @@ import { hf_corrosion_calc } from "./modules-step2/hf_corrosion_calcs.js";
 import { alkaline_sw_corrosion_calc } from "./modules-step2/alkaline_sw_corrosion_calcs.js";
 import { amine_corrosion_calc } from "./modules-step2/amine_corrosion_calcs.js";
 import { ht_oxidation_calc } from "./modules-step2/ht_oxidation_calcs.js";
+import { acid_sw_corrosion_calc } from "./modules-step2/acid_sw_corrosion_calcs.js";
 
 // URL TO GET THE JSON WITH THE TABLE
 export const tables_data =
@@ -22,7 +23,9 @@ export const tables_data =
     table_2b23: '/static/formula_app/data/json/table_2-B-2-3.JSON',
     table_2b24: '/static/formula_app/data/json/table_2b24.JSON',
     table_2b25: '/static/formula_app/data/json/table_2b25.JSON',
-    table_2b26: '/static/formula_app/data/json/table_2b26.JSON'
+    table_2b26: '/static/formula_app/data/json/table_2b26.JSON',
+    table_2b102: '/static/formula_app/data/json/acid_sw_corrosion/table_2b102.JSON',
+    table_2b103: '/static/formula_app/data/json/acid_sw_corrosion/table_2b103.JSON'
 }
 
 
@@ -35,18 +38,22 @@ class TableLoader {
             ci_conc_table_2b24: null,
             ci_conc_table_2b25: null,
             ci_conc_table_2b26: null,
+            table_2b102: null,
+            table_2b103: null
         }
     }
 
     async loadAll() {
         try {
 
-            const [table1, table2, table3, table4, table5] = await Promise.all([
+            const [table1, table2, table3, table4, table5, table6, table7] = await Promise.all([
                 fetch(tables_data.table_2b22).then(r => r.json()),
                 fetch(tables_data.table_2b23).then(r => r.json()),
                 fetch(tables_data.table_2b24).then(r => r.json()),
                 fetch(tables_data.table_2b25).then(r => r.json()),
-                fetch(tables_data.table_2b26).then(r => r.json())
+                fetch(tables_data.table_2b26).then(r => r.json()),
+                fetch(tables_data.table_2b102).then(r => r.json()),
+                fetch(tables_data.table_2b103).then(r => r.json())
             ])
 
             this.tables.ci_conc_table = table1;
@@ -54,6 +61,8 @@ class TableLoader {
             this.tables.ci_conc_table_2b24 = table3;
             this.tables.ci_conc_table_2b25 = table4;
             this.tables.ci_conc_table_2b26 = table5;
+            this.tables.table_2b102 = table6;
+            this.tables.table_2b103 = table7;
 
         } catch (error) {
             console.error(`failed to load the tables. Error: ${error}`);
@@ -117,6 +126,9 @@ document.addEventListener("click", (e) => {
                         break;
                     case "ht_oxidation":
                         ht_oxidation_calc();
+                        break;
+                    case "acid_sw_corrosion":
+                        acid_sw_corrosion_calc();
                         break;
                     default:
                         break;
