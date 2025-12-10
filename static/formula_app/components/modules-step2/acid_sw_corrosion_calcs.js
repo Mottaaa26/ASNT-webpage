@@ -20,13 +20,13 @@ function setVisibility(elementId, visible) {
 /**
  * VALIDATES INPUTS
  * @param {string} ph - Selected pH
- * @param {string} temp - Selected Temperature
+ * @param {string} temp - Input Temperature
  * @returns {string[]} errors
  */
 function validate_inputs(ph, temp) {
     const errors = [];
-    if (!ph) errors.push("pH selection is required.");
-    if (!temp) errors.push("Temperature selection is required.");
+    if (!ph || ph === "") errors.push("pH is required.");
+    if (!temp || temp === "") errors.push("Temperature is required.");
     return errors;
 }
 
@@ -49,57 +49,30 @@ function display_errors(errors) {
 }
 
 /**
- * POPULATE OPTIONS FOR SELECTS
- * @param {Object} tableData 
+ * Interpolates or extrapolates y value for given x based on sorted points.
+ * @param {number} x - The input value (Temperature or pH)
+ * @param {Array<Array<number>>} points - Array of [x, y] points, sorted by x
+ * @returns {number|null} - Interpolated y value (Corrosion Rate)
  */
-function populate_options(tableData) {
-    const phSelect = document.getElementById("ph_value");
-    const tempSelect = document.getElementById("temperature");
+function interpolate(x, points) {
+    if (!points || points.length === 0) return null;
 
-    // Clear existing options to prevent duplicates if called multiple times
-    phSelect.innerHTML = '<option value="" disabled selected>Select one</option>';
-    tempSelect.innerHTML = '<option value="" disabled selected>Select one</option>';
+    if (points.length === 1) return points[0][1];
 
-    if (!tableData) return;
-
-    // Determine unit
-    const table41Data = sessionStorage.getItem("table4.1_data");
-    let usesFahrenheit = true;
-    if (table41Data) {
-        const table41 = JSON.parse(table41Data);
-        usesFahrenheit = table41.measurement_unit === "farenheit";
+    let i = 0;
+    while (i < points.length - 2 && x > points[i + 1][0]) {
+        i++;
     }
 
-    // Correct keys based on JSON file inspection
-    const tempKey = usesFahrenheit ? "temperature_in_f" : "temperature_in_c";
+    const [x1, y1] = points[i];
+    const [x2, y2] = points[i + 1];
 
-    const rootData = tableData[tempKey];
-    if (!rootData) {
-        console.error(`Data for key '${tempKey}' not found in table_2b102.`);
-        return;
-    }
+    if (x1 === x2) return y1;
 
-    // Get Temperatures
-    const temps = Object.keys(rootData).sort((a, b) => parseFloat(a) - parseFloat(b));
-    temps.forEach(t => {
-        const opt = document.createElement("option");
-        opt.value = t;
-        opt.textContent = t;
-        tempSelect.appendChild(opt);
-    });
+    const slope = (y2 - y1) / (x2 - x1);
+    const y = y1 + slope * (x - x1);
 
-    // Populate pH 
-    const phs = new Set();
-    Object.values(rootData).forEach(entry => {
-        Object.keys(entry).forEach(k => phs.add(k));
-    });
-
-    Array.from(phs).sort((a, b) => parseFloat(a) - parseFloat(b)).forEach(p => {
-        const opt = document.createElement("option");
-        opt.value = p;
-        opt.textContent = p;
-        phSelect.appendChild(opt);
-    });
+    return y;
 }
 
 
@@ -136,20 +109,16 @@ export function acid_sw_corrosion_calc() {
     const finalResultDisplay = document.getElementById("corrosion_rate"); // Main Result at bottom
     const errorContainer = document.getElementById("error-container");
 
-    let isPopulated = false;
     let baseCorrosionRate = 0;
 
     // --- VISIBILITY LOGIC ---
 
     function updateVisibility() {
-        // Clear errors and results when changing main flow
         errorContainer.innerHTML = "";
         finalResultDisplay.classList.add("hidden");
 
-        // --- 1. H2O PRESENT ---
         if (h2oSelect.value === "no") {
             hideAllAfterH2O();
-            // Corrosion Rate = 0
             sessionStorage.setItem("corrosion_rate", 0);
             sessionStorage.setItem("final_corrosion_rate", 0);
             finalResultDisplay.textContent = "Estimated Corrosion Rate is 0 mpy";
@@ -164,7 +133,6 @@ export function acid_sw_corrosion_calc() {
             return;
         }
 
-        // --- 2. pH > 7 ---
         if (ph7Select.value === "yes") {
             hideAllAfterPH7();
             setVisibility("container_coming_soon", true);
@@ -179,7 +147,6 @@ export function acid_sw_corrosion_calc() {
             return;
         }
 
-        // --- 3. pH < 4.5 ---
         if (ph45Select.value === "yes") {
             hideAllAfterPH45();
             setVisibility("container_coming_soon", true);
@@ -194,7 +161,6 @@ export function acid_sw_corrosion_calc() {
             return;
         }
 
-        // --- 4. CHLORIDES ---
         if (chloridesSelect.value === "yes") {
             hideAllAfterChlorides();
             setVisibility("container_coming_soon", true);
@@ -209,10 +175,8 @@ export function acid_sw_corrosion_calc() {
             return;
         }
 
-        // --- 5. MATERIAL ---
         if (materialSelect.value === "no") {
             setVisibility("container_final_inputs", false);
-            // Rate = 2 mpy
             sessionStorage.setItem("corrosion_rate", 2);
             sessionStorage.setItem("final_corrosion_rate", 2);
             finalResultDisplay.textContent = "Estimated corrosion rate: 2 mpy";
@@ -224,13 +188,6 @@ export function acid_sw_corrosion_calc() {
             setVisibility("container_final_inputs", true);
             setVisibility("container_step_1", true);
             finalResultDisplay.classList.add("hidden");
-
-            // Populate options if not done
-            // Using helper table loader from imports
-            if (!isPopulated && tables.table_2b102) {
-                populate_options(tables.table_2b102);
-                isPopulated = true;
-            }
         } else {
             setVisibility("container_final_inputs", false);
             return;
@@ -238,7 +195,6 @@ export function acid_sw_corrosion_calc() {
 
     }
 
-    // --- HELPER HIDE FUNCTIONS ---
     function hideAllAfterH2O() {
         setVisibility("container_ph_7", false);
         setVisibility("container_ph_4_5", false);
@@ -277,12 +233,20 @@ export function acid_sw_corrosion_calc() {
     btnCalcRate.addEventListener("click", () => {
         errorContainer.innerHTML = "";
 
-        const ph = phValueInput.value;
-        const temp = temperatureInput.value;
+        const phVal = phValueInput.value;
+        const tempVal = temperatureInput.value;
 
-        const errors = validate_inputs(ph, temp);
+        const errors = validate_inputs(phVal, tempVal);
         if (errors.length > 0) {
             display_errors(errors);
+            return;
+        }
+
+        const ph = parseFloat(phVal);
+        const temp = parseFloat(tempVal);
+
+        if (isNaN(ph) || isNaN(temp)) {
+            display_errors(["Invalid pH or temperature."]);
             return;
         }
 
@@ -295,32 +259,109 @@ export function acid_sw_corrosion_calc() {
         }
         const unitLabel = usesFahrenheit ? "mpy" : "mm/y";
 
-        // Lookup Base Rate from Table 2.B.10.2
+        // Lookup Table 2.B.10.2
         if (!tables.table_2b102) {
             errorContainer.innerHTML = `<div class="alert alert-error">Table 2.B.10.2 data not loaded.</div>`;
             return;
         }
 
         const tempKey = usesFahrenheit ? "temperature_in_f" : "temperature_in_c";
-        const tempData = tables.table_2b102[tempKey];
+        const tempData = tables.table_2b102[tempKey]; // { "100": { "4.75": 1, ... }, "200": ... }
 
-        let foundRate = null;
-        if (tempData && tempData[temp]) {
-            foundRate = tempData[temp][ph];
-        }
-
-        if (foundRate === undefined || foundRate === null) {
-            // Fallback or error if not found (should be populated though)
-            errorContainer.innerHTML = `<div class="alert alert-error">Could not find corrosion rate for Temp ${temp} and pH ${ph}.</div>`;
+        if (!tempData) {
+            errorContainer.innerHTML = `<div class="alert alert-error">Data for ${unitLabel} not valid.</div>`;
             return;
         }
 
-        baseCorrosionRate = parseFloat(foundRate);
+        // DOUBLE INTERPOLATION STRATEGY
+        // 1. Iterate each Temperature T in the table.
+        // 2. For each T, get the list of (pH, Rate) points.
+        // 3. Interpolate (or find) the Rate at the input pH for that T. -> (T, Rate_at_Input_pH)
+        // 4. Collect all (T, Rate_at_Input_pH) points.
+        // 5. Interpolate the final Rate at the input T using these points.
+
+        const tempPoints = []; // Array of [T, InterpolatedRateAtPH]
+        let phWarning = "";
+
+        // Get all available temperatures and sort them
+        const availableTemps = Object.keys(tempData).map(parseFloat).sort((a, b) => a - b);
+
+        for (const t of availableTemps) {
+            const phData = tempData[t]; // { "4.75": 1, "5.5": 2 }
+            if (!phData) continue;
+
+            // Build (pH, Rate) points for this specific Temperature T
+            const phPoints = Object.entries(phData)
+                .map(([p, r]) => [parseFloat(p), parseFloat(r)])
+                .sort((a, b) => a[0] - b[0]);
+
+            if (phPoints.length === 0) continue;
+
+            const minPH = phPoints[0][0];
+            const maxPH = phPoints[phPoints.length - 1][0];
+
+            // Check pH Range for this temp (Assuming similar ranges across temps, but safe to check first one/all)
+            // Ideally we check if input pH is drastically out of range globally to warn user
+
+            // Interpolate Rate for Input pH at Temp T
+            let rateAtPH = interpolate(ph, phPoints);
+
+            // Clamp rate if pH is out of bounds for this curve
+            // Note: If pH is < minPH or > maxPH, we might be extrapolating.
+            // For Acid SW, pH range is usually 4.5 to 7ish.
+
+            if (ph < minPH) {
+                rateAtPH = Math.max(0, rateAtPH);
+                if (!phWarning) phWarning = `(pH < Table Range: Extrapolated)`;
+            } else if (ph > maxPH) {
+                // If pH > maxPH, rate usually decreases or stays same. 
+                // Let's simpler clamp to nearest bound value or use extrapolated value handled by helper.
+                // interpolate helper does extrapolation. We just clamp to >= 0
+                rateAtPH = Math.max(0, rateAtPH);
+                if (!phWarning) phWarning = `(pH > Table Range: Extrapolated)`;
+            } else {
+                rateAtPH = Math.max(0, rateAtPH);
+            }
+
+            tempPoints.push([t, rateAtPH]);
+        }
+
+        if (tempPoints.length === 0) {
+            errorContainer.innerHTML = `<div class="alert alert-error">Could not calculate rates from table data.</div>`;
+            return;
+        }
+
+        // Now interpolate across Temperatures
+        const minTemp = tempPoints[0][0];
+        const maxTemp = tempPoints[tempPoints.length - 1][0];
+        let finalRate = interpolate(temp, tempPoints);
+        let tempWarning = "";
+
+        if (temp < minTemp) {
+            tempWarning = `(Temp < Min: Extrapolated)`;
+            finalRate = Math.max(0, finalRate);
+        } else if (temp > maxTemp) {
+            tempWarning = `(Temp > Max: Clamped)`;
+            finalRate = tempPoints[tempPoints.length - 1][1];
+        } else {
+            finalRate = Math.max(0, finalRate);
+        }
+
+        // Store base rate
+        baseCorrosionRate = finalRate;
 
         // Store intermediate rate
-        sessionStorage.setItem("corrosion_rate", baseCorrosionRate);
+        const rateRounded = finalRate.toFixed(2);
+        sessionStorage.setItem("corrosion_rate", rateRounded);
 
-        resultRate1.textContent = `Base Corrosion Rate (CRph): ${baseCorrosionRate} ${unitLabel}`;
+        const combinedWarning = [phWarning, tempWarning].filter(Boolean).join(" ");
+        let warningHTML = "";
+
+        if (combinedWarning) {
+            warningHTML = `<div class="mt-2 p-2 bg-yellow-100 border border-yellow-400 text-yellow-700 rounded text-sm">Warning: ${combinedWarning}</div>`;
+        }
+
+        resultRate1.innerHTML = `Base Corrosion Rate (CRph): ${rateRounded} ${unitLabel} ${warningHTML}`;
         resultRate1.classList.remove("hidden");
 
         // Show Next Step
@@ -352,24 +393,16 @@ export function acid_sw_corrosion_calc() {
             return;
         }
 
-        // --- 1. Determine Adjustment Factor for Oxygen (Fo) ---
-        // Table 2.B.10.3: Oxygen Component -> Adjustment Factor
-        // Assumptions: "not_significant" (< 50 ppb), "significant" (>= 50 ppb)
-
         let Fo = 1.0;
         if (tables.table_2b103) {
             const isSignificant = oxy >= 50;
             const oxData = tables.table_2b103;
-            // Structure: { oxygen_component: [...], adjustment_factor: [1.0, 2.0] }
-            // Index 0 = not_significant, Index 1 = significant
             const index = isSignificant ? 1 : 0;
             if (oxData.adjustment_factor && oxData.adjustment_factor[index] !== undefined) {
                 Fo = oxData.adjustment_factor[index];
             }
         }
 
-        // --- 2. Determine Velocity Factor (Fv) ---
-        // Unit System Check
         const table41Data = sessionStorage.getItem("table4.1_data");
         let usesFahrenheit = true;
         if (table41Data) {
@@ -378,9 +411,7 @@ export function acid_sw_corrosion_calc() {
         }
 
         let Fv = 1.0;
-
         if (usesFahrenheit) {
-            // US Customary Units (ft/s)
             if (vel < 6) {
                 Fv = 1.0;
             } else if (vel <= 20) {
@@ -389,7 +420,6 @@ export function acid_sw_corrosion_calc() {
                 Fv = 5.0;
             }
         } else {
-            // SI Units (m/s)
             if (vel < 1.83) {
                 Fv = 1.0;
             } else if (vel <= 6.10) {
@@ -399,8 +429,6 @@ export function acid_sw_corrosion_calc() {
             }
         }
 
-        // --- 3. Calculate Final Rate ---
-        // CR = CRph * Fo * Fv
         const finalRate = baseCorrosionRate * Fo * Fv;
         const finalRateRounded = finalRate.toFixed(2);
 
@@ -409,18 +437,14 @@ export function acid_sw_corrosion_calc() {
         finalResultDisplay.textContent = `Estimated Corrosion Rate: ${finalRateRounded} ${unitLabel}`;
         finalResultDisplay.classList.remove("hidden");
 
-        // Store in Session
         sessionStorage.setItem("final_corrosion_rate", finalRateRounded);
     });
 
-
-    // --- EVENT LISTENERS FOR SELECTION CHANGES ---
     h2oSelect.addEventListener("change", updateVisibility);
     ph7Select.addEventListener("change", updateVisibility);
     ph45Select.addEventListener("change", updateVisibility);
     chloridesSelect.addEventListener("change", updateVisibility);
     materialSelect.addEventListener("change", updateVisibility);
 
-    // Initial check
     updateVisibility();
 }

@@ -6,6 +6,33 @@
 // import the tables for the api 581 document.
 import { tables } from "../step2_calcs.js";
 
+/**
+ * Interpolates or extrapolates y value for given x based on sorted points.
+ * @param {number} x - The input value (Temperature)
+ * @param {Array<Array<number>>} points - Array of [x, y] points, sorted by x
+ * @returns {number|null} - Interpolated y value (Corrosion Rate)
+ */
+function interpolate(x, points) {
+    if (!points || points.length === 0) return null;
+
+    if (points.length === 1) return points[0][1];
+
+    let i = 0;
+    while (i < points.length - 2 && x > points[i + 1][0]) {
+        i++;
+    }
+
+    const [x1, y1] = points[i];
+    const [x2, y2] = points[i + 1];
+
+    if (x1 === x2) return y1;
+
+    const slope = (y2 - y1) / (x2 - x1);
+    const y = y1 + slope * (x - x1);
+
+    return y;
+}
+
 export function hci_corrosion_calc() {
     const { ci_conc_table } = tables;
 
@@ -253,29 +280,31 @@ function calculate_corrosion_rate_tab2b23_2b24(table, ph_value) {
 
     const { ci_conc_table } = tables;
     const table41 = sessionStorage.getItem("table4.1_data");
-    const table41_data = JSON.parse(table41);
-    let temperature;
+    const table41_data = table41 ? JSON.parse(table41) : { measurement_unit: "farenheit", operating_temp: 100 };
+
+    let temperature = parseFloat(table41_data.operating_temp);
     let data;
     let interpolated_ph;
 
     const cr_container = document.getElementById("estimated_cr_tab2b23_tab2b24");
 
+    // For these tables (2b23/2b24), Structure is:
+    // "temperature in f°": { "0.5": { "100": rate, "125": rate, ...} ... }
+    // Or "temperature in f°": { "ph": { "temp": rate } }
+    // Based on previous code: data = table["temperature in f°"]
+    // Then ph_data = data[ph.toString()]
+    // Then corrosion_rate = ph_data[temperature.toString()]
+    // This implies { "PH_VAL": { "TEMP_VAL": RATE } }
+
     switch (table41_data.measurement_unit) {
         case "farenheit":
-            temperature = round_nearest([100, 125, 175, 200], table41_data.operating_temp);
-
             data = table["temperature in f°"];
-            console.log(data);
-
             break;
         case "celsius":
-            temperature = round_nearest([38, 52, 79, 93], table41_data.operating_temp);
-
             data = table["temperature in c°"];
-            console.log(data);
-
             break;
         default:
+            data = table["temperature in f°"];
             break;
     }
 
@@ -285,13 +314,34 @@ function calculate_corrosion_rate_tab2b23_2b24(table, ph_value) {
     const ph_data = data[interpolated_ph.toString()];
 
     if (ph_data) {
-        const corrosion_rate = ph_data[temperature.toString()];
+        // ph_data is { "200": 5, "100": 2 ... }
+        // Extract points
+        const points = Object.entries(ph_data).map(([t, r]) => [parseFloat(t), parseFloat(r)]).sort((a, b) => a[0] - b[0]);
+
+        let corrosion_rate = interpolate(temperature, points);
+
+        // Range checks
+        const minTemp = points[0][0];
+        const maxTemp = points[points.length - 1][0];
+        let warningMsg = "";
+
+        if (temperature < minTemp) {
+            warningMsg = `(Temp < Min: Extrapolated)`;
+            corrosion_rate = Math.max(0, corrosion_rate);
+        } else if (temperature > maxTemp) {
+            warningMsg = `(Temp > Max: Clamped)`;
+            corrosion_rate = points[points.length - 1][1];
+        } else {
+            corrosion_rate = Math.max(0, corrosion_rate);
+        }
+
         const unit = table41_data.measurement_unit === "farenheit" ? "mpy" : "mm/year";
+        const rateRounded = corrosion_rate.toFixed(2);
 
         cr_container.classList.remove("hidden");
-        cr_container.textContent = `Estimated corrosion rate calculated = ${corrosion_rate} ${unit}`;
+        cr_container.innerHTML = `Estimated corrosion rate calculated = ${rateRounded} ${unit} <br> <span class="text-sm text-yellow-600">${warningMsg}</span>`;
 
-        sessionStorage.setItem("corrosion_rate", corrosion_rate);
+        sessionStorage.setItem("corrosion_rate", rateRounded);
     } else {
         cr_container.classList.remove("hidden");
         cr_container.textContent = `No corrosion rate found for the given Cl concentration.`;
@@ -309,72 +359,30 @@ function operations_crrate_tab2b25(avg_cl_concentration, tables) {
 
     // Get the table 4.1 for session storage and get the operating temperatura value
     const table_data_str = sessionStorage.getItem("table4.1_data");
-    const table_data = JSON.parse(table_data_str);
+    const table_data = table_data_str ? JSON.parse(table_data_str) : { measurement_unit: "farenheit", operating_temp: 100 };
 
     // already have the cl_concentration average value.
 
     // now interpolate the cl_concentration value with the function:
     let interpolated_clvalue = interpolate_cl_concentration(avg_cl_concentration);
 
-    // Relation of the temp inputted by the user in the table and the temps shown in the table2b25.
-
-    // Get the representation of the temp by the user (F° o C°)
-
     let measurement_unit = table_data.measurement_unit;
     let temperature = parseFloat(table_data.operating_temp);
 
-    let new_temp_value;
-    let temp_in_f_available = [100, 125, 175, 200];
-    let temp_in_c_available = [38, 52, 79, 93];
-
     alloy_select.addEventListener("change", function () {
-        switch (measurement_unit) {
-            case "farenheit":
-
-                // Compare the value given by the user and round it to the available values.
-
-                // Get if the value inputted by ther user is in the array
-
-                for (let i = 0; i < temp_in_f_available.length; ++i) {
-                    if (temperature == temp_in_f_available[i]) {
-                        new_temp_value = temperature;
-
-                    } else {
-
-                        // Call the function round_nearest to get the value of the temp in table 2b25
-                        new_temp_value = round_nearest(temp_in_f_available, temperature);
-                    }
-
-                }
-                break;
-            case "celsius":
-                // Compare the value given by the user and round it to the available values.
-
-                // Get if the value inputted by ther user is in the array
-
-                for (let i = 0; i < temp_in_c_available.length; ++i) {
-                    if (temperature == temp_in_c_available[i]) {
-                        new_temp_value = temperature;
-                    } else {
-
-                        // Call the function round_nearest to get the value of the temp in table 2b25
-                        new_temp_value = round_nearest(temp_in_c_available, temperature);
-                    }
-
-                }
-                break;
-            default:
-                break;
-        }
 
         // call the function to determine the cr of the component and store it in session storage variable
-        let result_corrosion_rate;
-        result_corrosion_rate = calc_corrosion_rate_tab2b25(alloy_select.value, new_temp_value, interpolated_clvalue, measurement_unit, tables);
-        sessionStorage.setItem("corrosion_rate", result_corrosion_rate);
+        let result = calc_corrosion_rate_tab2b25(alloy_select.value, temperature, interpolated_clvalue, measurement_unit, tables);
 
-        let cr_result_container = document.getElementById("estimated_cr_tab2b25");
-        cr_result_container.classList.remove("hidden");
-        cr_result_container.textContent = `Estimated corrosion rate for this component is: ${result_corrosion_rate} mpy`;
+        if (result !== null) {
+            const { rate, warningMsg } = result;
+            const rateRounded = rate.toFixed(2);
+            sessionStorage.setItem("corrosion_rate", rateRounded);
+
+            let cr_result_container = document.getElementById("estimated_cr_tab2b25");
+            cr_result_container.classList.remove("hidden");
+            cr_result_container.innerHTML = `Estimated corrosion rate for this component is: ${rateRounded} mpy <br> <span class="text-sm text-yellow-600">${warningMsg}</span>`;
+        }
     })
 
 }
@@ -570,47 +578,53 @@ function calc_corrosion_rate_tab2b25(alloy_name, temperature, cl_concentration, 
     const { ci_conc_table_2b25 } = tables;
 
     let obt_array;
-    let corrosion_rate;
 
     // switch to evaluate the measurement_unit
     switch (measurement_unit) {
         case "farenheit":
             obt_array = ci_conc_table_2b25['temperature in f°'];
-
-            // Get the Corrosion rate with the values
-            for (let i = 0; i < obt_array.length; ++i) {
-                // see if the alloy name is equals to material then checks the temperature to get the corrosion rate.
-                if (obt_array[i].alloy == alloy_name && obt_array[i].cl_concentration == cl_concentration) {
-                    for (let x in obt_array[i].temperature) {
-                        if (temperature == x) {
-                            corrosion_rate = obt_array[i].temperature[x];
-                        }
-                    }
-                }
-            }
-
             break;
-
         case "celsius":
             obt_array = ci_conc_table_2b25['temperature in c°'];
-
-            for (let i = 0; i < obt_array.length; ++i) {
-                if (obt_array[i].alloy == alloy_name && obt_array[i].cl_concentration == cl_concentration) {
-                    for (let x in obt_array[i].temperature) {
-                        if (temperature == x) {
-                            corrosion_rate = obt_array[i].temperature[x];
-                        }
-                    }
-                }
-            }
-
             break;
-
         default:
+            obt_array = ci_conc_table_2b25['temperature in f°'];
             break;
     }
 
-    return corrosion_rate;
+    let temp_dict = null; // Map of Temp -> Rate
+
+    for (let i = 0; i < obt_array.length; ++i) {
+        // see if the alloy name is equals to material then checks the temperature to get the corrosion rate.
+        if (obt_array[i].alloy == alloy_name && parseFloat(obt_array[i].cl_concentration) == parseFloat(cl_concentration)) {
+            temp_dict = obt_array[i].temperature;
+            break;
+        }
+    }
+
+    if (!temp_dict) return null;
+
+    // Extract points
+    const points = Object.entries(temp_dict).map(([t, r]) => [parseFloat(t), parseFloat(r)]).sort((a, b) => a[0] - b[0]);
+
+    let corrosion_rate = interpolate(temperature, points);
+
+    // Range checks
+    const minTemp = points[0][0];
+    const maxTemp = points[points.length - 1][0];
+    let warningMsg = "";
+
+    if (temperature < minTemp) {
+        warningMsg = `(Temp < Min: Extrapolated)`;
+        corrosion_rate = Math.max(0, corrosion_rate);
+    } else if (temperature > maxTemp) {
+        warningMsg = `(Temp > Max: Clamped)`;
+        corrosion_rate = points[points.length - 1][1];
+    } else {
+        corrosion_rate = Math.max(0, corrosion_rate);
+    }
+
+    return { rate: corrosion_rate, warningMsg };
 }
 
 // Function responsible for do all the operations related to get the corrosion rate of the component using the table 2b26
@@ -621,6 +635,7 @@ function operations_crrate_tab2b26(avg_cl_concentration, tables) {
 
     //interpolate the avg_cl_concentration value
     let cl_concentration = interpolate_cl_concentration(avg_cl_concentration);
+
     // function to get the values of the inputs
     function process_values() {
 
@@ -632,12 +647,17 @@ function operations_crrate_tab2b26(avg_cl_concentration, tables) {
 
         if (alloy_value && ox_od_present_value) {
             // call the function to calc the corrosion rate and keep it in the sessionStorage
-            let corrosion_rate = calc_corrosion_rate_tab2b26(alloy_value, cl_concentration, ox_od_present_value, tables);
-            sessionStorage.setItem("corrosion_rate", corrosion_rate);
+            let result = calc_corrosion_rate_tab2b26(alloy_value, cl_concentration, ox_od_present_value, tables);
 
-            // show the result
-            corrosion_rate_container.classList.remove("hidden");
-            corrosion_rate_container.textContent = `Estimated corrosion rate for this component is: ${corrosion_rate} mpy`;
+            if (result !== null) {
+                const { rate, warningMsg } = result;
+                const rateRounded = rate.toFixed(2);
+                sessionStorage.setItem("corrosion_rate", rateRounded);
+
+                // show the result
+                corrosion_rate_container.classList.remove("hidden");
+                corrosion_rate_container.innerHTML = `Estimated corrosion rate for this component is: ${rateRounded} mpy <br> <span class="text-sm text-yellow-600">${warningMsg}</span>`;
+            }
 
         }
 
@@ -654,14 +674,10 @@ function calc_corrosion_rate_tab2b26(alloy_name, cl_concentration, ox_od_present
 
     // code to handle the temperature value. Get the value from the sessionStorage table4.1 and round it.
     let table41_string = sessionStorage.getItem("table4.1_data");
-    let table41 = JSON.parse(table41_string);
+    let table41 = table41_string ? JSON.parse(table41_string) : { measurement_unit: "farenheit", operating_temp: 100 };
     const measurement_unit = table41.measurement_unit;
 
-    let temp_in_f_available = [100, 125, 175, 200];
-    let temp_in_c_available = [38, 52, 79, 93];
-    let temperature_value = table41["operating_temp"];
-
-    let new_temp_value;
+    let temperature_value = parseFloat(table41["operating_temp"]);
 
     // Get the array depending on the temperature
     let operation_array;
@@ -669,17 +685,14 @@ function calc_corrosion_rate_tab2b26(alloy_name, cl_concentration, ox_od_present
     switch (measurement_unit) {
         case "farenheit":
             operation_array = ci_conc_table_2b26["temperature in f°"];
-            new_temp_value = round_nearest(temp_in_f_available, temperature_value);
             break;
         case "celsius":
             operation_array = ci_conc_table_2b26["temperature in c°"];
-            new_temp_value = round_nearest(temp_in_c_available, temperature_value);
             break;
         default:
+            operation_array = ci_conc_table_2b26["temperature in f°"];
             break;
     }
-
-    console.log(operation_array);
 
     let temp_dict;
 
@@ -687,25 +700,52 @@ function calc_corrosion_rate_tab2b26(alloy_name, cl_concentration, ox_od_present
         let actual_position = operation_array[i];
         if (actual_position.alloy == alloy_name) {
             temp_dict = actual_position.temperature;
+            break;
         }
     }
 
-    let corrosion_rate;
+    if (!temp_dict) return null;
 
-    Object.entries(temp_dict).forEach(([temp, value]) => {
-        if (temp == new_temp_value) {
-            switch (ox_od_present) {
-                case "yes":
-                    corrosion_rate = value["oxygen"];
-                    break;
-                case "no":
-                    corrosion_rate = value["no_oxygen"];
-                    break;
-                default:
-                    break;
-            }
+    // Structure of temp_dict in 2b26:
+    // { "100": {"oxygen": 5, "no_oxygen": 2}, "125": ... }
+
+    // Extract points based on oxygen selection
+    const points = [];
+    Object.entries(temp_dict).forEach(([t, val]) => {
+        // val is {oxygen: X, no_oxygen: Y}
+        let rate;
+        switch (ox_od_present) {
+            case "yes":
+                rate = val["oxygen"];
+                break;
+            case "no":
+                rate = val["no_oxygen"];
+                break;
         }
-    })
+        if (rate !== undefined) {
+            points.push([parseFloat(t), parseFloat(rate)]);
+        }
+    });
 
-    return corrosion_rate;
+    points.sort((a, b) => a[0] - b[0]);
+    if (points.length === 0) return null;
+
+    let corrosion_rate = interpolate(temperature_value, points);
+
+    // Range checks
+    const minTemp = points[0][0];
+    const maxTemp = points[points.length - 1][0];
+    let warningMsg = "";
+
+    if (temperature_value < minTemp) {
+        warningMsg = `(Temp < Min: Extrapolated)`;
+        corrosion_rate = Math.max(0, corrosion_rate);
+    } else if (temperature_value > maxTemp) {
+        warningMsg = `(Temp > Max: Clamped)`;
+        corrosion_rate = points[points.length - 1][1];
+    } else {
+        corrosion_rate = Math.max(0, corrosion_rate);
+    }
+
+    return { rate: corrosion_rate, warningMsg };
 }

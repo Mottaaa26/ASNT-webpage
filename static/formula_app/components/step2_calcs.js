@@ -15,6 +15,7 @@ import { alkaline_sw_corrosion_calc } from "./modules-step2/alkaline_sw_corrosio
 import { amine_corrosion_calc } from "./modules-step2/amine_corrosion_calcs.js";
 import { ht_oxidation_calc } from "./modules-step2/ht_oxidation_calcs.js";
 import { acid_sw_corrosion_calc } from "./modules-step2/acid_sw_corrosion_calcs.js";
+import { soil_side_corrosion_calc } from "./modules-step2/soil_side_corrosion_calcs.js";
 
 // URL TO GET THE JSON WITH THE TABLE
 export const tables_data =
@@ -129,6 +130,9 @@ document.addEventListener("click", (e) => {
                         break;
                     case "acid_sw_corrosion":
                         acid_sw_corrosion_calc();
+                        break;
+                    case "soil_side_corrosion":
+                        soil_side_corrosion_calc();
                         break;
                     default:
                         break;

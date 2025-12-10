@@ -124,18 +124,16 @@
 
             <div id="container_step_1" class="flex flex-col gap-3">
                 <label for="ph_value">pH</label>
-                <select required class="select select-bordered w-full max-w-xs" name="ph_value" id="ph_value">
-                    <option value="" selected disabled>Select one</option>
-                </select>
+                <input type="number" step="any" class="input input-bordered w-full max-w-xs" required name="ph_value"
+                    id="ph_value" placeholder="Enter pH">
 
                 <label for="temperature">Temperature</label>
-                <select required class="select select-bordered w-full max-w-xs" name="temperature" id="temperature">
-                    <option value="" selected disabled>Select one</option>
-                </select>
+                <input type="number" step="any" class="input input-bordered w-full max-w-xs" required name="temperature"
+                    id="temperature" placeholder="Enter temperature">
 
                 <button class="btn btn-primary m-3 w-full max-w-xs" id="calculate_corrosion_rate">Calculate corrosion
                     rate</button>
-                <p class="hidden alert alert-info alert-soft m-3 max-w-xs" id="corrosion_rate_result_1"></p>
+                <p class="hidden alert alert-info alert-soft m-3" id="corrosion_rate_result_1"></p>
             </div>
 
             <div id="container_step_2" class="hidden flex flex-col gap-3">

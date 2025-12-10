@@ -1,3 +1,4 @@
+
 import { roundToClosestValue } from '../utils.js';
 
 /**
@@ -21,20 +22,15 @@ async function get_table(material) {
 
     let table_path;
 
-    // Special handling for carbon steel based on temperature unit
     if (material === "carbon steel") {
-        // Get the measurement unit from table 4.1
         const table41Data = sessionStorage.getItem("table4.1_data");
         if (table41Data) {
             const table41 = JSON.parse(table41Data);
-            // If celsius, use table_2b52M, otherwise use table_2b52
             table_path = table41.measurement_unit === "celsius" ? tables.table_2b52M : tables.table_2b52;
         } else {
-            // Default to fahrenheit table if table 4.1 data is not available
             table_path = tables.table_2b52;
         }
     } else {
-        // For other materials, use the standard mapping
         const materialToTable = {
             "304 ss": tables.table_2b53,
             "316 ss": tables.table_2b54,
@@ -105,18 +101,43 @@ function display_errors(errors) {
 }
 
 /**
- * Calculates the corrosion rate based on the given inputs
- * Handles both carbon steel format and other materials format
- * Uses EXACT values from dropdowns (no rounding needed)
+ * Interpolates or extrapolates y value for given x based on sorted points.
+ * @param {number} x - The input value (Temperature)
+ * @param {Array<Array<number>>} points - Array of [x, y] points, sorted by x
+ * @returns {number|null} - Interpolated y value (Corrosion Rate)
+ */
+function interpolate(x, points) {
+    if (!points || points.length === 0) return null;
+
+    if (points.length === 1) return points[0][1];
+
+    let i = 0;
+    while (i < points.length - 2 && x > points[i + 1][0]) {
+        i++;
+    }
+
+    const [x1, y1] = points[i];
+    const [x2, y2] = points[i + 1];
+
+    if (x1 === x2) return y1;
+
+    const slope = (y2 - y1) / (x2 - x1);
+    const y = y1 + slope * (x - x1);
+
+    return y;
+}
+
+/**
+ * Calculates the corrosion rate based on the given inputs using interpolation
  * @param {Object} tableData - The table data
  * @param {string} material - The material name
  * @param {string} acidConcentration - The acid concentration
  * @param {number} maximumTemperature - The maximum temperature
  * @param {number} velocity - The velocity of acid
- * @returns {number|null} The corrosion rate or null if not found
+ * @returns {Object} result object with {rate, warningMsg} or null
  */
-function calculate_corrosion_rate(tableData, material, acidConcentration, maximumTemperature, velocity) {
-    let corrosionRate = null;
+function calculate_corrosion_rate_interpolated(tableData, material, acidConcentration, maximumTemperature, velocity) {
+    let points = [];
 
     if (material === "carbon steel") {
         // Carbon steel format: { "100": [{ temperature: 42, acid_velocity: { "0": 5, "1": 7 } }] }
@@ -127,63 +148,66 @@ function calculate_corrosion_rate(tableData, material, acidConcentration, maximu
             return null;
         }
 
-        // Find exact temperature match (dropdown values come from table)
-        const tempData = concentrationData.find(item => item.temperature === maximumTemperature);
-
-        if (!tempData || !tempData.acid_velocity) {
-            console.error("Temperature data not found:", maximumTemperature);
-            return null;
-        }
-
-        // Get corrosion rate for exact velocity (dropdown values come from table)
-        corrosionRate = tempData.acid_velocity[velocity.toString()];
+        // Iterate through all temp entries for this concentration
+        concentrationData.forEach(item => {
+            const t = parseFloat(item.temperature);
+            // Check if this temp has a rate for the selected velocity
+            if (item.acid_velocity && item.acid_velocity[velocity.toString()] !== undefined) {
+                points.push([t, parseFloat(item.acid_velocity[velocity.toString()])]);
+            }
+        });
 
     } else {
         // Other materials format: { "temperature_in_f": { "98": { "86": { "2": 5 } } } }
-        // Determine which temperature scale to use based on table 4.1
         const table41Data = sessionStorage.getItem("table4.1_data");
         let usesFahrenheit = true;
-
         if (table41Data) {
             const table41 = JSON.parse(table41Data);
             usesFahrenheit = table41.measurement_unit === "farenheit";
         }
-
         const tempScale = usesFahrenheit ? "temperature_in_f" : "temperature_in_c";
         const tempData = tableData[tempScale];
 
-        if (!tempData) {
-            console.error("Temperature scale not found in table:", tempScale);
+        if (!tempData || !tempData[acidConcentration]) {
             return null;
         }
 
-        // Get concentration data (exact match)
-        const concentrationData = tempData[acidConcentration];
+        const concentrationData = tempData[acidConcentration]; // { "86": {"2": 5}, ... }
 
-        if (!concentrationData) {
-            console.error("Concentration not found:", acidConcentration);
-            return null;
-        }
-
-        // Get velocity data for exact temperature (dropdown values come from table)
-        const velocityData = concentrationData[maximumTemperature.toString()];
-
-        if (!velocityData) {
-            console.error("Temperature not found:", maximumTemperature);
-            return null;
-        }
-
-        // Get corrosion rate for exact velocity (dropdown values come from table)
-        corrosionRate = velocityData[velocity.toString()];
+        Object.keys(concentrationData).forEach(tStr => {
+            const t = parseFloat(tStr);
+            const velData = concentrationData[tStr];
+            if (velData && velData[velocity.toString()] !== undefined) {
+                points.push([t, parseFloat(velData[velocity.toString()])]);
+            }
+        });
     }
 
-    if (corrosionRate === null || corrosionRate === undefined) {
-        console.error("Corrosion rate not found in table");
+    // Sort points
+    points.sort((a, b) => a[0] - b[0]);
+
+    if (points.length === 0) {
         return null;
     }
 
-    return corrosionRate;
+    const minTemp = points[0][0];
+    const maxTemp = points[points.length - 1][0];
+    let rate = interpolate(maximumTemperature, points);
+    let warningMsg = "";
+
+    if (maximumTemperature < minTemp) {
+        warningMsg = `<strong>Warning:</strong> The temperature entered (${maximumTemperature}) is below the minimum table value (${minTemp}). The result is extrapolated and may be inaccurate (likely negligible).`;
+        rate = Math.max(0, rate);
+    } else if (maximumTemperature > maxTemp) {
+        warningMsg = `<strong>Warning:</strong> The temperature entered (${maximumTemperature}) is above the maximum table value (${maxTemp}). The result is limited to the maximum available rate.`;
+        rate = points[points.length - 1][1]; // Clamp to max value
+    } else {
+        rate = Math.max(0, rate);
+    }
+
+    return { rate, warningMsg };
 }
+
 
 /**
  * Populates the acid concentration dropdown with unique values from the table
@@ -220,54 +244,6 @@ function populate_acid_concentration(tableData, material) {
     acidConcentrationSelect.disabled = false;
 }
 
-/**
- * Populates the temperature dropdown with unique temperature values from the table
- * Handles both carbon steel format and other materials format
- * @param {Object} tableData - The table data
- * @param {string} material - The material name to determine table format
- */
-function populate_temperature(tableData, material) {
-    const temperatureSelect = document.getElementById("maximum_temperature");
-    temperatureSelect.innerHTML = '<option value="" disabled selected>Select one</option>';
-
-    const temperatures = new Set();
-
-    // Check if this is carbon steel format
-    if (material === "carbon steel") {
-        // Carbon steel format: { "100": [{ temperature: 42, acid_velocity: { ... } }] }
-        Object.values(tableData).forEach((concentrationData) => {
-            if (Array.isArray(concentrationData)) {
-                concentrationData.forEach((tempData) => {
-                    if (tempData && tempData.temperature) {
-                        temperatures.add(parseFloat(tempData.temperature));
-                    }
-                });
-            }
-        });
-    } else {
-        // Other materials format: { "temperature_in_f": { "98": { "86": { ... } } } }
-        const tempData = tableData.temperature_in_f || tableData.temperature_in_c;
-        if (tempData) {
-            Object.values(tempData).forEach((concentrationData) => {
-                Object.keys(concentrationData).forEach((temp) => {
-                    temperatures.add(parseFloat(temp));
-                });
-            });
-        }
-    }
-
-    // Sort temperatures numerically
-    Array.from(temperatures)
-        .sort((a, b) => a - b)
-        .forEach((temp) => {
-            const option = document.createElement("option");
-            option.value = temp;
-            option.textContent = temp;
-            temperatureSelect.appendChild(option);
-        });
-
-    temperatureSelect.disabled = false;
-}
 
 /**
  * Populates the velocity dropdown with unique velocity values from the table
@@ -345,10 +321,10 @@ export function sa_corrosion_calc() {
             try {
                 const tableData = await get_table(material);
 
-                // Populate acid concentration, temperature, and velocity dropdowns
+                // Populate acid concentrationand velocity dropdowns
                 // Pass material to determine table format
                 populate_acid_concentration(tableData, material);
-                populate_temperature(tableData, material);
+                // populate_temperature(tableData, material); // Removed
                 populate_velocity(tableData, material);
 
             } catch (error) {
@@ -426,7 +402,7 @@ export function sa_corrosion_calc() {
             const tableData = await get_table(material);
 
             // Calculate corrosion rate
-            const corrosionRate = calculate_corrosion_rate(
+            const result = calculate_corrosion_rate_interpolated(
                 tableData,
                 material,
                 acidConcentration,
@@ -434,10 +410,12 @@ export function sa_corrosion_calc() {
                 velocityOfAcid
             );
 
-            if (corrosionRate === null) {
-                display_errors(["Could not calculate corrosion rate. Please check your inputs."]);
+            if (result === null || result.rate === null) {
+                display_errors(["Could not calculate corrosion rate. Data may be missing for these conditions."]);
                 return;
             }
+
+            const { rate, warningMsg } = result;
 
             // Get the measurement unit from table 4.1
             const table41Data = sessionStorage.getItem("table4.1_data");
@@ -449,11 +427,17 @@ export function sa_corrosion_calc() {
             }
 
             // Save to sessionStorage
-            sessionStorage.setItem("corrosion_rate", corrosionRate);
+            const rateRounded = rate.toFixed(2);
+            sessionStorage.setItem("corrosion_rate", rateRounded);
 
             // Display the result
             const corrosionRateDisplay = document.getElementById("corrosion_rate");
-            corrosionRateDisplay.textContent = `Corrosion Rate: ${corrosionRate} ${unit}`;
+            corrosionRateDisplay.innerHTML = `Corrosion Rate: ${rateRounded} ${unit}`;
+
+            if (warningMsg) {
+                corrosionRateDisplay.innerHTML += `<div class="mt-2 p-2 bg-yellow-100 border border-yellow-400 text-yellow-700 rounded text-sm">${warningMsg}</div>`;
+            }
+
             corrosionRateDisplay.classList.remove("hidden");
 
         } catch (error) {

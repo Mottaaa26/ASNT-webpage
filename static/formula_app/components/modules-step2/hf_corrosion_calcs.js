@@ -74,44 +74,32 @@ function display_errors(errors) {
 }
 
 /**
- * Populates the Temperature dropdown
- * @param {Object} tableData 
+ * Interpolates or extrapolates y value for given x based on sorted points.
+ * @param {number} x - The input value (Temperature)
+ * @param {Array<Array<number>>} points - Array of [x, y] points, sorted by x
+ * @returns {number|null} - Interpolated y value (Corrosion Rate)
  */
-function populate_temperature(tableData) {
-    const maxTempSelect = document.getElementById("maximum_service_temperature");
-    const currentVal = maxTempSelect.value;
-    maxTempSelect.innerHTML = '<option value="" disabled selected>Select one</option>';
+function interpolate(x, points) {
+    if (!points || points.length === 0) return null;
 
-    // Determine unit system
-    const table41Data = sessionStorage.getItem("table4.1_data");
-    let usesFahrenheit = true;
-    if (table41Data) {
-        const table41 = JSON.parse(table41Data);
-        usesFahrenheit = table41.measurement_unit === "farenheit";
+    if (points.length === 1) return points[0][1];
+
+    let i = 0;
+    while (i < points.length - 2 && x > points[i + 1][0]) {
+        i++;
     }
 
-    const tempKey = usesFahrenheit ? "temperature_in_f" : "temperature_in_c";
-    const rootData = tableData[tempKey];
+    const [x1, y1] = points[i];
+    const [x2, y2] = points[i + 1];
 
-    if (!rootData) return;
+    if (x1 === x2) return y1;
 
-    const temperatures = Object.keys(rootData).sort((a, b) => {
-        const numA = parseFloat(a.split('_')[0]);
-        const numB = parseFloat(b.split('_')[0]);
-        return numA - numB;
-    });
+    const slope = (y2 - y1) / (x2 - x1);
+    const y = y1 + slope * (x - x1);
 
-    temperatures.forEach(temp => {
-        const option = document.createElement("option");
-        option.value = temp;
-        option.textContent = temp;
-        maxTempSelect.appendChild(option);
-    });
-
-    if (temperatures.includes(currentVal)) {
-        maxTempSelect.value = currentVal;
-    }
+    return y;
 }
+
 
 /**
  * Populates other dropdowns based on material
@@ -177,10 +165,6 @@ function populate_specific_options(tableData, material) {
 
     } else if (material === "alloy_400") {
         // Populate HF Conc (Values)
-        // Aerated is static in HTML (Yes/No), so we don't necessarily need to populate it dynamically
-        // unless we want to be strictly data-driven. The structure is Temp -> Aerated -> HF -> Rate.
-        // We will trust the hardcoded Aerated options match the JSON keys ("Yes", "No").
-
         const hfConcs = new Set();
         Object.values(rootData).forEach(tempObj => {
             Object.values(tempObj).forEach(aeratedObj => {
@@ -204,13 +188,13 @@ function populate_specific_options(tableData, material) {
  * Calculates the corrosion rate from the table data
  * @param {Object} tableData 
  * @param {string} material 
- * @param {string} temp 
+ * @param {number} inputTemp 
  * @param {string} hfConc 
  * @param {string} velocity 
  * @param {string} aerated 
- * @returns {number|null} corrosion rate
+ * @returns {Object} result { rate, warningMsg } or null
  */
-function calculate_corrosion_rate(tableData, material, temp, hfConc, velocity, aerated) {
+function calculate_corrosion_rate_interpolated(tableData, material, inputTemp, hfConc, velocity, aerated) {
     const table41Data = sessionStorage.getItem("table4.1_data");
     let usesFahrenheit = true;
     if (table41Data) {
@@ -222,38 +206,71 @@ function calculate_corrosion_rate(tableData, material, temp, hfConc, velocity, a
     const rootData = tableData[tempKey];
     if (!rootData) return null;
 
-    const tempData = rootData[temp];
-    if (!tempData) return null;
+    const points = [];
 
-    if (material === "carbon_steel") {
-        // Temp -> HF Range -> Velocity -> Rate
-        const hfData = tempData[hfConc];
-        if (!hfData) return null;
+    // Iterate all available temperatures to find matches for other params
+    // Keys of rootData are temperature strings (e.g. "93" from "93_deg_f" or just "93" - checking get_table uses keys directly if mapped, but in populate it did parsing)
+    // Wait, populate_temperature line 99: parseFloat(a.split('_')[0]). It implies keys might be "93_deg_something"? 
+    // Checking table_2b62 or 63 json structure would be safer, but I can infer from code.
+    // Code lines 98-102: keys are temp strings.
 
-        const rate = hfData[velocity];
-        return rate !== undefined ? rate : null;
+    Object.keys(rootData).forEach(tempStr => {
+        // Clean temp key if needed (the populate function implies it might need splitting, but usually it's just the number if the JSON keys are numbers)
+        // Let's assume keys are parseable numbers or strings starting with number.
+        const t = parseFloat(tempStr); // e.g. "125" -> 125
 
-    } else if (material === "alloy_400") {
-        // Temp -> Aerated -> HF Conc -> Rate
-        // Aerated value in JSON is "Yes" / "No" (Capitalized)
-        // HTML value is "yes" / "no" (lowercase) - need to simple capitalize
-        const aeratedKey = aerated.charAt(0).toUpperCase() + aerated.slice(1).toLowerCase();
+        const tempData = rootData[tempStr];
+        let rate = undefined;
 
-        const aeratedData = tempData[aeratedKey];
-        if (!aeratedData) return null;
+        if (material === "carbon_steel") {
+            // Temp -> HF Range -> Velocity -> Rate
+            const hfData = tempData[hfConc];
+            if (hfData) {
+                rate = hfData[velocity];
+            }
+        } else if (material === "alloy_400") {
+            // Temp -> Aerated -> HF Conc -> Rate
+            const aeratedKey = aerated.charAt(0).toUpperCase() + aerated.slice(1).toLowerCase();
+            const aeratedData = tempData[aeratedKey];
+            if (aeratedData) {
+                rate = aeratedData[hfConc];
+            }
+        }
 
-        const rate = aeratedData[hfConc];
-        return rate !== undefined ? rate : null;
+        if (rate !== undefined && rate !== null) {
+            points.push([t, parseFloat(rate)]);
+        }
+    });
+
+    // Sort points
+    points.sort((a, b) => a[0] - b[0]);
+
+    if (points.length === 0) return null;
+
+    const minTemp = points[0][0];
+    const maxTemp = points[points.length - 1][0];
+    let rate = interpolate(inputTemp, points);
+    let warningMsg = "";
+
+    if (inputTemp < minTemp) {
+        warningMsg = `<strong>Warning:</strong> The temperature entered (${inputTemp}) is below the minimum table value (${minTemp}). The result is extrapolated and may be inaccurate (likely negligible).`;
+        rate = Math.max(0, rate);
+    } else if (inputTemp > maxTemp) {
+        warningMsg = `<strong>Warning:</strong> The temperature entered (${inputTemp}) is above the maximum table value (${maxTemp}). The result is limited to the maximum available rate.`;
+        rate = points[points.length - 1][1]; // Clamp to max value
+    } else {
+        rate = Math.max(0, rate);
     }
 
-    return null;
+    return { rate, warningMsg };
+
 }
 
 export function hf_corrosion_calc() {
     // Get all input elements
     const carbonSteelSelect = document.getElementById("carbon_steel");
     const alloy400Select = document.getElementById("alloy_400");
-    const maxTempSelect = document.getElementById("maximum_service_temperature");
+    const maxTempInput = document.getElementById("maximum_service_temperature"); // Input now
     const velocitySelect = document.getElementById("velocity");
     const hfConcentrationSelect = document.getElementById("hf_in_water");
     const aeratedSelect = document.getElementById("aerated");
@@ -338,7 +355,7 @@ export function hf_corrosion_calc() {
                     currentMaterial = activeMaterial;
 
                     // Populate
-                    populate_temperature(currentTableData);
+                    // populate_temperature(currentTableData); // Removed
                     populate_specific_options(currentTableData, activeMaterial);
 
                 } catch (error) {
@@ -355,24 +372,32 @@ export function hf_corrosion_calc() {
     calculateButton.addEventListener("click", () => {
         document.getElementById("error-container").innerHTML = ""; // Clear errors
 
-        const temp = maxTempSelect.value;
+        const tempVal = maxTempInput.value;
         const hfConc = hfConcentrationSelect.value;
         const velocity = velocitySelect.value;
         const aerated = aeratedSelect.value;
 
-        const errors = validate_inputs(currentMaterial, temp, hfConc, velocity, aerated);
+        const errors = validate_inputs(currentMaterial, tempVal, hfConc, velocity, aerated);
 
         if (errors.length > 0) {
             display_errors(errors);
             return;
         }
 
-        const rate = calculate_corrosion_rate(currentTableData, currentMaterial, temp, hfConc, velocity, aerated);
-
-        if (rate === null || rate === undefined) {
-            display_errors(["Could not determine corrosion rate from the table with these inputs."]);
+        const inputTemp = parseFloat(tempVal);
+        if (isNaN(inputTemp)) {
+            display_errors(["Invalid temperature value."]);
             return;
         }
+
+        const result = calculate_corrosion_rate_interpolated(currentTableData, currentMaterial, inputTemp, hfConc, velocity, aerated);
+
+        if (result === null || result.rate === null) {
+            display_errors(["Could not determine corrosion rate from the table with these inputs (insufficient data)."]);
+            return;
+        }
+
+        const { rate, warningMsg } = result;
 
         // Unit handling (from Table 4.1)
         const table41Data = sessionStorage.getItem("table4.1_data");
@@ -382,8 +407,15 @@ export function hf_corrosion_calc() {
             unit = table41.measurement_unit === "farenheit" ? "mpy" : "mm/year";
         }
 
-        sessionStorage.setItem("corrosion_rate", rate);
-        corrosionRateDisplay.textContent = `Corrosion Rate: ${rate} ${unit}`;
+        const rateRounded = rate.toFixed(2);
+        sessionStorage.setItem("corrosion_rate", rateRounded);
+
+        corrosionRateDisplay.innerHTML = `Corrosion Rate: ${rateRounded} ${unit}`;
+
+        if (warningMsg) {
+            corrosionRateDisplay.innerHTML += `<div class="mt-2 p-2 bg-yellow-100 border border-yellow-400 text-yellow-700 rounded text-sm">${warningMsg}</div>`;
+        }
+
         corrosionRateDisplay.classList.remove("hidden");
     });
 

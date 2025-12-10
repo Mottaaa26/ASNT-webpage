@@ -1,10 +1,7 @@
+
 import { roundToClosestValue } from '../utils.js';
 
-// Temperature constants (shared across all tables)
-const AVAILABLE_TEMPS_F = [450, 500, 550, 600, 650, 700, 750];
-const AVAILABLE_TEMPS_C = [232, 260, 288, 316, 343, 371, 399];
-
-// global variable declarations 
+// Global variable declarations 
 let material = "";
 let maximum_process_temperature = 0;
 let sulfur_concentration = 0;
@@ -18,30 +15,6 @@ let table41_data = JSON.parse(table41);
 
 
 /**
- * Maps a rounded temperature value to the correct JSON key format
- * Handles special cases like "<=450" for minimum and ">750" for maximum
- * 
- * @param {number} roundedTemp - The rounded temperature value
- * @param {number} originalTemp - The original input temperature (before rounding)
- * @param {boolean} isFahrenheit - Whether the temperature is in Fahrenheit
- * @returns {string} The temperature key to use in the JSON lookup
- */
-function getTemperatureKey(roundedTemp, originalTemp, isFahrenheit) {
-    const temps = isFahrenheit ? AVAILABLE_TEMPS_F : AVAILABLE_TEMPS_C;
-    const minTemp = temps[0];
-    const maxTemp = temps[temps.length - 1];
-
-    // If original temperature is less than or equal to minimum, use <=min format
-    if (originalTemp <= minTemp) return `<=${minTemp}`;
-
-    // If original temperature is greater than maximum, use >max format
-    if (originalTemp > maxTemp) return `>${maxTemp}`;
-
-    // Otherwise, use the rounded temperature as a string
-    return roundedTemp.toString();
-}
-
-/**
  * Populates the TAN select dropdown with unique TAN values from the table data
  * @param {Object} table - The table data
  */
@@ -50,7 +23,6 @@ function populate_tan_options(table) {
     tanSelect.innerHTML = '<option value="" disabled selected>Select one</option>';
 
     const tanValues = new Set();
-
     const tempData = table["temperature_in_f"] || table["temperature_in_c"];
 
     Object.values(tempData).forEach((value) => {
@@ -69,7 +41,6 @@ function populate_tan_options(table) {
         });
 
     tanSelect.disabled = false;
-
 }
 
 /**
@@ -161,25 +132,53 @@ async function get_tables(material) {
 }
 
 /**
- * Calculates the corrosion rate based on the given inputs
+ * Interpolates or extrapolates y value for given x based on sorted points.
+ * @param {number} x - The input value (Temperature)
+ * @param {Array<Array<number>>} points - Array of [x, y] points, sorted by x
+ * @returns {number|null} - Interpolated y value (Corrosion Rate)
+ */
+function interpolate(x, points) {
+    if (!points || points.length === 0) return null;
+
+    if (points.length === 1) return points[0][1];
+
+    let i = 0;
+    while (i < points.length - 2 && x > points[i + 1][0]) {
+        i++;
+    }
+
+    const [x1, y1] = points[i];
+    const [x2, y2] = points[i + 1];
+
+    if (x1 === x2) return y1;
+
+    const slope = (y2 - y1) / (x2 - x1);
+    const y = y1 + slope * (x - x1);
+
+    return y;
+}
+
+
+/**
+ * Calculates the corrosion rate based on the given inputs using interpolation
  * @param {Object} table - The table data
  * @param {string} measurement_unit - The measurement unit ("farenheit" or "celsius")
  * @param {number} maximum_process_temperature - The maximum process temperature
  * @param {number} sulfur_concentration - The sulfur concentration
  * @param {number} tan - The TAN value
  * @param {number} velocity - The velocity
- * @returns {number} The corrosion rate
+ * @returns {Object} result object with {rate, warningMsg}
  */
-function calculate_corrosion_rate(table, measurement_unit, maximum_process_temperature, sulfur_concentration, tan, velocity) {
+function calculate_corrosion_rate_interpolated(table, measurement_unit, maximum_process_temperature, sulfur_concentration, tan, velocity) {
 
     const isFahrenheit = measurement_unit === "farenheit";
 
-    // get the data based on the measurement unit
+    // Get the data based on the measurement unit
     let measurement_unit_dict = isFahrenheit
         ? table["temperature_in_f"]
         : table["temperature_in_c"];
 
-    // iterate through measurement_unit_dict to find the sulfur concentration dictionary
+    // find the sulfur concentration dictionary
     let sulfur_dict = null;
     Object.keys(measurement_unit_dict).forEach((key) => {
         if (parseFloat(key) === sulfur_concentration) {
@@ -192,7 +191,7 @@ function calculate_corrosion_rate(table, measurement_unit, maximum_process_tempe
         return null;
     }
 
-    // iterate through sulfur_dict to find the TAN dictionary
+    // find the TAN dictionary
     let tan_dict = null;
     Object.keys(sulfur_dict).forEach((key) => {
         if (parseFloat(key) === tan) {
@@ -205,38 +204,61 @@ function calculate_corrosion_rate(table, measurement_unit, maximum_process_tempe
         return null;
     }
 
-    // Round temperature to closest available value
-    const availableTemps = isFahrenheit ? AVAILABLE_TEMPS_F : AVAILABLE_TEMPS_C;
-    const roundedTemp = roundToClosestValue(availableTemps, maximum_process_temperature);
+    // tan_dict Contains keys like "<=450", "500", "550", ..., ">750"
+    // Extract points (Temp, Rate)
+    const points = [];
 
-    // Get the correct key for the JSON (handles <=450 and >750 cases)
-    // Pass both rounded and original temperature to determine the correct key
-    const tempKey = getTemperatureKey(roundedTemp, maximum_process_temperature, isFahrenheit);
+    Object.entries(tan_dict).forEach(([key, value]) => {
+        let tempVal;
+        // Parse key
+        if (key.startsWith("<=")) {
+            tempVal = parseFloat(key.substring(2));
+        } else if (key.startsWith(">")) {
+            tempVal = parseFloat(key.substring(1));
+        } else {
+            tempVal = parseFloat(key);
+        }
 
-    // Get corrosion rate from table
-    const corrosionRate = tan_dict[tempKey];
+        if (!isNaN(tempVal) && value !== null && value !== undefined) {
+            points.push([tempVal, parseFloat(value)]);
+        }
+    });
 
-    // Apply velocity factor based on threshold
+    // Sort
+    points.sort((a, b) => a[0] - b[0]);
+
+    if (points.length === 0) return null;
+
+    const minTemp = points[0][0];
+    const maxTemp = points[points.length - 1][0];
+    let rate = interpolate(maximum_process_temperature, points);
+    let warningMsg = "";
+
+    if (maximum_process_temperature < minTemp) {
+        warningMsg = `<strong>Warning:</strong> The temperature entered (${maximum_process_temperature}) is below the minimum table value (${minTemp}). The result is extrapolated and may be inaccurate (likely negligible).`;
+        rate = Math.max(0, rate);
+    } else if (maximum_process_temperature > maxTemp) {
+        warningMsg = `<strong>Warning:</strong> The temperature entered (${maximum_process_temperature}) is above the maximum table value (${maxTemp}). The result is limited to the maximum available rate.`;
+        rate = points[points.length - 1][1]; // Clamp to max value
+    } else {
+        rate = Math.max(0, rate);
+    }
+
+    // Apply Velocity Factor
     const velocityThreshold = isFahrenheit ? 100 : 30.48;
-    let finalCorrosionRate;
     let isHighVelocity = false;
 
-    if (velocity < velocityThreshold) {
-        // Use corrosion rate from tables
-        finalCorrosionRate = corrosionRate;
-    } else {
-        // Multiply by 5 for high velocity
-        finalCorrosionRate = corrosionRate * 5;
+    if (velocity >= velocityThreshold) {
+        rate = rate * 5;
         isHighVelocity = true;
     }
 
-    // Store both values in sessionStorage
-    sessionStorage.setItem("corrosion_rate", finalCorrosionRate);
+    // Store metadata
     sessionStorage.setItem("is_high_velocity", isHighVelocity);
     sessionStorage.setItem("velocity_threshold", velocityThreshold);
     sessionStorage.setItem("velocity_unit", isFahrenheit ? "ft/s" : "m/s");
 
-    return finalCorrosionRate;
+    return { rate, warningMsg };
 
 }
 
@@ -247,12 +269,13 @@ export async function ht_sna_corrosion_calc() {
 
     // Read table41_data from sessionStorage
     const table41 = sessionStorage.getItem("table4.1_data");
-    const table41_data = JSON.parse(table41);
+    const table41_data = table41 ? JSON.parse(table41) : { measurement_unit: "farenheit" };
 
     // Pre-fill maximum process temperature with operating_temp from Table 4.1
     const tempInput = document.getElementById("maximum_process_temperature");
     if (table41_data && table41_data.operating_temp) {
         tempInput.value = table41_data.operating_temp;
+        maximum_process_temperature = parseFloat(table41_data.operating_temp);
     }
 
     // get material value
@@ -271,6 +294,16 @@ export async function ht_sna_corrosion_calc() {
             tanSelect.innerHTML = '<option value="" disabled selected>Error loading options</option>';
         }
 
+    });
+
+    document.getElementById("maximum_process_temperature").addEventListener("input", (e) => {
+        maximum_process_temperature = parseFloat(e.target.value);
+    });
+    document.getElementById("sulfur_concentration").addEventListener("input", (e) => {
+        sulfur_concentration = parseFloat(e.target.value);
+    });
+    document.getElementById("velocity").addEventListener("input", (e) => {
+        velocity = parseFloat(e.target.value);
     });
 
     // Button calculate corrosion rate listener to get the data in the inputs to operate with them
@@ -293,27 +326,49 @@ export async function ht_sna_corrosion_calc() {
         // if all data is correct, get the table and calculate the corrosion rate
         try {
             table = await get_tables(material);
-            const finalRate = calculate_corrosion_rate(table, table41_data.measurement_unit, maximum_process_temperature, sulfur_concentration, tan, velocity);
 
-            // Get UI elements
-            const corrosionRateElement = document.getElementById("corrosion_rate");
-            const velocityMessageElement = document.getElementById("velocity_message");
+            const result = calculate_corrosion_rate_interpolated(
+                table,
+                table41_data.measurement_unit,
+                maximum_process_temperature,
+                sulfur_concentration,
+                tan,
+                velocity
+            );
 
-            // Get stored values
-            const isHighVelocity = sessionStorage.getItem("is_high_velocity") === "true";
-            const velocityThreshold = sessionStorage.getItem("velocity_threshold");
-            const velocityUnit = sessionStorage.getItem("velocity_unit");
+            if (result && result.rate !== null) {
+                const { rate, warningMsg } = result;
 
-            // Display corrosion rate
-            corrosionRateElement.textContent = `Estimated Corrosion Rate: ${finalRate} mpy`;
-            corrosionRateElement.classList.remove("hidden");
+                // Get UI elements
+                const corrosionRateElement = document.getElementById("corrosion_rate");
+                const velocityMessageElement = document.getElementById("velocity_message");
 
-            // Display velocity message if applicable
-            if (isHighVelocity) {
-                velocityMessageElement.textContent = `High velocity detected (${velocity} ${velocityUnit} ≥ ${velocityThreshold} ${velocityUnit}). Corrosion rate has been multiplied by 5.`;
-                velocityMessageElement.classList.remove("hidden");
+                // Get stored values
+                const isHighVelocity = sessionStorage.getItem("is_high_velocity") === "true";
+                const velocityThreshold = sessionStorage.getItem("velocity_threshold");
+                const velocityUnit = sessionStorage.getItem("velocity_unit");
+
+                const rateRounded = rate.toFixed(2);
+                sessionStorage.setItem("corrosion_rate", rateRounded);
+
+                // Display corrosion rate
+                corrosionRateElement.innerHTML = `Estimated Corrosion Rate: ${rateRounded} mpy`;
+
+                if (warningMsg) {
+                    corrosionRateElement.innerHTML += `<div class="mt-2 p-2 bg-yellow-100 border border-yellow-400 text-yellow-700 rounded text-sm">${warningMsg}</div>`;
+                }
+
+                corrosionRateElement.classList.remove("hidden");
+
+                // Display velocity message if applicable
+                if (isHighVelocity) {
+                    velocityMessageElement.textContent = `High velocity detected (${velocity} ${velocityUnit} ≥ ${velocityThreshold} ${velocityUnit}). Corrosion rate has been multiplied by 5.`;
+                    velocityMessageElement.classList.remove("hidden");
+                } else {
+                    velocityMessageElement.classList.add("hidden");
+                }
             } else {
-                velocityMessageElement.classList.add("hidden");
+                display_errors(["Could not determine corrosion rate."]);
             }
 
         } catch (error) {

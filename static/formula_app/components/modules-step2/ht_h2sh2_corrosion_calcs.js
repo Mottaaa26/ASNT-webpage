@@ -1,3 +1,4 @@
+
 import { roundToClosestValue } from "../utils.js";
 
 const AVAILABLE_TEMPS_F = [425, 475, 525, 575, 625, 675, 725, 775, 825, 875, 925, 975];
@@ -81,86 +82,6 @@ function validate_inputs() {
 }
 
 /**
- * Calculates the corrosion rate based on the given inputs
- * @param {Object} table - The table data from JSON
- * @param {string} measurement_unit - The measurement unit ("farenheit" or "celsius")
- * @param {number} maximum_process_temperature - The maximum process temperature
- * @param {number} h2s_concentration - The H2S concentration (mole %)
- * @param {string} hydrocarbon - The type of hydrocarbon ("naphtha" or "gas oil")
- * @returns {number} The corrosion rate
- */
-function calculate_corrosion_rate(table, measurement_unit, maximum_process_temperature, h2s_concentration, hydrocarbon) {
-
-    const isFahrenheit = measurement_unit === "farenheit";
-
-    // Get the data based on the measurement unit
-    const temperatureData = isFahrenheit
-        ? table["temperature_in_f"]
-        : table["temperature_in_c"];
-
-    // Get the temperatures array
-    const temperatures = temperatureData["temperatures"];
-
-    // Round temperature to closest available value
-    const availableTemps = isFahrenheit ? AVAILABLE_TEMPS_F : AVAILABLE_TEMPS_C;
-    const roundedTemp = roundToClosestValue(availableTemps, maximum_process_temperature);
-
-    // Find the index of the rounded temperature
-    const tempIndex = temperatures.indexOf(roundedTemp);
-
-    if (tempIndex === -1) {
-        console.error("Temperature not found in table:", roundedTemp);
-        return null;
-    }
-
-    // Find the H2S concentration key in the data
-    // We need to search for it because parseFloat(1.0).toString() = "1" but the key might be "1.0"
-    let h2sKey = null;
-    Object.keys(temperatureData["data"]).forEach((key) => {
-        if (parseFloat(key) === h2s_concentration) {
-            h2sKey = key;
-        }
-    });
-
-    if (!h2sKey) {
-        console.error("H2S concentration not found:", h2s_concentration);
-        return null;
-    }
-
-    // Get the data for this H2S concentration
-    const h2sData = temperatureData["data"][h2sKey];
-
-    // Check if h2sData is an array (for materials like 12Cr Steel and 300 series SS)
-    // or an object with hydrocarbon types (for other materials)
-    let corrosionRates;
-
-    if (Array.isArray(h2sData)) {
-        // For materials that don't require hydrocarbon type (12Cr, 300 series SS)
-        corrosionRates = h2sData;
-    } else {
-        // For materials that require hydrocarbon type
-        // Capitalize hydrocarbon type to match JSON keys ("Naphtha" or "Gas oil")
-        const hydrocarbonKey = hydrocarbon === "naphtha" ? "Naphtha" : "Gas oil";
-
-        // Get the corrosion rate array for this hydrocarbon type
-        corrosionRates = h2sData[hydrocarbonKey];
-
-        if (!corrosionRates) {
-            console.error("Hydrocarbon type not found:", hydrocarbonKey);
-            return null;
-        }
-    }
-
-    // Get the corrosion rate at the temperature index
-    const corrosionRate = corrosionRates[tempIndex];
-
-    // Store the result in sessionStorage
-    sessionStorage.setItem("corrosion_rate", corrosionRate);
-
-    return corrosionRate;
-}
-
-/**
  * DISPLAY VALIDATION ERRORS TO THE USER
  * @param {string[]} errors - Array of error messages
  */
@@ -176,11 +97,125 @@ function display_errors(errors) {
     });
 }
 
+/**
+ * Interpolates or extrapolates y value for given x based on sorted points.
+ * @param {number} x - The input value (Temperature)
+ * @param {Array<Array<number>>} points - Array of [x, y] points, sorted by x
+ * @returns {number|null} - Interpolated y value (Corrosion Rate)
+ */
+function interpolate(x, points) {
+    if (!points || points.length === 0) return null;
+
+    if (points.length === 1) return points[0][1];
+
+    let i = 0;
+    while (i < points.length - 2 && x > points[i + 1][0]) {
+        i++;
+    }
+
+    const [x1, y1] = points[i];
+    const [x2, y2] = points[i + 1];
+
+    if (x1 === x2) return y1;
+
+    const slope = (y2 - y1) / (x2 - x1);
+    const y = y1 + slope * (x - x1);
+
+    return y;
+}
+
+
+/**
+ * Calculates the corrosion rate based on the given inputs with interpolation
+ * @param {Object} table - The table data from JSON
+ * @param {string} measurement_unit - The measurement unit ("farenheit" or "celsius")
+ * @param {number} maximum_process_temperature - The maximum process temperature
+ * @param {number} h2s_concentration - The H2S concentration (mole %)
+ * @param {string} hydrocarbon - The type of hydrocarbon ("naphtha" or "gas oil")
+ * @returns {Object} {rate, warningMsg} or null
+ */
+function calculate_corrosion_rate_interpolated(table, measurement_unit, maximum_process_temperature, h2s_concentration, hydrocarbon) {
+
+    const isFahrenheit = measurement_unit === "farenheit";
+
+    const temperatureData = isFahrenheit
+        ? table["temperature_in_f"]
+        : table["temperature_in_c"];
+
+    const availableTemps = temperatureData["temperatures"]; // Array of temperatures e.g. [425, 475...]
+
+    // Find the H2S concentration key in the data
+    let h2sKey = null;
+    Object.keys(temperatureData["data"]).forEach((key) => {
+        if (parseFloat(key) === h2s_concentration) {
+            h2sKey = key;
+        }
+    });
+
+    if (!h2sKey) {
+        console.error("H2S concentration not found:", h2s_concentration);
+        return null;
+    }
+
+    const h2sData = temperatureData["data"][h2sKey];
+    let ratesArray;
+
+    if (Array.isArray(h2sData)) {
+        ratesArray = h2sData;
+    } else {
+        const hydrocarbonKey = hydrocarbon === "naphtha" ? "Naphtha" : "Gas oil";
+        ratesArray = h2sData[hydrocarbonKey];
+        if (!ratesArray) {
+            console.error("Hydrocarbon type not found:", hydrocarbonKey);
+            return null;
+        }
+    }
+
+    // Build points (Temp, Rate)
+    // Both arrays should be same length
+    if (availableTemps.length !== ratesArray.length) {
+        console.error("Data mismatch: Temperature and Rate arrays have different lengths.");
+        return null;
+    }
+
+    const points = [];
+    for (let i = 0; i < availableTemps.length; i++) {
+        points.push([availableTemps[i], ratesArray[i]]);
+    }
+
+    // Sort points (Available temps are usually sorted, but safe to ensure)
+    points.sort((a, b) => a[0] - b[0]);
+
+    const minTemp = points[0][0];
+    const maxTemp = points[points.length - 1][0];
+    let rate = interpolate(maximum_process_temperature, points);
+    let warningMsg = "";
+
+    if (maximum_process_temperature < minTemp) {
+        warningMsg = `<strong>Warning:</strong> The temperature entered (${maximum_process_temperature}) is below the minimum table value (${minTemp}). The result is extrapolated and may be inaccurate (likely negligible).`;
+        rate = Math.max(0, rate);
+    } else if (maximum_process_temperature > maxTemp) {
+        warningMsg = `<strong>Warning:</strong> The temperature entered (${maximum_process_temperature}) is above the maximum table value (${maxTemp}). The result is limited to the maximum available rate.`;
+        rate = points[points.length - 1][1]; // Clamp to max value
+    } else {
+        rate = Math.max(0, rate);
+    }
+
+    return { rate, warningMsg };
+}
+
+
 export async function ht_h2sh2_corrosion_calc() {
 
     // Read table41_data from sessionStorage
     const table41 = sessionStorage.getItem("table4.1_data");
-    const table41_data = JSON.parse(table41);
+    let table41_data = {
+        measurement_unit: "farenheit", // default, should handle missing gracefully
+        operating_temp: ""
+    };
+    if (table41) {
+        table41_data = JSON.parse(table41);
+    }
 
     // Pre-fill maximum process temperature with operating_temp from Table 4.1
     const tempInput = document.getElementById("maximum_process_temperature");
@@ -192,9 +227,12 @@ export async function ht_h2sh2_corrosion_calc() {
     // Event listener for material selection
     document.getElementById("material").addEventListener("change", async function () {
         material = this.value;
-        table = await get_table(material);
+        try {
+            table = await get_table(material);
+        } catch (e) {
+            console.error(e);
+        }
 
-        // IF THE MATERIAL IS 12%CR STEEL OR 300 SERIES SS DISABLED THE TYPE OF HYDROCARBON INPUT
         switch (material) {
             case "12cr steel":
             case "304 stainless steel":
@@ -204,7 +242,7 @@ export async function ht_h2sh2_corrosion_calc() {
             case "321 stainless steel":
             case "347 stainless steel":
                 document.getElementById("hydrocarbon").disabled = true;
-                document.getElementById("hydrocarbon").value = ""; // Clear value when disabled
+                document.getElementById("hydrocarbon").value = "";
                 hydrocarbon = "";
                 break;
             default:
@@ -213,24 +251,19 @@ export async function ht_h2sh2_corrosion_calc() {
         }
     });
 
-    // Event listener for hydrocarbon selection
     document.getElementById("hydrocarbon").addEventListener("change", function () {
         hydrocarbon = this.value;
     });
 
-    // Event listener for temperature input
     document.getElementById("maximum_process_temperature").addEventListener("input", function () {
         maximum_process_temperature = parseFloat(this.value);
     });
 
-    // Event listener for H2S concentration selection
     document.getElementById("h2s_concentration").addEventListener("change", function () {
         h2s_concentration = parseFloat(this.value);
     });
 
-    // Event listener for calculate button
     document.getElementById("calculate_corrosion_rate").addEventListener("click", async function () {
-        // Validate inputs
         const errors = validate_inputs();
 
         if (errors.length > 0) {
@@ -238,11 +271,9 @@ export async function ht_h2sh2_corrosion_calc() {
             return;
         }
 
-        // Clear any previous errors
         document.getElementById("error-container").innerHTML = "";
 
-        // Calculate corrosion rate
-        const corrosionRate = calculate_corrosion_rate(
+        const result = calculate_corrosion_rate_interpolated(
             table,
             table41_data.measurement_unit,
             maximum_process_temperature,
@@ -250,12 +281,23 @@ export async function ht_h2sh2_corrosion_calc() {
             hydrocarbon
         );
 
-        // Display the result
-        if (corrosionRate !== null) {
+        if (result && result.rate !== null) {
+            const { rate, warningMsg } = result;
             const resultElement = document.getElementById("corrosion_rate");
             const unit = table41_data.measurement_unit === "farenheit" ? "mpy" : "mm/y";
-            resultElement.textContent = `Corrosion rate: ${corrosionRate} ${unit}`;
+
+            const rateRounded = rate.toFixed(2);
+            sessionStorage.setItem("corrosion_rate", rateRounded);
+
+            resultElement.innerHTML = `Corrosion rate: ${rateRounded} ${unit}`;
+
+            if (warningMsg) {
+                resultElement.innerHTML += `<div class="mt-2 p-2 bg-yellow-100 border border-yellow-400 text-yellow-700 rounded text-sm">${warningMsg}</div>`;
+            }
+
             resultElement.classList.remove("hidden");
+        } else {
+            display_errors(["Could not determine corrosion rate."]);
         }
     });
 
