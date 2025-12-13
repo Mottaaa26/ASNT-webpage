@@ -430,6 +430,16 @@ export function amine_corrosion_calc() {
     const calculateButton = document.getElementById("calculate_corrosion_rate");
     const corrosionRateDisplay = document.getElementById("corrosion_rate");
 
+    // Check Cladding Status from Table 4.1
+    let hasCladding = false;
+    try {
+        const t41 = JSON.parse(sessionStorage.getItem("table4.1_data"));
+        if (t41 && t41.has_cladding === "yes") {
+            hasCladding = true;
+        }
+    } catch (e) { console.error("Error reading table4.1", e); }
+
+
     // Function to manage the flow logic
     function updateVisibility() {
         const isCS = typeCS.value === "yes";
@@ -441,6 +451,16 @@ export function amine_corrosion_calc() {
         setVisibility("ss_inputs_container", false);
         setVisibility("specialist_message", false);
         setVisibility("calculate_corrosion_rate", false);
+
+        // Cladding visibility
+        const cladContainer = document.getElementById("cladding_type_container");
+        if (cladContainer) {
+            if (hasCladding && (isCS || (isNotCS && typeSS.value === "yes"))) {
+                cladContainer.classList.remove("hidden");
+            } else {
+                cladContainer.classList.add("hidden");
+            }
+        }
 
         // Clear errors and results
         display_errors([]);
@@ -507,7 +527,12 @@ export function amine_corrosion_calc() {
         const isCS = typeCS.value === "yes";
         const isSS = typeSS.value === "yes";
 
+        let rateBM = 0;
+        let rateClad = 0;
+        let bmCalced = false;
+
         try {
+            // --- BASE METAL CALCULATION ---
             if (isCS) {
                 // Carbon Steel/Low Alloy path
                 const amineType = document.getElementById("amine_type").value;
@@ -523,19 +548,16 @@ export function amine_corrosion_calc() {
                     return;
                 }
 
-                const corrosionRate = await calculate_corrosion_rate_cs(
+                const result = await calculate_corrosion_rate_cs(
                     amineType, acidGasLoading, hsas, amineConcentration, velocity, temperature
                 );
 
-                if (corrosionRate !== null) {
-                    const unitKey = get_unit_key();
-                    const unit = unitKey === "temperature_in_f" ? "mpy" : "mm/yr";
-
-                    sessionStorage.setItem("corrosion_rate", corrosionRate);
-                    corrosionRateDisplay.textContent = `Estimated Corrosion Rate: ${corrosionRate} ${unit}`;
-                    corrosionRateDisplay.classList.remove("hidden");
+                if (result !== null) {
+                    rateBM = result;
+                    bmCalced = true;
                 } else {
                     display_errors(["Could not calculate corrosion rate. Please check your inputs."]);
+                    return;
                 }
 
             } else if (isSS) {
@@ -549,18 +571,66 @@ export function amine_corrosion_calc() {
                     return;
                 }
 
-                const corrosionRate = await calculate_corrosion_rate_ss(acidGasLoading);
+                const result = await calculate_corrosion_rate_ss(acidGasLoading);
 
-                if (corrosionRate !== null) {
-                    const unitKey = get_unit_key();
-                    const unit = unitKey === "temperature_in_f" ? "mpy" : "mm/yr";
-
-                    sessionStorage.setItem("corrosion_rate", corrosionRate);
-                    corrosionRateDisplay.textContent = `Estimated Corrosion Rate: ${corrosionRate} ${unit}`;
-                    corrosionRateDisplay.classList.remove("hidden");
+                if (result !== null) {
+                    rateBM = result;
+                    bmCalced = true;
                 } else {
                     display_errors(["Could not calculate corrosion rate. Please check your inputs."]);
+                    return;
                 }
+            }
+
+            // --- CLADDING CALCULATION ---
+            if (hasCladding && bmCalced) {
+                const cladType = document.getElementById("cladding_material_type").value;
+
+                if (cladType === "ss" && isCS) {
+                    // Base=CS, Clad=SS. Reuse CS inputs -> convert to SS inputs
+                    // Need: Acid Gas Loading (float), Temperature
+                    const csLoadingStr = document.getElementById("acid_gas_loading").value; // e.g. "0.20" or "<0.1"
+                    let csLoading = parseFloat(csLoadingStr);
+                    if (csLoadingStr.includes("<")) csLoading = 0.09; // Safe approx
+
+                    const csTemp = parseFloat(document.getElementById("temperature").value);
+
+                    // SS Calc needs loading and doesn't use temp for rate look up but validates it?
+                    // Actually calculate_corrosion_rate_ss uses loading. 
+                    const ssResult = await calculate_corrosion_rate_ss(csLoading);
+                    if (ssResult !== null) rateClad = ssResult;
+
+                } else if (cladType === "cs" && isCS) {
+                    // Base=CS, Clad=CS. Same rate.
+                    rateClad = rateBM;
+                } else if (cladType === "ss" && isSS) {
+                    // Base=SS, Clad=SS. Same rate.
+                    rateClad = rateBM;
+                } else {
+                    // Other cases (e.g. Base=SS, Clad=CS -> Can't calc CS without extra inputs)
+                    // Or Clad = Other
+                    rateClad = 0; // Default safe assumption or 0 corrosion
+                }
+            }
+
+            // --- SAVE & DISPLAY ---
+            if (bmCalced) {
+                const unitKey = get_unit_key();
+                const unit = unitKey === "temperature_in_f" ? "mpy" : "mm/yr";
+
+                // Save keys
+                sessionStorage.setItem("corrosion_rate", rateBM.toFixed(2)); // Legacy
+                sessionStorage.setItem("corrosion_rate_bm", rateBM.toFixed(2));
+
+                if (hasCladding) {
+                    sessionStorage.setItem("corrosion_rate_cladding", rateClad.toFixed(2));
+                    corrosionRateDisplay.innerHTML = `Base Rate: ${rateBM.toFixed(2)} ${unit}<br>Cladding Rate: ${rateClad.toFixed(2)} ${unit}`;
+                } else {
+                    sessionStorage.removeItem("corrosion_rate_cladding");
+                    corrosionRateDisplay.innerHTML = `Estimated Corrosion Rate: ${rateBM.toFixed(2)} ${unit}`;
+                }
+
+                corrosionRateDisplay.classList.remove("hidden");
             }
 
         } catch (error) {
@@ -595,14 +665,14 @@ export function amine_corrosion_calc() {
 
             // Save to sessionStorage
             sessionStorage.setItem("corrosion_rate", specialistRate);
+            sessionStorage.setItem("corrosion_rate_bm", specialistRate);
+            if (hasCladding) sessionStorage.setItem("corrosion_rate_cladding", 0); // Specialist rate usually for base
 
             // Show success message
             const unitKey = get_unit_key();
             const unit = unitKey === "temperature_in_f" ? "mpy" : "mm/yr";
             specialistRateSavedMessage.textContent = `Corrosion rate saved successfully: ${specialistRate} ${unit}`;
             specialistRateSavedMessage.classList.remove("hidden");
-
-            console.log(`Specialist corrosion rate saved: ${specialistRate} ${unit}`);
         });
     }
 

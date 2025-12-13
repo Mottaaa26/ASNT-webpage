@@ -102,7 +102,80 @@ export function ht_oxidation_calc() {
         }
     }
 
+    // Check for Cladding
+    let hasCladding = false;
+    try {
+        const t41 = JSON.parse(sessionStorage.getItem("table4.1_data"));
+        if (t41 && t41.has_cladding === "yes") hasCladding = true;
+    } catch (e) { }
+
+    // Toggle UI
+    function toggleCladdingUI() {
+        const cladContainer = document.getElementById("cladding_type_container");
+        if (cladContainer && hasCladding) {
+            cladContainer.classList.remove("hidden");
+        }
+    }
+
     init();
+    toggleCladdingUI();
+
+    // Helper to calculate rate for a specific material
+    function getRateForMaterial(matName, temp) {
+        const isF = is_fahrenheit();
+        const materialMap = {
+            "carbon steel": "CS",
+            "1 1/4cr": "1 1/4Cr",
+            "2 1/4cr": "2 1/4Cr",
+            "5cr": "5 Cr",
+            "7cr": "7 Cr",
+            "9cr": "9 Cr",
+            "12cr": "12 Cr",
+            "304 ss": "304 SS",
+            "309 ss": "309 SS",
+            "310 ss/hk": "310 SS/HK",
+            "800 h/hp": "800 H/HP"
+        };
+        const jsonMaterial = materialMap[matName];
+        if (!jsonMaterial) return null; // Unknown or "Other"
+
+        const tableData = tables.table_2b92;
+        const unitKey = isF ? "temperature_in_f" : "temperature_in_c";
+
+        if (!tableData || !tableData[unitKey] || !tableData[unitKey][jsonMaterial]) {
+            return { error: "Data not available" };
+        }
+
+        const rawData = tableData[unitKey][jsonMaterial];
+
+        // Convert to sorted array
+        const points = Object.entries(rawData)
+            .map(([t, r]) => [parseFloat(t), r])
+            .filter(([t, r]) => r !== null && !isNaN(r) && !isNaN(t))
+            .sort((a, b) => a[0] - b[0]);
+
+        if (points.length === 0) return { error: "No valid data" };
+
+        const minTemp = points[0][0];
+        const maxTemp = points[points.length - 1][0];
+
+        // Calculate Rate
+        let rate = interpolate(temp, points);
+        let warningMsg = "";
+
+        // Check Bounds
+        if (temp < minTemp) {
+            warningMsg = `<strong>Warning:</strong> The temperature entered (${temp}) is below the minimum table value (${minTemp}). The result is extrapolated and may be inaccurate (likely negligible).`;
+            rate = Math.max(0, rate);
+        } else if (temp > maxTemp) {
+            warningMsg = `<strong>Warning:</strong> The temperature entered (${temp}) is above the maximum table value (${maxTemp}). The result is limited to the maximum available rate.`;
+            rate = points[points.length - 1][1];
+        } else {
+            rate = Math.max(0, rate);
+        }
+
+        return { rate, warningMsg };
+    }
 
     // Calculate Button Logic
     calcButton.addEventListener("click", () => {
@@ -126,78 +199,45 @@ export function ht_oxidation_calc() {
         const isF = is_fahrenheit();
         const unit = isF ? "mpy" : "mm/year";
 
-        // Map Material HTML values to JSON Keys
-        const materialMap = {
-            "carbon steel": "CS",
-            "1 1/4cr": "1 1/4Cr",
-            "2 1/4cr": "2 1/4Cr",
-            "5cr": "5 Cr",
-            "7cr": "7 Cr",
-            "9cr": "9 Cr",
-            "12cr": "12 Cr",
-            "304 ss": "304 SS",
-            "309 ss": "309 SS",
-            "310 ss/hk": "310 SS/HK",
-            "800 h/hp": "800 H/HP"
-        };
-        const jsonMaterial = materialMap[material];
-
-        // Prepare Data for Interpolation
-        const tableData = tables.table_2b92;
-        const unitKey = isF ? "temperature_in_f" : "temperature_in_c";
-
-        if (!tableData || !tableData[unitKey] || !tableData[unitKey][jsonMaterial]) {
-            display_errors(["Data not available for the selected material."]);
+        // Base Calculation
+        const baseResult = getRateForMaterial(material, temperature);
+        if (!baseResult || baseResult.error) {
+            display_errors([baseResult?.error || "Calculation failed for base material."]);
             return;
         }
 
-        const rawData = tableData[unitKey][jsonMaterial];
+        const rateRounded = baseResult.rate.toFixed(2);
+        let rateClad = 0;
 
-        // Convert to sorted array of [temp, rate], filtering nulls
-        const points = Object.entries(rawData)
-            .map(([t, r]) => [parseFloat(t), r])
-            .filter(([t, r]) => r !== null && !isNaN(r) && !isNaN(t))
-            .sort((a, b) => a[0] - b[0]);
-
-        if (points.length === 0) {
-            display_errors(["No valid data points available for this material."]);
-            return;
-        }
-
-        // Calculate Stats
-        const minTemp = points[0][0];
-        const maxTemp = points[points.length - 1][0];
-
-        // Calculate Rate
-        let rate = interpolate(temperature, points);
-        let warningMsg = "";
-
-        // Check Bounds
-        if (temperature < minTemp) {
-            warningMsg = `<strong>Warning:</strong> The temperature entered (${temperature}) is below the minimum table value (${minTemp}). The result is extrapolated and may be inaccurate (likely negligible).`;
-            rate = Math.max(0, rate); // Clamp to 0 if negative
-        } else if (temperature > maxTemp) {
-            warningMsg = `<strong>Warning:</strong> The temperature entered (${temperature}) is above the maximum table value (${maxTemp}). The result is limited to the maximum available rate.`;
-            rate = points[points.length - 1][1]; // Clamp to max value
-        } else {
-            rate = Math.max(0, rate);
-        }
-
-        if (rate !== null) {
-            const rateRounded = rate.toFixed(2);
-
-            sessionStorage.setItem("corrosion_rate", rateRounded);
-
-            resultDisplay.innerHTML = `Estimated Corrosion Rate: ${rateRounded} ${unit}`;
-
-            if (warningMsg) {
-                resultDisplay.innerHTML += `<div class="mt-2 p-2 bg-yellow-100 border border-yellow-400 text-yellow-700 rounded text-sm">${warningMsg}</div>`;
+        // Cladding Calculation
+        if (hasCladding) {
+            const cladSelect = document.getElementById("cladding_material_type");
+            const cladMat = cladSelect ? cladSelect.value : "";
+            if (cladMat && cladMat !== "other") {
+                const cladResult = getRateForMaterial(cladMat, temperature);
+                if (cladResult && !cladResult.error) {
+                    rateClad = cladResult.rate;
+                }
             }
-
-            resultDisplay.classList.remove("hidden");
-        } else {
-            display_errors(["Calculation failed."]);
         }
+
+        // Save
+        sessionStorage.setItem("corrosion_rate", rateRounded);
+        sessionStorage.setItem("corrosion_rate_bm", rateRounded);
+
+        if (hasCladding) {
+            sessionStorage.setItem("corrosion_rate_cladding", rateClad.toFixed(2));
+            resultDisplay.innerHTML = `Base Rate: ${rateRounded} ${unit}<br>Cladding Rate: ${rateClad.toFixed(2)} ${unit}`;
+        } else {
+            sessionStorage.removeItem("corrosion_rate_cladding");
+            resultDisplay.innerHTML = `Estimated Corrosion Rate: ${rateRounded} ${unit}`;
+        }
+
+        if (baseResult.warningMsg) {
+            resultDisplay.innerHTML += `<div class="mt-2 p-2 bg-yellow-100 border border-yellow-400 text-yellow-700 rounded text-sm">${baseResult.warningMsg}</div>`;
+        }
+
+        resultDisplay.classList.remove("hidden");
     });
 
 }

@@ -224,6 +224,25 @@ export async function ht_h2sh2_corrosion_calc() {
         maximum_process_temperature = parseFloat(table41_data.operating_temp);
     }
 
+    // Check for Cladding
+    let hasCladding = false;
+    try {
+        const t41 = JSON.parse(sessionStorage.getItem("table4.1_data"));
+        if (t41 && t41.has_cladding === "yes") hasCladding = true;
+    } catch (e) { }
+
+    // Function to toggle Cladding UI
+    function toggleCladdingUI() {
+        const cladContainer = document.getElementById("cladding_type_container");
+        if (cladContainer) {
+            if (hasCladding && material) { // Show if material is selected (and cladding exists)
+                cladContainer.classList.remove("hidden");
+            } else {
+                cladContainer.classList.add("hidden");
+            }
+        }
+    }
+
     // Event listener for material selection
     document.getElementById("material").addEventListener("change", async function () {
         material = this.value;
@@ -249,6 +268,8 @@ export async function ht_h2sh2_corrosion_calc() {
                 document.getElementById("hydrocarbon").disabled = false;
                 break;
         }
+
+        toggleCladdingUI();
     });
 
     document.getElementById("hydrocarbon").addEventListener("change", function () {
@@ -281,15 +302,46 @@ export async function ht_h2sh2_corrosion_calc() {
             hydrocarbon
         );
 
+        // --- Cladding Calculation ---
+        let rateClad = 0;
+        if (hasCladding) {
+            const cladSelect = document.getElementById("cladding_material_type");
+            const cladMaterial = cladSelect ? cladSelect.value : "";
+
+            if (cladMaterial && cladMaterial !== "other") {
+                try {
+                    const cladTable = await get_table(cladMaterial);
+                    const cladResult = calculate_corrosion_rate_interpolated(
+                        cladTable,
+                        table41_data.measurement_unit,
+                        maximum_process_temperature,
+                        h2s_concentration,
+                        hydrocarbon
+                    );
+                    if (cladResult && cladResult.rate !== null) {
+                        rateClad = cladResult.rate;
+                    }
+                } catch (e) { console.log("Clad calc failed", e); }
+            }
+        }
+
         if (result && result.rate !== null) {
             const { rate, warningMsg } = result;
             const resultElement = document.getElementById("corrosion_rate");
             const unit = table41_data.measurement_unit === "farenheit" ? "mpy" : "mm/y";
 
             const rateRounded = rate.toFixed(2);
-            sessionStorage.setItem("corrosion_rate", rateRounded);
 
-            resultElement.innerHTML = `Corrosion rate: ${rateRounded} ${unit}`;
+            sessionStorage.setItem("corrosion_rate", rateRounded);
+            sessionStorage.setItem("corrosion_rate_bm", rateRounded);
+
+            if (hasCladding) {
+                sessionStorage.setItem("corrosion_rate_cladding", rateClad.toFixed(2));
+                resultElement.innerHTML = `Base Rate: ${rateRounded} ${unit}<br>Cladding Rate: ${rateClad.toFixed(2)} ${unit}`;
+            } else {
+                sessionStorage.removeItem("corrosion_rate_cladding");
+                resultElement.innerHTML = `Corrosion rate: ${rateRounded} ${unit}`;
+            }
 
             if (warningMsg) {
                 resultElement.innerHTML += `<div class="mt-2 p-2 bg-yellow-100 border border-yellow-400 text-yellow-700 rounded text-sm">${warningMsg}</div>`;
@@ -300,5 +352,8 @@ export async function ht_h2sh2_corrosion_calc() {
             display_errors(["Could not determine corrosion rate."]);
         }
     });
+
+    // Initial check
+    toggleCladdingUI();
 
 }

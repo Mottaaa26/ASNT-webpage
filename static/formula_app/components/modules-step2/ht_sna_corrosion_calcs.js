@@ -278,6 +278,25 @@ export async function ht_sna_corrosion_calc() {
         maximum_process_temperature = parseFloat(table41_data.operating_temp);
     }
 
+    // Check for Cladding
+    let hasCladding = false;
+    try {
+        const t41 = JSON.parse(sessionStorage.getItem("table4.1_data"));
+        if (t41 && t41.has_cladding === "yes") hasCladding = true;
+    } catch (e) { }
+
+    // Toggle UI
+    function toggleCladdingUI() {
+        const cladContainer = document.getElementById("cladding_type_container");
+        if (cladContainer && material) {
+            if (hasCladding) {
+                cladContainer.classList.remove("hidden");
+            } else {
+                cladContainer.classList.add("hidden");
+            }
+        }
+    }
+
     // get material value
     document.getElementById("material").addEventListener("change", async (e) => {
         material = e.target.value;
@@ -294,6 +313,7 @@ export async function ht_sna_corrosion_calc() {
             tanSelect.innerHTML = '<option value="" disabled selected>Error loading options</option>';
         }
 
+        toggleCladdingUI();
     });
 
     document.getElementById("maximum_process_temperature").addEventListener("input", (e) => {
@@ -336,6 +356,30 @@ export async function ht_sna_corrosion_calc() {
                 velocity
             );
 
+            // --- Cladding Calculation ---
+            let rateClad = 0;
+            if (hasCladding) {
+                const cladSelect = document.getElementById("cladding_material_type");
+                const cladMat = cladSelect ? cladSelect.value : "";
+
+                if (cladMat && cladMat !== "other") {
+                    try {
+                        const cladTable = await get_tables(cladMat);
+                        const cladResult = calculate_corrosion_rate_interpolated(
+                            cladTable,
+                            table41_data.measurement_unit,
+                            maximum_process_temperature,
+                            sulfur_concentration,
+                            tan,
+                            velocity
+                        );
+                        if (cladResult && cladResult.rate !== null) {
+                            rateClad = cladResult.rate;
+                        }
+                    } catch (e) { console.log("Clad calc failed", e); }
+                }
+            }
+
             if (result && result.rate !== null) {
                 const { rate, warningMsg } = result;
 
@@ -350,9 +394,15 @@ export async function ht_sna_corrosion_calc() {
 
                 const rateRounded = rate.toFixed(2);
                 sessionStorage.setItem("corrosion_rate", rateRounded);
+                sessionStorage.setItem("corrosion_rate_bm", rateRounded);
 
-                // Display corrosion rate
-                corrosionRateElement.innerHTML = `Estimated Corrosion Rate: ${rateRounded} mpy`;
+                if (hasCladding) {
+                    sessionStorage.setItem("corrosion_rate_cladding", rateClad.toFixed(2));
+                    corrosionRateElement.innerHTML = `Base Rate: ${rateRounded} mpy<br>Cladding Rate: ${rateClad.toFixed(2)} mpy`;
+                } else {
+                    sessionStorage.removeItem("corrosion_rate_cladding");
+                    corrosionRateElement.innerHTML = `Estimated Corrosion Rate: ${rateRounded} mpy`;
+                }
 
                 if (warningMsg) {
                     corrosionRateElement.innerHTML += `<div class="mt-2 p-2 bg-yellow-100 border border-yellow-400 text-yellow-700 rounded text-sm">${warningMsg}</div>`;
@@ -375,5 +425,8 @@ export async function ht_sna_corrosion_calc() {
             console.error("Error:", error);
         }
     });
+
+    // Init UI
+    toggleCladdingUI();
 
 }

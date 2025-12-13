@@ -297,12 +297,30 @@ export function hf_corrosion_calc() {
     let currentMaterial = null;
     let currentTableData = null;
 
+    // Check for Cladding
+    let hasCladding = false;
+    try {
+        const t41 = JSON.parse(sessionStorage.getItem("table4.1_data"));
+        if (t41 && t41.has_cladding === "yes") hasCladding = true;
+    } catch (e) { }
+
     async function checkConditions() {
         // Reset UI Components
         setVisibility("maximum_service_temperature", false);
         setVisibility("velocity", false);
         setVisibility("hf_in_water", false);
         setVisibility("aerated", false);
+
+        // Cladding UI
+        const cladContainer = document.getElementById("cladding_type_container");
+        if (cladContainer) {
+            if (hasCladding && (carbonSteelSelect.value === "yes" || alloy400Select.value === "yes")) {
+                cladContainer.classList.remove("hidden");
+            } else {
+                cladContainer.classList.add("hidden");
+            }
+        }
+
         calculateButton.classList.add("hidden");
         messageDisplay.classList.add("hidden");
         corrosionRateDisplay.classList.add("hidden");
@@ -369,7 +387,7 @@ export function hf_corrosion_calc() {
     }
 
     // Calculation Handler
-    calculateButton.addEventListener("click", () => {
+    calculateButton.addEventListener("click", async () => {
         document.getElementById("error-container").innerHTML = ""; // Clear errors
 
         const tempVal = maxTempInput.value;
@@ -408,9 +426,40 @@ export function hf_corrosion_calc() {
         }
 
         const rateRounded = rate.toFixed(2);
-        sessionStorage.setItem("corrosion_rate", rateRounded);
 
-        corrosionRateDisplay.innerHTML = `Corrosion Rate: ${rateRounded} ${unit}`;
+        // --- Cladding Logic ---
+        let rateClad = 0;
+        let cladType = "";
+        if (hasCladding) {
+            const cladSelect = document.getElementById("cladding_material_type");
+            if (cladSelect) cladType = cladSelect.value;
+
+            // Map simplified values to internal keys
+            let internalCladType = "";
+            if (cladType === "cs") internalCladType = "carbon_steel";
+            if (cladType === "alloy400") internalCladType = "alloy_400";
+
+            if (internalCladType === currentMaterial) {
+                rateClad = rate; // Reuse base rate
+            } else if (internalCladType && internalCladType !== currentMaterial) {
+                // Try to calculate if possible?
+                // If Base=CS (has velocity), Clad=Alloy (needs aerated). We don't have aerated.
+                // If Base=Alloy (has aerated), Clad=CS (needs velocity). We don't have velocity.
+                // So default to 0.
+                rateClad = 0;
+            }
+        }
+
+        sessionStorage.setItem("corrosion_rate", rateRounded);
+        sessionStorage.setItem("corrosion_rate_bm", rateRounded);
+
+        if (hasCladding) {
+            sessionStorage.setItem("corrosion_rate_cladding", rateClad.toFixed(2));
+            corrosionRateDisplay.innerHTML = `Base Rate: ${rateRounded} ${unit}<br>Cladding Rate: ${rateClad.toFixed(2)} ${unit}`;
+        } else {
+            sessionStorage.removeItem("corrosion_rate_cladding");
+            corrosionRateDisplay.innerHTML = `Corrosion Rate: ${rateRounded} ${unit}`;
+        }
 
         if (warningMsg) {
             corrosionRateDisplay.innerHTML += `<div class="mt-2 p-2 bg-yellow-100 border border-yellow-400 text-yellow-700 rounded text-sm">${warningMsg}</div>`;

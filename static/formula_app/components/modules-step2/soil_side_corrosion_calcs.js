@@ -651,6 +651,17 @@ export function soil_side_corrosion_calc() {
 
             // Save to sessionStorage
             sessionStorage.setItem("corrosion_rate", corrosionRate.toFixed(2));
+            sessionStorage.setItem("corrosion_rate_bm", corrosionRate.toFixed(2));
+
+            // Check for cladding and set rate to 0 (Internal cladding doesn't affect external soil corrosion)
+            try {
+                const t41 = JSON.parse(sessionStorage.getItem("table4.1_data"));
+                if (t41 && t41.has_cladding === "yes") {
+                    sessionStorage.setItem("corrosion_rate_cladding", 0);
+                } else {
+                    sessionStorage.removeItem("corrosion_rate_cladding");
+                }
+            } catch (e) { }
 
         } catch (error) {
             console.error("Calculation Error:", error);

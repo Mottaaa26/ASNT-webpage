@@ -58,6 +58,18 @@ export function hci_corrosion_calc() {
             document.getElementById("data_table2b26").classList.add("hidden");
             document.getElementById("data_table2b25").classList.add("hidden");
 
+            // Show Cladding Type Check if Cladding is present
+            let hasCladding = false;
+            try {
+                const t41 = JSON.parse(sessionStorage.getItem("table4.1_data"));
+                if (t41 && t41.has_cladding === "yes") hasCladding = true;
+            } catch (e) { }
+
+            const cladContainer = document.getElementById("cladding_type_container");
+            if (hasCladding && cladContainer) {
+                cladContainer.classList.remove("hidden");
+            }
+
 
             ph_known_container.classList.remove("hidden");
             ph_known.addEventListener("change", function () {
@@ -335,13 +347,66 @@ function calculate_corrosion_rate_tab2b23_2b24(table, ph_value) {
             corrosion_rate = Math.max(0, corrosion_rate);
         }
 
+        // Dual Calculation & Save Logic
+        const corrosion_rate_bm = corrosion_rate;
+        let corrosion_rate_clad = 0;
+
+        // Check for Cladding
+        let hasCladding = false;
+        let cladType = "";
+        try {
+            const t41 = JSON.parse(sessionStorage.getItem("table4.1_data"));
+            if (t41 && t41.has_cladding === "yes") {
+                hasCladding = true;
+                cladType = document.getElementById("cladding_material_type").value;
+            }
+        } catch (e) { }
+
+        const { ci_conc_table_2b23, ci_conc_table_2b24 } = tables;
+
+        if (hasCladding) {
+            if (cladType === "ss") {
+                // Calculate using 2b24 (SS table) with same pH and Temp
+                // Re-run interpolation logic for SS table
+                // We can extract logic to function or just duplicate specific part for simplicity here as tables differ slightly?
+                // Actually reusing logic requires the table data structure to be identical.
+                // 2b23 and 2b24 structure is identical.
+
+                // Helper to get rate from table
+                function getRateFromTable(targetTable, t, ph) {
+                    let tKey = (table41_data.measurement_unit === "celsius") ? "temperature in c°" : "temperature in f°";
+                    let d = targetTable[tKey];
+                    // Interpolate pH
+                    let iph = interpolate_ph(ph);
+                    let pd = d[iph.toString()];
+                    if (!pd) return 0;
+                    let pts = Object.entries(pd).map(([tm, r]) => [parseFloat(tm), parseFloat(r)]).sort((a, b) => a[0] - b[0]);
+                    let r = interpolate(t, pts);
+                    return Math.max(0, r);
+                }
+
+                corrosion_rate_clad = getRateFromTable(ci_conc_table_2b24, temperature, ph_value);
+
+            } else if (cladType === "cs") {
+                corrosion_rate_clad = corrosion_rate_bm; // Same as base
+            }
+            // else 0
+        }
+
         const unit = table41_data.measurement_unit === "farenheit" ? "mpy" : "mm/year";
-        const rateRounded = corrosion_rate.toFixed(2);
+        const rateRounded = corrosion_rate_bm.toFixed(2);
+        const cladRounded = corrosion_rate_clad.toFixed(2);
 
         cr_container.classList.remove("hidden");
-        cr_container.innerHTML = `Estimated corrosion rate calculated = ${rateRounded} ${unit} <br> <span class="text-sm text-yellow-600">${warningMsg}</span>`;
+        let resultHTML = `Estimated Base Rate: ${rateRounded} ${unit} <br> <span class="text-sm text-yellow-600">${warningMsg}</span>`;
 
-        sessionStorage.setItem("corrosion_rate", rateRounded);
+        if (hasCladding) {
+            resultHTML += `<br>Estimated Cladding Rate: ${cladRounded} ${unit}`;
+        }
+
+        cr_container.innerHTML = resultHTML;
+
+        saveRates(rateRounded, cladRounded);
     } else {
         cr_container.classList.remove("hidden");
         cr_container.textContent = `No corrosion rate found for the given Cl concentration.`;
@@ -652,7 +717,9 @@ function operations_crrate_tab2b26(avg_cl_concentration, tables) {
             if (result !== null) {
                 const { rate, warningMsg } = result;
                 const rateRounded = rate.toFixed(2);
-                sessionStorage.setItem("corrosion_rate", rateRounded);
+
+                // Generic Saving for Alloy path (No Cladding Support explicitly yet or assume 0)
+                saveRates(rateRounded, 0);
 
                 // show the result
                 corrosion_rate_container.classList.remove("hidden");
@@ -748,4 +815,23 @@ function calc_corrosion_rate_tab2b26(alloy_name, cl_concentration, ox_od_present
     }
 
     return { rate: corrosion_rate, warningMsg };
+}
+
+// Helper to save rates
+function saveRates(bmRate, cmRate) {
+    sessionStorage.setItem("corrosion_rate", bmRate);
+    sessionStorage.setItem("corrosion_rate_bm", bmRate);
+
+    // Check hasCladding again in case called from outside context (inefficient but safe)
+    let hasCladding = false;
+    try {
+        const t41 = JSON.parse(sessionStorage.getItem("table4.1_data"));
+        if (t41 && t41.has_cladding === "yes") hasCladding = true;
+    } catch (e) { }
+
+    if (hasCladding) {
+        sessionStorage.setItem("corrosion_rate_cladding", cmRate);
+    } else {
+        sessionStorage.removeItem("corrosion_rate_cladding");
+    }
 }

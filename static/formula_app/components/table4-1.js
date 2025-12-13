@@ -7,21 +7,44 @@ document.getElementById("btn_table4.1").addEventListener("click", () => {
     //
     const requiredFields = document.getElementById("table4.1_data").querySelectorAll('input[required], select[required]');
 
-    for (let field of requiredFields)
-    {
+    for (let field of requiredFields) {
 
-        if(!field.value || field.value === "")
-        {
-            if(!field.reportValidity())
-            {
+        if (!field.value || field.value === "") {
+            if (!field.reportValidity()) {
                 return;
             }
-        } 
+        }
 
     }
 
+    // Validate dates
+    const startDateVal = document.getElementById('start_date').value;
+    const linerDateVal = document.getElementById('internal_liner_input').value;
+
+    // Normalize today to midnight
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    if (startDateVal) {
+        const [y, m, d] = startDateVal.split('-').map(Number);
+        const startDate = new Date(y, m - 1, d);
+        if (startDate > today) {
+            alert("Start Date cannot be in the future.");
+            return;
+        }
+    }
+
+    if (linerDateVal) {
+        const [y, m, d] = linerDateVal.split('-').map(Number);
+        const linerDate = new Date(y, m - 1, d);
+        if (linerDate > today) {
+            alert("Internal Liner Date cannot be in the future.");
+            return;
+        }
+    }
+
     // Dict with all the data table and we use sessionStorage to keep these values and use them later in other scripts.
-    table_data = 
+    table_data =
     {
         start_date: document.getElementById('start_date').value,
         thickness: parseFloat(document.getElementById('thickness').value),
@@ -37,7 +60,7 @@ document.getElementById("btn_table4.1").addEventListener("click", () => {
         has_cladding: document.getElementById('has_cladding').value,
         cladding: document.getElementById('cladding_input').value,
         has_internal_liner: document.getElementById('has_internal_liner').value,
-        internal_liner:  document.getElementById('internal_liner_input').value,
+        internal_liner: document.getElementById('internal_liner_input').value,
         comp_geom_data: document.getElementById('component_geometry_data').value,
         material_especification: document.getElementById('material_especification').value,
         yield_strength: parseFloat(document.getElementById('yield_strength').value),
@@ -56,9 +79,9 @@ document.getElementById("btn_table4.1").addEventListener("click", () => {
 
 window.loadComponents = undefined;
 
-async function loadTable41(){
+async function loadTable41() {
     const dataString = sessionStorage.getItem('table4.1_data');
-    if(!dataString) return;
+    if (!dataString) return;
 
     const table_data = JSON.parse(dataString);
 
@@ -84,17 +107,44 @@ async function loadTable41(){
 
     document.getElementById('equipment').value = table_data.equip_type;
 
-    if(table_data.equip_type && typeof window.loadComponents === 'function')
-    {
+    if (table_data.equip_type && typeof window.loadComponents === 'function') {
         await window.loadComponents(table_data.equip_type);
     }
 
     document.getElementById('component').value = table_data.comp_type;
 
-} 
+}
 
 // Delete the sessionStorage data when the log_out button is clicked
 let log_out_btn = document.getElementById("logout_btn");
-log_out_btn.addEventListener("click", function(){
-   sessionStorage.clear();
+log_out_btn.addEventListener("click", function () {
+    sessionStorage.clear();
 });
+
+// Helper to setup toggle logic
+function setupToggle(selectId, rowId, inputId) {
+    const select = document.getElementById(selectId);
+    const row = document.getElementById(rowId);
+    const input = document.getElementById(inputId);
+
+    if (select && row && input) {
+        const toggle = () => {
+            if (select.value === 'yes') { // Case sensitive 'yes' matches HTML value
+                row.classList.remove('hidden');
+                input.setAttribute('required', 'true');
+            } else {
+                row.classList.add('hidden');
+                input.removeAttribute('required');
+                input.value = ''; // Clean up
+            }
+        };
+        select.addEventListener('change', toggle);
+        // Run once
+        toggle();
+    }
+}
+
+// Initialize triggers
+setupToggle('has_internal_liner', 'internal_liner_row', 'internal_liner_input');
+setupToggle('has_cladding', 'cladding_row', 'cladding_input');
+

@@ -13,6 +13,17 @@
     </select>
   </div>
 
+  <div id="cladding_type_container" class="hidden flex flex-col gap-3">
+    <label for="cladding_material_type">Cladding Material Type</label>
+    <select required name="cladding_material_type" id="cladding_material_type"
+      class="select select-bordered w-full max-w-xs">
+      <option value="" disabled selected>Select one</option>
+      <option value="cs">Mask Carbon Steel</option>
+      <option value="ss">Mask 300 Series SS</option>
+      <option value="other">Other</option>
+    </select>
+  </div>
+
   <div id="ph_known_container" class="hidden flex flex-col gap-3">
     <label for="ph_known">Do you know the ph?</label>
     <select required name="ph_known" class="select" id="ph_known">

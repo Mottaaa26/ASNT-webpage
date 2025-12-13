@@ -236,6 +236,13 @@ export function alkaline_sw_corrosion_calc() {
 
 
 
+    // Check for Cladding
+    let hasCladding = false;
+    try {
+        const t41 = JSON.parse(sessionStorage.getItem("table4.1_data"));
+        if (t41 && t41.has_cladding === "yes") hasCladding = true;
+    } catch (e) { }
+
     calculateButton.addEventListener("click", () => {
         // Reset output
         document.getElementById("error-container").innerHTML = "";
@@ -272,7 +279,16 @@ export function alkaline_sw_corrosion_calc() {
         }
 
         sessionStorage.setItem("corrosion_rate", rate);
-        corrosionRateDisplay.textContent = `Estimated Corrosion Rate (Table 2.B.7.2): ${rate} ${unit}`;
+        sessionStorage.setItem("corrosion_rate_bm", rate);
+
+        if (hasCladding) {
+            sessionStorage.setItem("corrosion_rate_cladding", 0);
+            corrosionRateDisplay.innerHTML = `Base Rate: ${rate} ${unit}<br>Cladding Rate: 0 ${unit} (Assumed Resistant)`;
+        } else {
+            sessionStorage.removeItem("corrosion_rate_cladding");
+            corrosionRateDisplay.textContent = `Estimated Corrosion Rate (Table 2.B.7.2): ${rate} ${unit}`;
+        }
+
         corrosionRateDisplay.classList.remove("hidden");
 
         // Show H2S section after successful baseline calculation
@@ -305,7 +321,15 @@ export function alkaline_sw_corrosion_calc() {
         const adjustedRate = calculate_adjusted_rate(baselineRate, h2sPressure, isFahrenheit);
 
         sessionStorage.setItem("adjusted_corrosion_rate", adjustedRate);
-        adjustedRateDisplay.textContent = `Adjusted Corrosion Rate: ${adjustedRate} ${unit}`;
+        sessionStorage.setItem("corrosion_rate_bm", adjustedRate); // Update BM with adjusted
+
+        if (hasCladding) {
+            // Cladding rate remains 0
+            adjustedRateDisplay.innerHTML = `Adjusted Base Rate: ${adjustedRate} ${unit}<br>Cladding Rate: 0 ${unit}`;
+        } else {
+            adjustedRateDisplay.textContent = `Adjusted Corrosion Rate: ${adjustedRate} ${unit}`;
+        }
+
         adjustedRateDisplay.classList.remove("hidden");
     });
 

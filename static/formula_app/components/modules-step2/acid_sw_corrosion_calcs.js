@@ -87,6 +87,7 @@ export function acid_sw_corrosion_calc() {
     const ph45Select = document.getElementById("ph_4_5");
     const chloridesSelect = document.getElementById("chlorides");
     const materialSelect = document.getElementById("material");
+    const claddingMaterialSelect = document.getElementById("cladding_material"); // NEW
 
     // Final Inputs Containers
     const containerFinalInputs = document.getElementById("container_final_inputs");
@@ -109,7 +110,16 @@ export function acid_sw_corrosion_calc() {
     const finalResultDisplay = document.getElementById("corrosion_rate"); // Main Result at bottom
     const errorContainer = document.getElementById("error-container");
 
-    let baseCorrosionRate = 0;
+    let baseCorrosionRate = 0; // Calculated rate for CS (unfactored)
+
+    // Check Cladding Status from Table 4.1
+    let hasCladding = false;
+    try {
+        const t41 = JSON.parse(sessionStorage.getItem("table4.1_data"));
+        if (t41 && t41.has_cladding === "yes") {
+            hasCladding = true;
+        }
+    } catch (e) { console.error("Error reading table4.1", e); }
 
     // --- VISIBILITY LOGIC ---
 
@@ -119,8 +129,8 @@ export function acid_sw_corrosion_calc() {
 
         if (h2oSelect.value === "no") {
             hideAllAfterH2O();
-            sessionStorage.setItem("corrosion_rate", 0);
-            sessionStorage.setItem("final_corrosion_rate", 0);
+            // Both rates 0
+            saveRates(0, 0);
             finalResultDisplay.textContent = "Estimated Corrosion Rate is 0 mpy";
             finalResultDisplay.classList.remove("hidden");
             return;
@@ -175,24 +185,66 @@ export function acid_sw_corrosion_calc() {
             return;
         }
 
-        if (materialSelect.value === "no") {
+        // Material Selection Logic
+        // Flow: Material (BM) -> Cladding Material (if hasCladding) -> Calc Inputs
+
+        // If BM is NO (non-CS) -> We handle it (rate=2). 
+        // If BM is YES (CS) -> Go to Cladding Check.
+
+        if (materialSelect.value === "") {
+            setVisibility("container_cladding_material", false);
             setVisibility("container_final_inputs", false);
-            sessionStorage.setItem("corrosion_rate", 2);
-            sessionStorage.setItem("final_corrosion_rate", 2);
-            finalResultDisplay.textContent = "Estimated corrosion rate: 2 mpy";
-            finalResultDisplay.classList.remove("hidden");
             return;
         }
 
-        if (materialSelect.value === "yes") {
-            setVisibility("container_final_inputs", true);
-            setVisibility("container_step_1", true);
-            finalResultDisplay.classList.add("hidden");
+        let showCalcInputs = false;
+
+        if (hasCladding) {
+            setVisibility("container_cladding_material", true);
+            if (claddingMaterialSelect.value !== "") {
+                showCalcInputs = true;
+            } else {
+                showCalcInputs = false;
+            }
+        } else {
+            setVisibility("container_cladding_material", false);
+            showCalcInputs = true;
+        }
+
+        if (showCalcInputs) {
+            // Logic to determine if we show inputs or auto-result
+            // We need inputs IF at least one material is CS ("yes").
+            // If both are "no", we just set result to 2/2?
+
+            const bmIsCS = materialSelect.value === "yes";
+            const cmIsCS = hasCladding ? (claddingMaterialSelect.value === "yes") : false;
+
+            if (bmIsCS || cmIsCS) {
+                // Need calculation parameters
+                setVisibility("container_final_inputs", true);
+                setVisibility("container_step_1", true);
+                finalResultDisplay.classList.add("hidden");
+            } else {
+                // Both are non-CS (e.g. both SS)
+                setVisibility("container_final_inputs", false);
+                const rate = 2; // Default for non-CS
+                saveRates(rate, hasCladding ? rate : 0);
+                finalResultDisplay.textContent = `Estimated Corrosion Rates: Base=${rate} mpy` + (hasCladding ? `, Clad=${rate} mpy` : "");
+                finalResultDisplay.classList.remove("hidden");
+            }
         } else {
             setVisibility("container_final_inputs", false);
-            return;
         }
+    }
 
+    function saveRates(bmRate, cmRate) {
+        sessionStorage.setItem("corrosion_rate", bmRate); // Keep legacy for compatibility? or base
+        sessionStorage.setItem("corrosion_rate_bm", bmRate);
+        if (hasCladding) {
+            sessionStorage.setItem("corrosion_rate_cladding", cmRate);
+        } else {
+            sessionStorage.removeItem("corrosion_rate_cladding");
+        }
     }
 
     function hideAllAfterH2O() {
@@ -200,6 +252,7 @@ export function acid_sw_corrosion_calc() {
         setVisibility("container_ph_4_5", false);
         setVisibility("container_chlorides", false);
         setVisibility("container_material", false);
+        setVisibility("container_cladding_material", false);
         setVisibility("container_final_inputs", false);
         setVisibility("container_coming_soon", false);
         finalResultDisplay.classList.add("hidden");
@@ -209,6 +262,7 @@ export function acid_sw_corrosion_calc() {
         setVisibility("container_ph_4_5", false);
         setVisibility("container_chlorides", false);
         setVisibility("container_material", false);
+        setVisibility("container_cladding_material", false);
         setVisibility("container_final_inputs", false);
         setVisibility("container_coming_soon", false);
     }
@@ -216,12 +270,14 @@ export function acid_sw_corrosion_calc() {
     function hideAllAfterPH45() {
         setVisibility("container_chlorides", false);
         setVisibility("container_material", false);
+        setVisibility("container_cladding_material", false);
         setVisibility("container_final_inputs", false);
         setVisibility("container_coming_soon", false);
     }
 
     function hideAllAfterChlorides() {
         setVisibility("container_material", false);
+        setVisibility("container_cladding_material", false);
         setVisibility("container_final_inputs", false);
         setVisibility("container_coming_soon", false);
     }
@@ -273,56 +329,33 @@ export function acid_sw_corrosion_calc() {
             return;
         }
 
-        // DOUBLE INTERPOLATION STRATEGY
-        // 1. Iterate each Temperature T in the table.
-        // 2. For each T, get the list of (pH, Rate) points.
-        // 3. Interpolate (or find) the Rate at the input pH for that T. -> (T, Rate_at_Input_pH)
-        // 4. Collect all (T, Rate_at_Input_pH) points.
-        // 5. Interpolate the final Rate at the input T using these points.
+        // DOUBLE INTERPOLATION STRATEGY (Copy of existing logic)
+        // ... (omitted for brevity, assume logic is same but result assigned to variable)
+        // Actually I need to run this logic. 
 
-        const tempPoints = []; // Array of [T, InterpolatedRateAtPH]
+        const tempPoints = [];
         let phWarning = "";
 
-        // Get all available temperatures and sort them
         const availableTemps = Object.keys(tempData).map(parseFloat).sort((a, b) => a - b);
 
         for (const t of availableTemps) {
-            const phData = tempData[t]; // { "4.75": 1, "5.5": 2 }
+            const phData = tempData[t];
             if (!phData) continue;
-
-            // Build (pH, Rate) points for this specific Temperature T
-            const phPoints = Object.entries(phData)
-                .map(([p, r]) => [parseFloat(p), parseFloat(r)])
-                .sort((a, b) => a[0] - b[0]);
-
+            const phPoints = Object.entries(phData).map(([p, r]) => [parseFloat(p), parseFloat(r)]).sort((a, b) => a[0] - b[0]);
             if (phPoints.length === 0) continue;
-
             const minPH = phPoints[0][0];
             const maxPH = phPoints[phPoints.length - 1][0];
-
-            // Check pH Range for this temp (Assuming similar ranges across temps, but safe to check first one/all)
-            // Ideally we check if input pH is drastically out of range globally to warn user
-
-            // Interpolate Rate for Input pH at Temp T
             let rateAtPH = interpolate(ph, phPoints);
-
-            // Clamp rate if pH is out of bounds for this curve
-            // Note: If pH is < minPH or > maxPH, we might be extrapolating.
-            // For Acid SW, pH range is usually 4.5 to 7ish.
 
             if (ph < minPH) {
                 rateAtPH = Math.max(0, rateAtPH);
                 if (!phWarning) phWarning = `(pH < Table Range: Extrapolated)`;
             } else if (ph > maxPH) {
-                // If pH > maxPH, rate usually decreases or stays same. 
-                // Let's simpler clamp to nearest bound value or use extrapolated value handled by helper.
-                // interpolate helper does extrapolation. We just clamp to >= 0
                 rateAtPH = Math.max(0, rateAtPH);
                 if (!phWarning) phWarning = `(pH > Table Range: Extrapolated)`;
             } else {
                 rateAtPH = Math.max(0, rateAtPH);
             }
-
             tempPoints.push([t, rateAtPH]);
         }
 
@@ -331,7 +364,6 @@ export function acid_sw_corrosion_calc() {
             return;
         }
 
-        // Now interpolate across Temperatures
         const minTemp = tempPoints[0][0];
         const maxTemp = tempPoints[tempPoints.length - 1][0];
         let finalRate = interpolate(temp, tempPoints);
@@ -347,21 +379,19 @@ export function acid_sw_corrosion_calc() {
             finalRate = Math.max(0, finalRate);
         }
 
-        // Store base rate
+        // Store BASE CALCULATED rate (unfactored)
         baseCorrosionRate = finalRate;
 
-        // Store intermediate rate
+        // Store intermediate rate for display (just base rate unfactored?) or factored?
+        // The original logic saved this as 'acid_base_corrosion_rate' and showed it.
         const rateRounded = finalRate.toFixed(2);
-        sessionStorage.setItem("corrosion_rate", rateRounded);
+        sessionStorage.setItem("acid_base_corrosion_rate", rateRounded);
 
         const combinedWarning = [phWarning, tempWarning].filter(Boolean).join(" ");
         let warningHTML = "";
+        if (combinedWarning) warningHTML = `<div class="mt-2 p-2 bg-yellow-100 border border-yellow-400 text-yellow-700 rounded text-sm">Warning: ${combinedWarning}</div>`;
 
-        if (combinedWarning) {
-            warningHTML = `<div class="mt-2 p-2 bg-yellow-100 border border-yellow-400 text-yellow-700 rounded text-sm">Warning: ${combinedWarning}</div>`;
-        }
-
-        resultRate1.innerHTML = `Base Corrosion Rate (CRph): ${rateRounded} ${unitLabel} ${warningHTML}`;
+        resultRate1.innerHTML = `Base Rate (CRph): ${rateRounded} ${unitLabel} ${warningHTML}`;
         resultRate1.classList.remove("hidden");
 
         // Show Next Step
@@ -379,7 +409,6 @@ export function acid_sw_corrosion_calc() {
     btnCalcFinalRate.addEventListener("click", () => {
         errorContainer.innerHTML = "";
 
-        // Ensure Step 1 was done
         if (!baseCorrosionRate && baseCorrosionRate !== 0) {
             errorContainer.innerHTML = `<div class="alert alert-error">Please calculate the base rate first.</div>`;
             return;
@@ -412,34 +441,41 @@ export function acid_sw_corrosion_calc() {
 
         let Fv = 1.0;
         if (usesFahrenheit) {
-            if (vel < 6) {
-                Fv = 1.0;
-            } else if (vel <= 20) {
-                Fv = (0.25 * vel) - 0.5;
-            } else {
-                Fv = 5.0;
-            }
+            if (vel < 6) Fv = 1.0;
+            else if (vel <= 20) Fv = (0.25 * vel) - 0.5;
+            else Fv = 5.0;
         } else {
-            if (vel < 1.83) {
-                Fv = 1.0;
-            } else if (vel <= 6.10) {
-                Fv = (0.82 * vel) - 0.5;
-            } else {
-                Fv = 5.0;
-            }
+            if (vel < 1.83) Fv = 1.0;
+            else if (vel <= 6.10) Fv = (0.82 * vel) - 0.5;
+            else Fv = 5.0;
         }
 
-        const finalRate = baseCorrosionRate * Fo * Fv;
-        const finalRateRounded = finalRate.toFixed(2);
+        // --- DUAL CALCULATION ---
+        const bmIsCS = materialSelect.value === "yes";
+        const cmIsCS = hasCladding ? (claddingMaterialSelect.value === "yes") : false;
+
+        const calculatedRate = baseCorrosionRate * Fo * Fv;
+        const defaultRate = 2.0;
+
+        const bmRate = bmIsCS ? calculatedRate : defaultRate;
+        const cmRate = hasCladding ? (cmIsCS ? calculatedRate : defaultRate) : 0;
 
         const unitLabel = usesFahrenheit ? "mpy" : "mm/y";
 
-        finalResultDisplay.textContent = `Estimated Corrosion Rate: ${finalRateRounded} ${unitLabel}`;
+        // Display
+        let outputHTML = `Estimated Base Metal Rate: ${bmRate.toFixed(2)} ${unitLabel}`;
+        if (hasCladding) {
+            outputHTML += `<br>Estimated Cladding Rate: ${cmRate.toFixed(2)} ${unitLabel}`;
+        }
+
+        finalResultDisplay.innerHTML = outputHTML;
         finalResultDisplay.classList.remove("hidden");
 
-        sessionStorage.setItem("final_corrosion_rate", finalRateRounded);
+        // Save
+        saveRates(bmRate.toFixed(2), cmRate.toFixed(2));
     });
 
+    if (claddingMaterialSelect) claddingMaterialSelect.addEventListener("change", updateVisibility); // Ensure listener
     h2oSelect.addEventListener("change", updateVisibility);
     ph7Select.addEventListener("change", updateVisibility);
     ph45Select.addEventListener("change", updateVisibility);
@@ -448,3 +484,4 @@ export function acid_sw_corrosion_calc() {
 
     updateVisibility();
 }
+

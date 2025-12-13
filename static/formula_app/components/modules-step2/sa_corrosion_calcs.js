@@ -310,10 +310,27 @@ export function sa_corrosion_calc() {
     const setCorrosionRateButton = document.getElementById("set_corrosion_rate");
     const specialistCorrosionRateInput = document.getElementById("specialist_corrosion_rate");
 
+    // Check for Cladding
+    let hasCladding = false;
+    try {
+        const t41 = JSON.parse(sessionStorage.getItem("table4.1_data"));
+        if (t41 && t41.has_cladding === "yes") hasCladding = true;
+    } catch (e) { }
+
     // Function to check conditions and show/hide elements
     async function checkConditions() {
         const material = materialSelect.value;
         const oxygenPresent = oxygenSelect.value;
+
+        // Cladding UI
+        const cladContainer = document.getElementById("cladding_type_container");
+        if (cladContainer && material) { // Show if material is selected
+            if (hasCladding) {
+                cladContainer.classList.remove("hidden");
+            } else {
+                cladContainer.classList.add("hidden");
+            }
+        }
 
         // Check if both material and oxygen are selected
         if (material && oxygenPresent) {
@@ -368,6 +385,8 @@ export function sa_corrosion_calc() {
 
             // Save to sessionStorage (only the numeric value, without unit)
             sessionStorage.setItem("corrosion_rate", corrosionRateValue);
+            sessionStorage.setItem("corrosion_rate_bm", corrosionRateValue);
+            if (hasCladding) sessionStorage.setItem("corrosion_rate_cladding", 0);
 
             // Show success message with the appropriate unit
             const corrosionRateDisplay = document.getElementById("corrosion_rate");
@@ -426,13 +445,50 @@ export function sa_corrosion_calc() {
                 unit = table41.measurement_unit === "farenheit" ? "mpy" : "mm/year";
             }
 
-            // Save to sessionStorage
             const rateRounded = rate.toFixed(2);
+            let rateClad = 0;
+
+            // --- Cladding Calculation ---
+            if (hasCladding) {
+                const cladSelect = document.getElementById("cladding_material_type");
+                const cladMaterial = cladSelect ? cladSelect.value : "";
+
+                if (cladMaterial && cladMaterial !== "other") {
+                    try {
+                        // Reuse the same functions
+                        // Note: get_table might fail if material not in list but we matched HTML options
+                        const cladTable = await get_table(cladMaterial);
+                        // Try calc
+                        const cladResult = calculate_corrosion_rate_interpolated(
+                            cladTable,
+                            cladMaterial,
+                            acidConcentration,
+                            maximumTemperature,
+                            velocityOfAcid
+                        );
+                        if (cladResult && cladResult.rate !== null) {
+                            rateClad = cladResult.rate;
+                        }
+                    } catch (e) {
+                        console.log("Clad calc failed", e);
+                    }
+                }
+            }
+
+            // Save to sessionStorage
             sessionStorage.setItem("corrosion_rate", rateRounded);
+            sessionStorage.setItem("corrosion_rate_bm", rateRounded);
 
             // Display the result
             const corrosionRateDisplay = document.getElementById("corrosion_rate");
-            corrosionRateDisplay.innerHTML = `Corrosion Rate: ${rateRounded} ${unit}`;
+
+            if (hasCladding) {
+                sessionStorage.setItem("corrosion_rate_cladding", rateClad.toFixed(2));
+                corrosionRateDisplay.innerHTML = `Base Rate: ${rateRounded} ${unit}<br>Cladding Rate: ${rateClad.toFixed(2)} ${unit}`;
+            } else {
+                sessionStorage.removeItem("corrosion_rate_cladding");
+                corrosionRateDisplay.innerHTML = `Corrosion Rate: ${rateRounded} ${unit}`;
+            }
 
             if (warningMsg) {
                 corrosionRateDisplay.innerHTML += `<div class="mt-2 p-2 bg-yellow-100 border border-yellow-400 text-yellow-700 rounded text-sm">${warningMsg}</div>`;

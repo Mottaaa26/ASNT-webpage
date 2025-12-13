@@ -77,6 +77,21 @@
             <option value="carbon steel">Carbon Steel</option>
         </select>
 
+        <div id="cladding_type_container" class="hidden flex flex-col gap-3">
+            <label for="cladding_material_type">Cladding Material Type</label>
+            <select required name="cladding_material_type" id="cladding_material_type"
+                class="select select-bordered w-full max-w-xs">
+                <option value="" disabled selected>Select one</option>
+                <option value="carbon steel">Carbon Steel</option>
+                <option value="304 ss">304 SS</option>
+                <option value="316 ss">316 SS</option>
+                <option value="alloy 20">Alloy 20</option>
+                <option value="alloy c-276">Alloy C-276</option>
+                <option value="alloy b-2">Alloy B-2</option>
+                <option value="other">Other</option>
+            </select>
+        </div>
+
         <!-- Specialist Consultation Message -->
         <div id="specialist_message_container" class="hidden">
             <div class="alert alert-warning m-3">

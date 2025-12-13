@@ -13,18 +13,16 @@ const message_error = document.getElementById("message_error");
 
 
 async function loadStepContent(stepNumber) {
-    
+
     const filePath = `${STEP_BASE_PATH}${stepNumber}`;
     console.log(`INFO: cargando el contenido del paso ${filePath}`);
 
     try {
         const response = await fetch(filePath);
-        if(!response.ok)
-        {
+        if (!response.ok) {
             console.error(`Eror al cargar el paso ${stepNumber}: Archivo no encontrado.`);
-            
-            if(message_error)
-            {
+
+            if (message_error) {
                 message_error.innerHTML = error.message;
                 message_error.classList.remove("hidden");
             }
@@ -49,24 +47,32 @@ async function renderStep() {
     sessionStorage.setItem('actual_step', actual_step);
 
     executeInjectedScripts(stepContainer);
+
+    // Apply date restrictions to new inputs
+    if (typeof window.restrictDateInputs === 'function') {
+        window.restrictDateInputs();
+    }
+
+    // Initializations for specific steps
+    if (actual_step === 3 && typeof window.step3_init === 'function') {
+        window.step3_init();
+    }
 }
 
 function executeInjectedScripts(container) {
     const scripts = container.querySelectorAll('script');
     scripts.forEach(oldScript => {
         const newScript = document.createElement('script');
-        
+
         Array.from(oldScript.attributes).forEach(attr => {
             newScript.setAttribute(attr.name, attr.value);
         });
 
-        if(oldScript.textContent)
-        {
+        if (oldScript.textContent) {
             newScript.textContent = oldScript.textContent;
         }
 
-        if(oldScript.parentNode)
-        {
+        if (oldScript.parentNode) {
             oldScript.parentNode.replaceChild(newScript, oldScript);
         }
 
@@ -74,17 +80,15 @@ function executeInjectedScripts(container) {
 }
 
 
-btn_next.onclick = function() {
-    if(actual_step < MAX_STEP)
-    {
+btn_next.onclick = function () {
+    if (actual_step < MAX_STEP) {
         actual_step++;
         renderStep();
     }
 }
 
-btn_anterior.onclick = function() {
-    if(actual_step > 1)
-    {
+btn_anterior.onclick = function () {
+    if (actual_step > 1) {
         actual_step--;
         renderStep();
     }
