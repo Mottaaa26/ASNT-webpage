@@ -116,10 +116,12 @@ async function loadTable41() {
 }
 
 // Delete the sessionStorage data when the log_out button is clicked
-let log_out_btn = document.getElementById("logout_btn");
-log_out_btn.addEventListener("click", function () {
-    sessionStorage.clear();
-});
+var log_out_btn = document.getElementById("logout_btn");
+if (log_out_btn) {
+    log_out_btn.addEventListener("click", function () {
+        sessionStorage.clear();
+    });
+}
 
 // Helper to setup toggle logic
 function setupToggle(selectId, rowId, inputId) {

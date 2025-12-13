@@ -226,6 +226,7 @@ function step4_init() {
         const method = methodSelect.value;
         let tmin = 0;
 
+        let S = 0;
         if (method === 'manual' || method === 'struct') {
             tmin = parseFloat(manualInput.value) || 0;
         } else {
@@ -235,7 +236,7 @@ function step4_init() {
             document.getElementById("step4_error_container").classList.add("hidden");
 
             // Get Inputs
-            const S = parseFloat(stressInput.value);
+            S = parseFloat(stressInput.value);
             const DesignP = parseFloat(table1Data.design_press) || parseFloat(table1Data.operating_press) || 0;
             let E = parseFloat(table1Data.weld_joint_efficiency) || 1.0;
             if (E > 1.0) E = E / 100.0;
@@ -249,6 +250,15 @@ function step4_init() {
                 errorContainer.classList.remove("hidden");
                 return;
             }
+
+            // Save Allowable Stress (S) logic
+            sessionStorage.setItem("allowable_stress", S);
+
+            // Save Allowable Stress (S) explicitly when calculating
+            sessionStorage.setItem("allowable_stress", S);
+
+            // Save Allowable Stress (S) for future steps (Step 7)
+            sessionStorage.setItem("allowable_stress", S);
 
             // Get Geometry Inputs
             const dInput = document.querySelector('[id^="step4_geom_diameter"]');
