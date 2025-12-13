@@ -1819,6 +1819,9 @@
   .z-\[1\] {
     z-index: 1;
   }
+  .col-span-1 {
+    grid-column: span 1 / span 1;
+  }
   @layer daisyui.component {
     .drawer-content {
       grid-column-start: 2;
@@ -1939,9 +1942,6 @@
   .mt-6 {
     margin-top: calc(var(--spacing) * 6);
   }
-  .mt-8 {
-    margin-top: calc(var(--spacing) * 8);
-  }
   .mb-1 {
     margin-bottom: calc(var(--spacing) * 1);
   }
@@ -2041,6 +2041,9 @@
   }
   .hidden {
     display: none;
+  }
+  .inline {
+    display: inline;
   }
   .inline-block {
     display: inline-block;
@@ -2419,6 +2422,9 @@
   .text-center {
     text-align: center;
   }
+  .font-mono {
+    font-family: var(--font-mono);
+  }
   .font-sans {
     font-family: var(--font-sans);
   }
@@ -2514,6 +2520,9 @@
   .text-blue-950 {
     color: var(--color-blue-950);
   }
+  .text-error {
+    color: var(--color-error);
+  }
   .text-gray-400 {
     color: var(--color-gray-400);
   }
@@ -2549,6 +2558,9 @@
   }
   .lowercase {
     text-transform: lowercase;
+  }
+  .italic {
+    font-style: italic;
   }
   .underline {
     text-decoration-line: underline;
@@ -2745,8 +2757,18 @@
     }
   }
   @media (width >= 48rem) {
+    .md\:col-span-2 {
+      grid-column: span 2 / span 2;
+    }
+  }
+  @media (width >= 48rem) {
     .md\:w-96 {
       width: calc(var(--spacing) * 96);
+    }
+  }
+  @media (width >= 48rem) {
+    .md\:w-auto {
+      width: auto;
     }
   }
   @media (width >= 48rem) {

@@ -1,0 +1,312 @@
+<div class="flex flex-col h-full w-full">
+    <div class="mb-4">
+        <h2 class="text-xl font-bold mb-2">Step 4 - Determine Minimum Required Thickness (t<sub>min</sub>)</h2>
+        <p class="text-sm text-gray-600 mb-4">
+            Determine the minimum required thickness (t<sub>min</sub>) based on the original construction code or API
+            579-1/ASME FFS-1.
+        </p>
+
+        <!-- Calculation Method Selection -->
+        <div class="form-control w-full max-w-xs mb-4">
+            <label class="label">
+                <span class="label-text font-bold">Calculation Method</span>
+            </label>
+            <!-- Added onchange handler explicitly -->
+            <select id="step4_calc_method" class="select select-bordered w-full"
+                onchange="window.step4_toggle_method()">
+                <option value="calc" selected>Calculate (ASME Code Formula)</option>
+                <option value="struct">Structural Thickness (t<sub>c</sub>)</option>
+                <option value="manual">Manual Input (Asset Management Program)</option>
+            </select>
+        </div>
+
+        <!-- 1. Calculation Method Inputs -->
+        <div id="step4_method_calc_container"
+            class="flex flex-col gap-4 p-4 bg-base-100 rounded-box border border-base-300">
+            <h3 class="font-bold underline">Code Calculation Parameters</h3>
+
+            <!-- Allowable Stress (Missing from Step 1) -->
+            <div class="form-control w-full">
+                <label class="label">
+                    <span class="label-text">Allowable Stress (S) at Design Temp</span>
+                    <span class="label-text-alt text-error font-bold" id="step4_stress_unit">ksi</span>
+                </label>
+                <input type="number" id="step4_allowable_stress" placeholder="Enter Allowable Stress"
+                    class="input input-bordered w-full" step="0.1" required />
+                <label class="label">
+                    <span class="label-text-alt">From ASME II-D or Construction Code</span>
+                </label>
+            </div>
+
+            <!-- Dynamic Geometry Inputs Container -->
+            <div id="step4_geometry_inputs_container" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <!-- Inputs will be injected here by JS based on Step 1 Component Type -->
+                <p class="text-gray-500 italic">Select a component in Step 1 to load geometry fields.</p>
+            </div>
+        </div>
+
+        <!-- 2. Structural/Manual Inputs -->
+        <div id="step4_method_manual_container"
+            class="hidden flex flex-col gap-4 p-4 bg-base-100 rounded-box border border-base-300">
+            <div class="form-control w-full">
+                <label class="label">
+                    <span class="label-text" id="step4_manual_label">Minimum Structural Thickness (t<sub>c</sub>)</span>
+                    <span class="label-text-alt unit_display">mm</span>
+                </label>
+                <input type="number" id="step4_manual_tmin" placeholder="Enter thickness"
+                    class="input input-bordered w-full" step="0.001" />
+            </div>
+        </div>
+
+        <!-- Error Container -->
+        <div id="step4_error_container" class="alert alert-error hidden mb-4">
+            <svg xmlns="http://www.w3.org/2000/svg" class="stroke-current shrink-0 h-6 w-6" fill="none"
+                viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            <span id="step4_error_message">Error!</span>
+        </div>
+
+        <button id="step4_calc_btn" class="btn btn-primary mt-4 w-full md:w-auto">Calculate t<sub>min</sub></button>
+    </div>
+
+    <!-- Results -->
+    <div id="step4_result_container" class="hidden mt-6 p-4 bg-base-100 rounded-box border border-base-300">
+        <div class="flex flex-col">
+            <span class="font-bold underline mb-2">Step 4 Result</span>
+            <div class="flex flex-col">
+                <span class="font-bold text-primary">Minimum Required Thickness (t<sub>min</sub>)</span>
+                <span class="text-2xl" id="step4_result_value">0.000</span>
+                <span class="text-sm unit_display">mm</span>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Load Step 4 Script (INLINE for reliability) -->
+<script>
+    /**
+     * Logic for Step 4: Determine t_min
+     */
+
+    // Define global vars for step 4 to avoid scope issues in inline script if needed, 
+    // but keeping them inside init or window scope is safer.
+
+    window.step4_toggle_method = function () {
+        const methodSelect = document.getElementById("step4_calc_method");
+        const calcContainer = document.getElementById("step4_method_calc_container");
+        const manualContainer = document.getElementById("step4_method_manual_container");
+        const manualLabel = document.getElementById("step4_manual_label");
+
+        if (!methodSelect || !calcContainer || !manualContainer) return;
+
+        const val = methodSelect.value;
+        console.log("Toggling Method to:", val);
+
+        if (val === 'calc') {
+            calcContainer.classList.remove('hidden');
+            manualContainer.classList.add('hidden');
+        } else {
+            calcContainer.classList.add('hidden');
+            manualContainer.classList.remove('hidden');
+            if (manualLabel) {
+                manualLabel.innerHTML = val === 'struct'
+                    ? "Minimum Structural Thickness (t<sub>c</sub>)"
+                    : "Manual t<sub>min</sub> (Asset Management)";
+            }
+        }
+    }
+
+    function step4_init() {
+        console.log("Step 4 Init Launched");
+
+        const methodSelect = document.getElementById("step4_calc_method");
+        const geomContainer = document.getElementById("step4_geometry_inputs_container");
+        const stressInput = document.getElementById("step4_allowable_stress");
+        const manualInput = document.getElementById("step4_manual_tmin");
+        const resultContainer = document.getElementById("step4_result_container");
+        const resultValue = document.getElementById("step4_result_value");
+        const calcBtn = document.getElementById("step4_calc_btn");
+        const stressUnitLabel = document.getElementById("step4_stress_unit");
+        const unitDisplays = document.querySelectorAll(".unit_display");
+
+        let table1Data = {};
+        let table42Data = {};
+        let table43Data = {};
+        let currentGeomType = null;
+        let units = "imperial"; // default
+
+        // Force toggle run on init to match initial select state
+        window.step4_toggle_method();
+
+        // Load Data
+        const t1Str = sessionStorage.getItem("table4.1_data");
+        if (t1Str) {
+            try {
+                table1Data = JSON.parse(t1Str);
+                // Determine units
+                if (table1Data.measurement_unit && table1Data.measurement_unit.toLowerCase() === "celsius") {
+                    units = "metric";
+                    stressUnitLabel.textContent = "MPa";
+                    unitDisplays.forEach(s => s.textContent = "mm");
+                } else {
+                    units = "imperial";
+                    stressUnitLabel.textContent = "psi"; // Changed to psi for consistency
+                    unitDisplays.forEach(s => s.textContent = "in");
+                }
+            } catch (e) { console.error(e); }
+        }
+
+        // Load JSONs
+        Promise.all([
+            fetch('/static/formula_app/data/json/step4/table42.JSON').then(r => r.json()),
+            fetch('/static/formula_app/data/json/step4/table43.JSON').then(r => r.json())
+        ]).then(([t42, t43]) => {
+            table42Data = t42;
+            table43Data = t43;
+            initGeometry();
+        }).catch(err => console.error("Error loading Step 4 JSONs", err));
+
+
+        function initGeometry() {
+            if (!table1Data.comp_type || !table1Data.equip_type) {
+                geomContainer.innerHTML = `<p class="text-error">Please complete Step 1 (Component Selection) first.</p>`;
+                return;
+            }
+
+            let targetEquipName = table1Data.equip_type;
+            const equipId = parseInt(table1Data.equip_type);
+
+            if (!isNaN(equipId)) {
+                const idMap = {
+                    1: "Compressor",
+                    2: "Heat exchanger",
+                    3: "Pipe",
+                    4: "Pump",
+                    5: "Tank620",
+                    6: "Tank650",
+                    7: "FinFan",
+                    8: "Vessel"
+                };
+                if (idMap[equipId]) targetEquipName = idMap[equipId];
+            }
+
+            const equip = table42Data.equipment_data.find(e => e.equipment_type.toLowerCase().replace(/\s/g, '') === targetEquipName.toLowerCase().replace(/\s/g, ''));
+
+            if (!equip) {
+                geomContainer.innerHTML = `<p class="text-warning">Geometry mapping not found for ${table1Data.equip_type} (${targetEquipName}). Please use Manual Method.</p>`;
+                return;
+            }
+
+            const possibleGeoms = equip.geometry_types;
+
+            if (!possibleGeoms || possibleGeoms.length === 0) {
+                geomContainer.innerHTML = `<p class="text-warning">No geometry types defined. Use Manual Method.</p>`;
+                return;
+            }
+
+            let html = `
+            <div class="form-control w-full col-span-1 md:col-span-2">
+                <label class="label"><span class="label-text">Component Geometry</span></label>
+                <select id="step4_geometry_select" class="select select-bordered w-full">
+                    ${possibleGeoms.map(g => `<option value="${g}">${g} - ${getGeomDesc(g)}</option>`).join('')}
+                </select>
+            </div>
+        `;
+
+            geomContainer.innerHTML = html;
+
+            const geomSelect = document.getElementById("step4_geometry_select");
+            geomSelect.onchange = () => loadGeomFields(geomSelect.value);
+
+            if (possibleGeoms.length > 0) loadGeomFields(possibleGeoms[0]);
+        }
+
+        function getGeomDesc(code) {
+            if (!table43Data.geometry_types) return code;
+            const g = table43Data.geometry_types.find(x => x.geometry_type === code);
+            return g ? g.description : code;
+        }
+
+        function loadGeomFields(geomCode) {
+            currentGeomType = geomCode;
+            const existingInputs = geomContainer.querySelectorAll('.dynamic-field');
+            existingInputs.forEach(e => e.remove());
+
+            const gData = table43Data.geometry_types.find(x => x.geometry_type === geomCode);
+            if (!gData || !gData.data_fields) return;
+
+            gData.data_fields.forEach(field => {
+                const safeName = field.replace(/\s/g, '_').toLowerCase();
+                const div = document.createElement("div");
+                div.className = "form-control w-full dynamic-field";
+                div.innerHTML = `
+                <label class="label">
+                    <span class="label-text">${field}</span>
+                    <span class="label-text-alt unit_display">${units === 'imperial' ? 'in' : 'mm'}</span>
+                </label>
+                <input type="number" id="step4_geom_${safeName}" placeholder="${field}" class="input input-bordered w-full" step="0.001" required />
+             `;
+                geomContainer.appendChild(div);
+            });
+        }
+
+        // Calculate Action
+        calcBtn.onclick = (e) => {
+            e.preventDefault();
+
+            const method = document.getElementById("step4_calc_method").value;
+            let tmin = 0;
+
+            if (method === 'manual' || method === 'struct') {
+                tmin = parseFloat(manualInput.value) || 0;
+            } else {
+                // CALCULATION LOGIC
+                const S = parseFloat(stressInput.value);
+                // Use design pressure
+                const DesignP = parseFloat(table1Data.design_press) || parseFloat(table1Data.operating_press) || 0;
+                let E = parseFloat(table1Data.weld_joint_efficiency) || 1.0;
+
+                // Normalize Efficiency: Users might enter 100 for 100% or 1 for 100%. Formula expects 0-1.
+                // If E > 1, assume percentage.
+                if (E > 1.0) E = E / 100.0;
+
+                if (!S || S <= 0) {
+                    alert("Please enter a valid Allowable Stress (S). Example: 20000 psi.");
+                    return;
+                }
+                if (DesignP <= 0) {
+                    // warning
+                }
+
+                const dInput = document.querySelector('[id^="step4_geom_diameter"]');
+                const diameter = dInput ? parseFloat(dInput.value) : 0;
+                const radius = diameter / 2;
+
+                if (currentGeomType === 'CYL') {
+                    tmin = (DesignP * radius) / (S * E - 0.6 * DesignP);
+                } else if (currentGeomType === 'SPH' || currentGeomType === 'HEM') {
+                    tmin = (DesignP * radius) / (2 * S * E - 0.2 * DesignP);
+                } else if (currentGeomType === 'ELL') {
+                    tmin = (DesignP * diameter) / (2 * S * E - 0.2 * DesignP);
+                } else {
+                    alert("Formula for " + currentGeomType + " not yet implemented. Please use Manual Input.");
+                    return;
+                }
+            }
+
+            if (tmin < 0) tmin = 0;
+
+            // Display
+            resultContainer.classList.remove('hidden');
+            resultValue.textContent = tmin.toFixed(4);
+
+            // Save
+            sessionStorage.setItem("t_min", tmin.toFixed(4));
+        };
+    }
+
+    // Assign to window immediately
+    window.step4_init = step4_init;
+</script>

@@ -115,8 +115,17 @@
                             <th></th>
                             <td>Design code</td>
                             <td>The design code of the component containing the component.</td>
-                            <td><input required class="input input-ghost" placeholder="type here" type="text"
-                                    name="design_code" id="design_code"></td>
+                            <td>
+                                <select required id="design_code"
+                                    class="select w-full rounded-lg border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                    <option value="" disabled selected>Select code</option>
+                                    <option value="ASME Section VIII Div 1">ASME Section VIII Div 1</option>
+                                    <option value="ASME Section VIII Div 2">ASME Section VIII Div 2</option>
+                                    <option value="API 650">API 650</option>
+                                    <option value="ASME B31.3">ASME B31.3</option>
+                                    <option value="ASME B31.1">ASME B31.1</option>
+                                </select>
+                            </td>
                         </tr>
                         <tr>
                             <th></th>
@@ -199,8 +208,12 @@
                             <th></th>
                             <td>Component geometry data</td>
                             <td>Component geometry data depending on the type of component (see Table 4.3).</td>
-                            <td><input required class="input input-ghost" placeholder="type here" type="text"
-                                    name="component_geometry_data" id="component_geometry_data"></td>
+                            <td>
+                                <select required id="component_geometry_data"
+                                    class="select w-full rounded-lg border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                    <option value="" disabled selected>Select geometry</option>
+                                </select>
+                            </td>
                         </tr>
                         <tr>
                             <th></th>
@@ -212,8 +225,20 @@
                                 number, and class/condition/temper/size/thickness; these data are readily available
                                 in the ASME Code [12].
                             </td>
-                            <td><input required class="input input-ghost" placeholder="type here" type="text"
-                                    name="material_especification" id="material_especification"></td>
+                            <td>
+                                <select required id="material_especification"
+                                    class="select w-full rounded-lg border border-gray-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                    <option value="" disabled selected>Select material</option>
+                                    <option value="SA-516 Gr 70">SA-516 Gr 70</option>
+                                    <option value="SA-106 Gr B">SA-106 Gr B</option>
+                                    <option value="SA-285 Gr C">SA-285 Gr C</option>
+                                    <option value="SA-312 TP304">SA-312 TP304</option>
+                                    <option value="SA-312 TP316">SA-312 TP316</option>
+                                    <option value="SA-537 Cl 1">SA-537 Cl 1</option>
+                                    <option value="SA-387 Gr 11 Cl 2">SA-387 Gr 11 Cl 2</option>
+                                    <option value="SA-387 Gr 22 Cl 2">SA-387 Gr 22 Cl 2</option>
+                                </select>
+                            </td>
                         </tr>
                         <tr>
                             <th></th>
@@ -258,3 +283,5 @@
         </div>
     </div>
 </div>
+<script src="/static/formula_app/components/step1_geom_loader.js"></script>
+<script src="/static/formula_app/components/table4-1.js"></script>

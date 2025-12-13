@@ -57,6 +57,12 @@ async function renderStep() {
     if (actual_step === 3 && typeof window.step3_init === 'function') {
         window.step3_init();
     }
+    if (actual_step === 4 && typeof window.step4_init === 'function') {
+        window.step4_init();
+    }
+    if (actual_step === 5 && typeof window.step5_init === 'function') {
+        window.step5_init();
+    }
 }
 
 function executeInjectedScripts(container) {
