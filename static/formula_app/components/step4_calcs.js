@@ -46,6 +46,14 @@ function step4_init() {
         } catch (e) { console.error(e); }
     }
 
+
+
+    // Restore previously saved Allowable Stress if available
+    const savedS = sessionStorage.getItem("allowable_stress");
+    if (savedS && stressInput) {
+        stressInput.value = savedS;
+    }
+
     // Load JSONs
     Promise.all([
         fetch('/static/formula_app/data/json/step4/table42.JSON').then(r => r.json()),
@@ -251,13 +259,8 @@ function step4_init() {
                 return;
             }
 
-            // Save Allowable Stress (S) logic
-            sessionStorage.setItem("allowable_stress", S);
-
-            // Save Allowable Stress (S) explicitly when calculating
-            sessionStorage.setItem("allowable_stress", S);
-
-            // Save Allowable Stress (S) for future steps (Step 7)
+            // Save Allowable Stress (S)
+            console.log("Saving Allowable Stress:", S);
             sessionStorage.setItem("allowable_stress", S);
 
             // Get Geometry Inputs
@@ -325,32 +328,37 @@ function step4_init() {
 
         // Save
         sessionStorage.setItem("t_min", tmin.toFixed(4));
+
+        // Trigger Validation
+        if (typeof window.updateNextButtonState === 'function') {
+            window.updateNextButtonState();
+        }
     };
+
+    function showError(msg) {
+        const errorContainer = document.getElementById("step4_error_container");
+        const errorMessageCtx = document.getElementById("step4_error_message");
+        if (errorContainer && errorMessageCtx) {
+            errorMessageCtx.textContent = msg;
+            errorContainer.classList.remove("hidden");
+        } else {
+            // Fallback if HTML container missing, but we added it.
+            console.error("Validation Error:", msg);
+        }
+    }
 }
 
 function validateInputs(S, P, E) {
     if (!S || S <= 0) return "Allowable Stress (S) must be greater than 0.";
     if (P <= 0) return "Design Pressure must be greater than 0.";
     if (E <= 0 || E > 1) return "Efficiency (E) must be between 0 and 1.";
-    // Check dynamic fields
     const inputs = document.querySelectorAll('#step4_geometry_inputs_container input');
     for (let inp of inputs) {
         if (!inp.value || parseFloat(inp.value) <= 0) {
             return `Please enter a valid value for ${inp.placeholder || "all fields"}.`;
         }
     }
-    return null; // Valid
-}
-
-function showError(msg) {
-    const errorContainer = document.getElementById("step4_error_container");
-    const errorMessageCtx = document.getElementById("step4_error_message");
-    if (errorContainer && errorMessageCtx) {
-        errorMessageCtx.textContent = msg;
-        errorContainer.classList.remove("hidden");
-    } else {
-        alert(msg);
-    }
+    return null;
 }
 
 window.step4_init = step4_init;

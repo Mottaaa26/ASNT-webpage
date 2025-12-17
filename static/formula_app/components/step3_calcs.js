@@ -210,8 +210,12 @@ function step3_init() {
 
         const ageRc = (numerator / F_LC) * F_OM;
 
+
         // Save
         sessionStorage.setItem("liner_age_rc", ageRc.toFixed(3));
+
+        // Save 'step3_data' validation flag (as checked in steps_handler.js)
+        sessionStorage.setItem("step3_data", "true");
 
         // Display
         part3Result.classList.remove("hidden");
@@ -234,6 +238,11 @@ function step3_init() {
                 </div>
             </div>
         `;
+
+        // Trigger Validation
+        if (typeof window.updateNextButtonState === 'function') {
+            window.updateNextButtonState();
+        }
     }
 
     // Listeners
@@ -548,6 +557,12 @@ function step3_init() {
             if (hasLiner && part3Container) {
                 part3Container.classList.remove("hidden");
                 loadLinerTables();
+            } else {
+                // If NO liner, step 3 is effectively done here.
+                sessionStorage.setItem("step3_data", "true");
+                if (typeof window.updateNextButtonState === 'function') {
+                    window.updateNextButtonState();
+                }
             }
         }
     }

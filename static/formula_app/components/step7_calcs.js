@@ -23,6 +23,7 @@ function step7_init() {
     const fs = parseFloat(sessionStorage.getItem("FS_Thin") || 0);
     const tmin = parseFloat(sessionStorage.getItem("t_min") || 0);
     const trdi = parseFloat(sessionStorage.getItem("t_rdi") || 0);
+    const savedTc = parseFloat(sessionStorage.getItem("structural_thickness_tc") || 0);
 
     let efficiency = 1.0;
     let unitStress = "psi";
@@ -47,6 +48,7 @@ function step7_init() {
     if (fsInput) fsInput.value = fs;
     if (tminInput) tminInput.value = tmin;
     if (trdiInput) trdiInput.value = trdi;
+    if (tcInput && savedTc) tcInput.value = savedTc;
 
     // Update Units
     unitStressSpans.forEach(s => s.textContent = unitStress);
@@ -82,6 +84,11 @@ function step7_init() {
         // Save
         sessionStorage.setItem("SR_Thin_p", SR.toFixed(4));
         sessionStorage.setItem("structural_thickness_tc", tc); // Save tc if user entered it
+
+        // Trigger Validation
+        if (typeof window.updateNextButtonState === 'function') {
+            window.updateNextButtonState();
+        }
 
         // Display
         resultContainer.classList.remove("hidden");

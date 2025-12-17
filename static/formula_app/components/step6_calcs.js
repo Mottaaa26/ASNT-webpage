@@ -60,6 +60,11 @@ function step6_init() {
         // Save Result
         sessionStorage.setItem("FS_Thin", fsThin.toFixed(4));
 
+        // Trigger Validation
+        if (typeof window.updateNextButtonState === 'function') {
+            window.updateNextButtonState();
+        }
+
         // Display
         if (resultContainer && resultSpan) {
             resultContainer.classList.remove("hidden");

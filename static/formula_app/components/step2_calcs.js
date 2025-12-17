@@ -91,6 +91,7 @@ document.addEventListener("click", (e) => {
     const item = e.target.closest(".list-row");
     if (item) {
         selected_option = item.dataset.value.toLowerCase();
+        sessionStorage.setItem("selected_mechanism", selected_option);
 
         fetch(`load-cr-snippet/${selected_option}`)
             .then(response => {

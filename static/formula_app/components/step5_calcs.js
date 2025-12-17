@@ -74,6 +74,11 @@ function step5_init() {
         // Save Result
         sessionStorage.setItem("Art", art.toFixed(4));
 
+        // Trigger Validation
+        if (typeof window.updateNextButtonState === 'function') {
+            window.updateNextButtonState();
+        }
+
         // Display
         if (resultContainer && artResultSpan) {
             resultContainer.classList.remove("hidden");

@@ -834,4 +834,9 @@ function saveRates(bmRate, cmRate) {
     } else {
         sessionStorage.removeItem("corrosion_rate_cladding");
     }
+
+    // Trigger validation to enable Next button
+    if (typeof window.updateNextButtonState === 'function') {
+        window.updateNextButtonState();
+    }
 }

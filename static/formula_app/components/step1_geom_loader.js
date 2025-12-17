@@ -2,7 +2,7 @@
 // Logic to populate Component Geometry Data in Table 4.1 (Step 1)
 // This should run after table4-1.js has initialized the main select listeners.
 
-document.addEventListener("DOMContentLoaded", function () {
+function step1_loader_init() {
     const equipSelect = document.getElementById("equipment");
     const compSelect = document.getElementById("component");
     const geomDataSelect = document.getElementById("component_geometry_data");
@@ -12,6 +12,9 @@ document.addEventListener("DOMContentLoaded", function () {
     let t42Data = null;
     let t43Data = null;
 
+    let dataResolve;
+    const dataReady = new Promise(resolve => dataResolve = resolve);
+
     // Load JSONs
     Promise.all([
         fetch('/static/formula_app/data/json/step4/table42.JSON').then(r => r.json()),
@@ -19,8 +22,62 @@ document.addEventListener("DOMContentLoaded", function () {
     ]).then(([t42, t43]) => {
         t42Data = t42;
         t43Data = t43;
-        // If data loaded, we bind change events or initial load check
+        if (dataResolve) dataResolve(); // Signal valid data
+    }).catch(err => {
+        console.error("Failed to load geometry data", err);
     });
+
+    // Expose updateGeometryOptions globally
+    window.updateGeometryOptions = updateGeometryOptions;
+
+    // Expose loadComponents globally
+    window.loadComponents = async function (equipType) {
+        // Wait for data with timeout
+        if (!t42Data) {
+            // Race dataReady with a 3s timeout
+            const timeout = new Promise(resolve => setTimeout(() => resolve('timeout'), 3000));
+            const result = await Promise.race([dataReady, timeout]);
+            if (result === 'timeout') {
+                console.warn("Geometry data load timed out. Dropdowns will be empty.");
+                // Proceed anyway so we don't block other fields
+            }
+        }
+
+        const compSelect = document.getElementById("component");
+        if (!compSelect) return;
+
+        compSelect.innerHTML = '<option value="" disabled selected>Select component</option>';
+
+        let targetEquipName = "";
+        const equipId = parseInt(equipType);
+
+        // Map ID to Name logic (Same as Step 4)
+        const idMap = {
+            1: "Compressor",
+            2: "Heat exchanger",
+            3: "Pipe",
+            4: "Pump",
+            5: "Tank620",
+            6: "Tank650",
+            7: "FinFan",
+            8: "Vessel"
+        };
+        if (idMap[equipId]) targetEquipName = idMap[equipId];
+        else targetEquipName = equipType; // Fallback if string
+
+        const equipEntry = t42Data.equipment_data.find(e =>
+            e.equipment_type.toLowerCase().replaceAll(/\s/g, '') === targetEquipName.toLowerCase().replaceAll(/\s/g, '')
+        );
+
+        if (!equipEntry || !equipEntry.components) return;
+
+        equipEntry.components.forEach(comp => {
+            const opt = document.createElement("option");
+            opt.value = comp;
+            opt.textContent = comp;
+            compSelect.appendChild(opt);
+        });
+    };
 
     function updateGeometryOptions() {
         // Wait for data
@@ -34,7 +91,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
         if (isNaN(equipId) || !compId) return;
 
-        // Map ID to Name logic (Same as Step 4)
+        // Map ID to Name logic 
         let targetEquipName = "";
         const idMap = {
             1: "Compressor",
@@ -47,6 +104,9 @@ document.addEventListener("DOMContentLoaded", function () {
             8: "Vessel"
         };
         if (idMap[equipId]) targetEquipName = idMap[equipId];
+        if (!targetEquipName && isNaN(equipId)) targetEquipName = equipSelect.value;
+        if (!targetEquipName) targetEquipName = "";
+
 
         // Find matches in Table 4.2
         const equipEntry = t42Data.equipment_data.find(e =>
@@ -54,10 +114,6 @@ document.addEventListener("DOMContentLoaded", function () {
         );
 
         if (!equipEntry) return;
-
-        // In Table 4.2, geometry_types are listed for the EQUIPMENT, not strictly per component.
-        // We will show ALL valid geometries for this Equipment.
-        // Step 4 logic: "Find matching equipment... possibleGeoms = equip.geometry_types"
 
         const possibleGeoms = equipEntry.geometry_types;
 
@@ -75,8 +131,6 @@ document.addEventListener("DOMContentLoaded", function () {
 
     // Attach listener to Component select (since Equipment change triggers Component update, 
     // we assume user picks Component last. Or we listen to both/mutation).
-    // existing table4-1.js likely changes 'component' innerHTML on equipment change.
-    // We should listen to 'change' on COMPONENT.
 
     compSelect.addEventListener("change", () => {
         // Short delay to ensure value is set? No need for change event.
@@ -86,6 +140,13 @@ document.addEventListener("DOMContentLoaded", function () {
     // Also listen to Equipment change to clear if needed, but component change is key.
     equipSelect.addEventListener("change", () => {
         geomDataSelect.innerHTML = '<option value="" disabled selected>Select geometry</option>';
+        window.loadComponents(equipSelect.value);
     });
+}
 
-});
+// Ensure execution on load or if already loaded
+if (document.readyState === 'loading') {
+    document.addEventListener("DOMContentLoaded", step1_loader_init);
+} else {
+    step1_loader_init();
+}

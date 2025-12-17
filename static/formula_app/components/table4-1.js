@@ -75,6 +75,11 @@ document.getElementById("btn_table4.1").addEventListener("click", () => {
     sessionStorage.setItem('table4.1_data', result_JSON);
     step1_calculations();
     document.getElementById("table4.1_confirmation").classList.remove("hidden");
+
+    // Enable Next Button
+    if (typeof window.updateNextButtonState === 'function') {
+        window.updateNextButtonState();
+    }
 });
 
 window.loadComponents = undefined;
@@ -105,14 +110,51 @@ async function loadTable41() {
     document.getElementById('weld_joint_efficiency').value = table_data.weld_joint_efficiency;
     document.getElementById('heat_tracing').value = table_data.heat_tracing;
 
+    // Trigger Toggle Logic explicitly
+    document.getElementById('has_cladding').dispatchEvent(new Event('change'));
+    document.getElementById('has_internal_liner').dispatchEvent(new Event('change'));
+
     document.getElementById('equipment').value = table_data.equip_type;
 
     if (table_data.equip_type && typeof window.loadComponents === 'function') {
         await window.loadComponents(table_data.equip_type);
     }
 
-    document.getElementById('component').value = table_data.comp_type;
+    // Set Component Value
+    const compSelect = document.getElementById('component');
+    compSelect.value = table_data.comp_type;
 
+    // Trigger Geometry Load
+    if (typeof window.updateGeometryOptions === 'function') {
+        window.updateGeometryOptions();
+
+        // Small delay if needed? synchronous updateGeometryOptions should be fine if data loaded
+        // However, if updateGeometryOptions relies on async data that might be missing?
+        // We added a wait inside step1_geom_loader for data, but updateGeometryOptions might return early if data missing.
+        // But since loadComponents waited, data should be there.
+    }
+
+    // Set Geometry Value
+    if (table_data.comp_geom_data) {
+        document.getElementById('component_geometry_data').value = table_data.comp_geom_data;
+    }
+
+    // Restore Cladding/Liner Rows (Explicit check)
+    // Sometimes dispatchEvent isn't enough if listeners are not creating? 
+    // But polling ensures listeners... wait. 
+    // setupToggle is run at end of file. It runs BEFORE or AFTER initializeStep1?
+    // initializeStep1 is delayed by polling/DOMReady. setupToggle runs immediately script loads.
+    // So listeners are ready. dispatch should work.
+
+    // Restore Results Message
+    console.log("Restoring Step 1 Results...");
+    if (typeof step1_calculations === 'function') {
+        step1_calculations();
+    } else {
+        console.warn("step1_calculations function not found.");
+    }
+
+    console.log("Table 4.1 Data Restored Successfully.");
 }
 
 // Delete the sessionStorage data when the log_out button is clicked
@@ -149,4 +191,28 @@ function setupToggle(selectId, rowId, inputId) {
 // Initialize triggers
 setupToggle('has_internal_liner', 'internal_liner_row', 'internal_liner_input');
 setupToggle('has_cladding', 'cladding_row', 'cladding_input');
+
+// Polling to ensure dependencies from step1_geom_loader.js are ready
+let step1Retries = 0;
+function initializeStep1() {
+    // Check if dependent functions are defined
+    if (typeof window.loadComponents === 'function' && typeof window.updateGeometryOptions === 'function') {
+        loadTable41();
+    } else {
+        step1Retries++;
+        if (step1Retries < 200) { // Max wait ~10 seconds
+            setTimeout(initializeStep1, 50);
+        } else {
+            console.error("Timeout: Step 1 dependencies (loadComponents) failed to load.");
+            // Try loading anyway as last resort? No, it would crash.
+        }
+    }
+}
+
+// Call on load
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initializeStep1);
+} else {
+    initializeStep1();
+}
 
