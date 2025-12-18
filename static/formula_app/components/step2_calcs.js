@@ -93,7 +93,8 @@ document.addEventListener("click", (e) => {
         selected_option = item.dataset.value.toLowerCase();
         sessionStorage.setItem("selected_mechanism", selected_option);
 
-        fetch(`load-cr-snippet/${selected_option}`)
+        const snippetBase = window.djangoUrls ? window.djangoUrls.loadSnippet : 'load-cr-snippet/';
+        fetch(`${snippetBase}${selected_option}`)
             .then(response => {
                 if (!response.ok) {
                     throw new Error("Error en la respuesta");

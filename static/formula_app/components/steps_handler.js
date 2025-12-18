@@ -3,7 +3,8 @@
  */
 
 const MAX_STEP = 13;
-const STEP_BASE_PATH = 'load-step/';
+// Base path defaulting to relative if global config not found (backwards compatibility)
+const STEP_BASE_PATH = window.djangoUrls ? window.djangoUrls.loadStep : 'load-step/';
 
 let actual_step = parseInt(sessionStorage.getItem('actual_step') || 1);
 const stepContainer = document.getElementById("actual_step");

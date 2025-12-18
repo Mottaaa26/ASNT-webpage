@@ -32,21 +32,7 @@
             <!-- SIDEBAR -->
             <aside
                 class="hidden lg:block w-64 bg-white p-6 shadow-xl border-r border-gray-200 flex-shrink-0 overflow-y-auto">
-                <h2 class="text-xl font-bold text-blue-950 mb-4 border-b pb-2">Formulas</h2>
-                <div class="flex flex-col gap-3">
-                    <a href="#"
-                        class="btn btn-block bg-blue-950 text-white hover:bg-blue-800 hover-lift text-wrap h-auto min-h-0 py-3 text-sm border-none">
-                        Calculation of thinning DF
-                    </a>
-                    <a href="#"
-                        class="btn btn-block btn-outline border-blue-950 text-blue-950 hover:bg-blue-950 hover:text-white hover-lift text-wrap h-auto min-h-0 py-3 text-sm">
-                        Fórmula (Espesores)
-                    </a>
-                    <a href="#"
-                        class="btn btn-block btn-outline border-blue-950 text-blue-950 hover:bg-blue-950 hover:text-white hover-lift text-wrap h-auto min-h-0 py-3 text-sm">
-                        Fórmula (Presiones)
-                    </a>
-                </div>
+                {% include 'formula_app/includes/sidebar.html' %}
             </aside>
 
             <!-- END SIDEBAR -->
@@ -58,9 +44,9 @@
                 <!-- SELECT BAR FOR MOBILE -->
                 <div class="flex lg:hidden w-full mb-6 flex-shrink-0 animate-fade-in">
                     <div class="dropdown dropdown-bottom w-full">
-                        <div tabindex="0" role="button"
+                        <div tabindex="0" role="button" <div tabindex="0" role="button"
                             class="btn btn-block justify-between bg-blue-950 text-white hover:bg-blue-800 hover-lift text-lg">
-                            Formulas
+                            Probability of Failure
                             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24"
                                 fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
                                 stroke-linejoin="round">
@@ -72,9 +58,15 @@
                         <ul tabindex="0"
                             class="dropdown-content z-[1] menu p-2 shadow-xl bg-white rounded-box w-full space-y-2 mt-2">
                             <li>
-                                <a href="#"
+                                <a href="{% url 'calculation_thinning_df' %}"
                                     class="btn btn-block bg-blue-50 text-blue-950 hover:bg-blue-100 hover-lift text-wrap h-auto min-h-0 py-3 text-sm border-none justify-start">
                                     Calculation of thinning DF
+                                </a>
+                            </li>
+                            <li>
+                                <a href="{% url 'gff_calculation' %}"
+                                    class="btn btn-block bg-white text-blue-950 hover:bg-blue-100 hover-lift text-wrap h-auto min-h-0 py-3 text-sm border-none justify-start">
+                                    Generic Failure Frequency
                                 </a>
                             </li>
                             <li>
@@ -114,27 +106,19 @@
     <div class="drawer-side z-40">
         <label for="my-drawer" aria-label="close sidebar" class="drawer-overlay"></label>
         <aside class="w-64 bg-white p-4 shadow-2xl flex-shrink-0">
-            <h2 class="text-xl font-bold text-blue-950 mb-4 border-b pb-2">Fórmulas (Menú Lateral Móvil)</h2>
-            <div class="flex flex-col gap-3">
-                <a href="#"
-                    class="btn btn-block bg-blue-950 text-white hover:bg-blue-800 hover-lift text-wrap h-auto min-h-0 py-3 text-sm border-none">
-                    Minimun thickness calculation for welded tank shell
-                </a>
-                <a href="#"
-                    class="btn btn-block btn-outline border-blue-950 text-blue-950 hover:bg-blue-950 hover:text-white hover-lift text-wrap h-auto min-h-0 py-3 text-sm">
-                    Fórmula (Espesores)
-                </a>
-                <a href="#"
-                    class="btn btn-block btn-outline border-blue-950 text-blue-950 hover:bg-blue-950 hover:text-white hover-lift text-wrap h-auto min-h-0 py-3 text-sm">
-                    Fórmula (Presiones)
-                </a>
-            </div>
+            {% include 'formula_app/includes/sidebar.html' %}
         </aside>
     </div>
 </div>
 {%endblock%}
 
 {% block scripts %}
+<script>
+    window.djangoUrls = {
+        loadStep: "{% url 'load_step_content' 0 %}".replace('0/', ''), // Base path for steps
+        loadSnippet: "{% url 'load_cr_snippets' 'PLACEHOLDER' %}".replace('PLACEHOLDER/', '') // Base path for snippets
+    };
+</script>
 <script src="{% static 'formula_app/components/table4-1.js' %}"></script>
 <script src="{% static 'formula_app/data/get-elements.js' %}"></script>
 <script src="{% static 'formula_app/components/step1_calcs.js' %}"></script>
