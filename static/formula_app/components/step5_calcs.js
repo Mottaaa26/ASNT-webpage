@@ -72,7 +72,7 @@ function step5_init() {
         let art = Math.max(numerator / trdi, 0.0);
 
         // Save Result
-        sessionStorage.setItem("Art", art.toFixed(4));
+        sessionStorage.setItem("A_rt", art.toFixed(4));
 
         // Trigger Validation
         if (typeof window.updateNextButtonState === 'function') {

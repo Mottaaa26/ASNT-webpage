@@ -155,7 +155,8 @@ async function step9_init() {
 
         // Save
         const results = { I1, I2, I3 };
-        sessionStorage.setItem("inspection_effectiveness_factors", JSON.stringify(results));
+        sessionStorage.setItem("inspection_effectiveness", JSON.stringify(results));
+        sessionStorage.setItem("inspection_effectiveness_factors", JSON.stringify(results)); // Keep old key for compatibility just in case
 
         // Trigger Validation
         if (typeof window.updateNextButtonState === 'function') {

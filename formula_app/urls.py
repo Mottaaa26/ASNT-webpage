@@ -10,5 +10,7 @@ urlpatterns = [
     path('load-cr-snippet/<str:snippet_name>/', views.load_cr_snippets, name="load_cr_snippets"),
     path('gff-calculation/', views.gff_calculation_view, name="gff_calculation"),
     path('api/get-gff/', views.get_gff_value, name="api_get_gff"),
+    path('fms-calculation/', views.fms_calculation_view, name="fms_calculation"),
+    path('pof-dashboard/', views.pof_dashboard_view, name="pof_dashboard"),
 
 ]

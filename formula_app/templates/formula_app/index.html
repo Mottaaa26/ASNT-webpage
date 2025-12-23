@@ -93,9 +93,24 @@
 
                 <div id="content-scroller" class="w-full flex-1 overflow-y-auto rounded-box bg-gray-50 space-y-8 p-2">
 
-                    {% include 'formula_app/includes/thinningDF/_intro.html' %}
+                    <!-- SECTION: Damage Mechanism Selection (Step 0) -->
+                    {% include 'formula_app/includes/modules/damage_mech_selection.html' %}
+                    
+                    <!-- SECTION: Dynamic Navigation Bar (Hidden initially) -->
+                    <div id="module_nav_container" class="hidden mb-6 animate-fade-in">
+                        <div class="tabs tabs-boxed bg-gray-200 p-1 rounded-lg">
+                            <ul id="module_nav_list" class="flex w-full justify-start gap-2">
+                                <!-- Tabs injected by JS -->
+                            </ul>
+                        </div>
+                    </div>
 
-                    {% include 'formula_app/includes/thinningDF/_steps.html' %}
+                    <!-- MODULES CONTAINER -->
+                    <!-- 1. Thinning Module -->
+                    {% include 'formula_app/includes/modules/thinning_module.html' %}
+
+                    <!-- 2. SCC Module -->
+                    {% include 'formula_app/includes/modules/scc_module.html' %}
 
                 </div>
             </section>
@@ -116,7 +131,8 @@
 <script>
     window.djangoUrls = {
         loadStep: "{% url 'load_step_content' 0 %}".replace('0/', ''), // Base path for steps
-        loadSnippet: "{% url 'load_cr_snippets' 'PLACEHOLDER' %}".replace('PLACEHOLDER/', '') // Base path for snippets
+        loadSnippet: "{% url 'load_cr_snippets' 'PLACEHOLDER' %}".replace('PLACEHOLDER/', ''), // Base path for snippets
+        getComponents: "{% url 'api_get_components' %}"
     };
 </script>
 <script src="{% static 'formula_app/components/table4-1.js' %}"></script>
@@ -136,4 +152,6 @@
 <script src="{% static 'formula_app/components/step13_calcs.js' %}"></script>
 <script src="{% static 'formula_app/data/app_main_loader.js' %}"></script>
 <script src="{% static 'formula_app/components/steps_handler.js' %}"></script>
-{% endblock %}
+<script src="{% static 'formula_app/js/module_navigator.js' %}"></script>
+<script type="module" src="{% static 'formula_app/js/scc_interactions.js' %}?v=14"></script>
+{% endblock %}a

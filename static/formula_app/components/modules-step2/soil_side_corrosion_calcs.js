@@ -663,6 +663,11 @@ export function soil_side_corrosion_calc() {
                 }
             } catch (e) { }
 
+            // Enable Next Step Button (Global Handler)
+            if (typeof window.updateNextButtonState === 'function') {
+                window.updateNextButtonState();
+            }
+
         } catch (error) {
             console.error("Calculation Error:", error);
             display_errors([`Error calculating rate: ${error.message}`]);

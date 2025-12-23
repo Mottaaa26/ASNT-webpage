@@ -82,7 +82,7 @@ function step7_init() {
         const SR = term1 * term2;
 
         // Save
-        sessionStorage.setItem("SR_Thin_p", SR.toFixed(4));
+        sessionStorage.setItem("strength_ratio_p", SR.toFixed(4));
         sessionStorage.setItem("structural_thickness_tc", tc); // Save tc if user entered it
 
         // Trigger Validation

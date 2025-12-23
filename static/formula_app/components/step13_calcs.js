@@ -313,7 +313,8 @@ function step13_init() {
         if (resultContainer) resultContainer.classList.remove("hidden");
 
         // Save Result
-        sessionStorage.setItem("thinning_final_df", finalDf.toFixed(4));
+        sessionStorage.setItem("final_df_thin", finalDf.toFixed(4));
+        sessionStorage.setItem("thinning_final_df", finalDf.toFixed(4)); // Keep alias if needed by dashboard
         console.log("Final Thinning DF:", finalDf);
 
         // Trigger Validation

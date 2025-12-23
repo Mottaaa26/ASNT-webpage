@@ -57,6 +57,14 @@ def gff_calculation_view(request):
     return render(request, 'formula_app/gff_calculation.html', context)
 
 @login_required
+def fms_calculation_view(request):
+    return render(request, 'formula_app/fms_calculation.html')
+
+@login_required
+def pof_dashboard_view(request):
+    return render(request, 'formula_app/pof_dashboard.html')
+
+@login_required
 def get_gff_value(request):
     component_id = request.GET.get('component_id')
     hole_size = request.GET.get('hole_size') # optional: small, medium, large, rupture
@@ -93,7 +101,7 @@ def get_gff_value(request):
                 'medium': gff.gff_medium,
                 'large': gff.gff_large,
                 'rupture': gff.gff_rupture,
-                'total': gff.gff_total
+                'gff_total': gff.gff_total
             }
             
         return JsonResponse(data)

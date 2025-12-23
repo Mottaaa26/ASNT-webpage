@@ -169,6 +169,7 @@ async function step8_init() {
         // Save
         const history = { confidence, A: countA, B: countB, C: countC, D: countD };
         sessionStorage.setItem("inspection_history", JSON.stringify(history));
+        sessionStorage.setItem("inspection_counts", JSON.stringify(history)); // Alias for validation
         sessionStorage.setItem("thinning_df", finalDF.toFixed(4));
 
         // Trigger Validation

@@ -193,14 +193,17 @@ setupToggle('has_internal_liner', 'internal_liner_row', 'internal_liner_input');
 setupToggle('has_cladding', 'cladding_row', 'cladding_input');
 
 // Polling to ensure dependencies from step1_geom_loader.js are ready
-let step1Retries = 0;
+if (typeof window.step1Retries === 'undefined') {
+    window.step1Retries = 0;
+}
+
 function initializeStep1() {
     // Check if dependent functions are defined
     if (typeof window.loadComponents === 'function' && typeof window.updateGeometryOptions === 'function') {
         loadTable41();
     } else {
-        step1Retries++;
-        if (step1Retries < 200) { // Max wait ~10 seconds
+        window.step1Retries++;
+        if (window.step1Retries < 200) { // Max wait ~10 seconds
             setTimeout(initializeStep1, 50);
         } else {
             console.error("Timeout: Step 1 dependencies (loadComponents) failed to load.");
