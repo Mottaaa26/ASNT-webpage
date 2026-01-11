@@ -1,5 +1,5 @@
 
-import { roundToClosestValue } from "../utils.js";
+
 
 const AVAILABLE_TEMPS_F = [425, 475, 525, 575, 625, 675, 725, 775, 825, 875, 925, 975];
 const AVAILABLE_TEMPS_C = [218, 246, 274, 302, 329, 357, 385, 413, 441, 469, 496, 524];

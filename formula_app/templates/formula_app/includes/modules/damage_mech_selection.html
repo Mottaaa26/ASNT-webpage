@@ -20,27 +20,28 @@
 
         <div class="form-control">
             <label class="label cursor-pointer justify-start gap-4">
-                <input type="checkbox" id="dm_external" class="checkbox checkbox-primary" disabled />
-                <span class="label-text font-medium text-lg text-gray-400">External Damage (Coming Soon)</span>
+                <input type="checkbox" id="dm_external" class="checkbox checkbox-primary" />
+                <span class="label-text font-medium text-lg">External Damage</span>
             </label>
         </div>
 
             <div class="form-control">
             <label class="label cursor-pointer justify-start gap-4">
-                <input type="checkbox" id="dm_htha" class="checkbox checkbox-primary" disabled />
-                <span class="label-text font-medium text-lg text-gray-400">High Temperature Hydrogen Attack (Coming Soon)</span>
+                <input type="checkbox" id="dm_htha" class="checkbox checkbox-primary" />
+                <span class="label-text font-medium text-lg">High Temperature Hydrogen Attack (HTHA)</span>
             </label>
         </div>
 
-            <div class="form-control">
+        <div class="form-control">
             <label class="label cursor-pointer justify-start gap-4">
-                <input type="checkbox" id="dm_brittle" class="checkbox checkbox-primary" disabled />
-                <span class="label-text font-medium text-lg text-gray-400">Brittle Fracture (Coming Soon)</span>
+                <input type="checkbox" id="dm_brittle" class="checkbox checkbox-primary" />
+                <span class="label-text font-medium text-lg">Brittle Fracture</span>
             </label>
         </div>
     </div>
 
-    <div class="mt-8 flex justify-end">
+    <div class="mt-8 flex justify-end items-center gap-4">
+        <div id="dm_selection_error" class="text-error font-medium hidden animate-fade-in">Reference Error</div>
         <button id="btn_continue_dm" class="btn btn-primary text-white hover-lift">
             Continue
         </button>

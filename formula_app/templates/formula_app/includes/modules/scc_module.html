@@ -26,12 +26,14 @@
                     <span class="label-text">Sulfide Stress Cracking (SSC)</span>
                 </label>
             </div>
+            <!-- Temporarily disabled until HIC/SOHIC-H2S module is implemented
             <div class="form-control">
                 <label class="label cursor-pointer justify-start gap-3">
                     <input type="checkbox" id="scc_mech_hic_h2s" class="checkbox checkbox-sm checkbox-primary scc-mech-check" />
                     <span class="label-text">HIC/SOHIC-H2S</span>
                 </label>
             </div>
+            -->
             <div class="form-control">
                 <label class="label cursor-pointer justify-start gap-3">
                     <input type="checkbox" id="scc_mech_acscc" class="checkbox checkbox-sm checkbox-primary scc-mech-check" />
@@ -134,23 +136,59 @@
                 </div>
 
                 {% include "formula_app/includes/modules/scc_caustic.html" %}
-
-        </div>
-
-        <!-- 2. Amine -->
-        <div id="cont_scc_amine" class="scc-input-group hidden animate-fade-in">
-             <div class="card bg-base-100 border border-gray-200 p-4">
-                <h3 class="font-bold text-lg text-blue-900 mb-2 border-b pb-1">Amine Cracking Inputs</h3>
-                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                     <div class="form-control">
-                        <label class="label"><span class="label-text font-semibold">Susceptibility</span></label>
-                        <select class="select select-bordered select-sm w-full"><option>None</option><option>Low</option><option>Medium</option><option>High</option></select>
-                    </div>
-                </div>
             </div>
         </div>
-        
-        <!-- Add placeholders for other 7 mechanisms here as needed -->
+
+        <!-- 3. SSC (Sulfide Stress Cracking) -->
+        <div id="cont_scc_ssc" class="scc-input-group hidden">
+            <div class="card bg-base-100 border border-gray-200 p-6">
+                <h3 class="font-bold text-2xl text-blue-950 mb-4 border-b pb-2">SCC DF — Sulfide Stress Cracking (SSC)</h3>
+                
+                {% include "formula_app/includes/modules/scc_ssc.html" %}
+            </div>
+        </div>
+
+    <!-- ACSCC Content -->
+    <div id="cont_scc_acscc" class="scc-input-group hidden">
+        {% include 'formula_app/includes/modules/scc_acscc.html' %}
+    </div>
+
+    <!-- ClSCC Content (Chloride) -->
+    <div id="cont_scc_ciscc" class="scc-input-group hidden">
+        {% include 'formula_app/includes/modules/scc_clscc.html' %}
+    </div>
+
+    <!-- HIC/SOHIC-HF Content -->
+    <div id="cont_scc_hic_hf" class="scc-input-group hidden">
+        <div class="card bg-base-100 border border-gray-200 p-6">
+            <h3 class="font-bold text-2xl text-blue-950 mb-4 border-b pb-2">SCC DF — HIC/SOHIC-HF</h3>
+            {% include 'formula_app/includes/modules/scc_hic_sohic_hf.html' %}
+        </div>
+    </div>
+
+    <!-- HSC-HF Content -->
+    <div id="cont_scc_hsc_hf" class="scc-input-group hidden">
+        <div class="card bg-base-100 border border-gray-200 p-6">
+            <h3 class="font-bold text-2xl text-blue-950 mb-4 border-b pb-2">SCC DF — HSC-HF</h3>
+            {% include 'formula_app/includes/modules/scc_hsc_hf.html' %}
+        </div>
+    </div>
+
+    <!-- Amine Cracking Content -->
+    <div id="cont_scc_amine" class="scc-input-group hidden">
+        <div class="card bg-base-100 border border-gray-200 p-6">
+            <h3 class="font-bold text-2xl text-blue-950 mb-4 border-b pb-2">SCC DF — Amine Cracking</h3>
+            {% include 'formula_app/includes/modules/scc_amine.html' %}
+        </div>
+    </div>
+
+    <!-- Polythionic Acid SCC Content -->
+    <div id="cont_scc_pascc" class="scc-input-group hidden">
+        <div class="card bg-base-100 border border-gray-200 p-6">
+            <h3 class="font-bold text-2xl text-blue-950 mb-4 border-b pb-2">SCC DF — Polythionic Acid SCC (PASCC)</h3>
+            {% include 'formula_app/includes/modules/scc_pascc.html' %}
+        </div>
+    </div>
 
     </div>
 
@@ -167,10 +205,11 @@
     </div>
     
     <!-- RESULTS (Max) -->
-    <div class="alert alert-success mt-6 hidden" id="scc_max_result_container">
-        <div>
-           <h3 class="font-bold">Governing SCC Damage Factor</h3>
-           <div class="text-2xl font-mono" id="val_scc_governing">0.00</div>
+    <div class="mt-6 hidden p-4 bg-white border border-gray-300 rounded-md shadow-sm" id="scc_max_result_container">
+        <h3 class="font-bold text-gray-800 text-lg border-b pb-2 mb-2">Governing SCC Damage Factor</h3>
+        <div class="flex items-center justify-between">
+            <span class="text-gray-600 font-medium">Maximum Damage Factor (D<sub>f-gov</sub><sup>SCC</sup>):</span>
+            <span class="text-3xl font-extrabold text-blue-900" id="val_scc_governing">0.00</span>
         </div>
     </div>
 </div>

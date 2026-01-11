@@ -26,3 +26,17 @@ export function validateInputs(inputs) {
     });
     return allValid;
 }
+
+/**
+ * Linear Interpolation
+ * @param {number} x - The x value to interpolate for.
+ * @param {number} x1 - The x value of the first point.
+ * @param {number} y1 - The y value of the first point.
+ * @param {number} x2 - The x value of the second point.
+ * @param {number} y2 - The y value of the second point.
+ * @returns {number} - The interpolated y value.
+ */
+export function interpolate(x, x1, y1, x2, y2) {
+    if (x2 === x1) return y1;
+    return y1 + (x - x1) * (y2 - y1) / (x2 - x1);
+}

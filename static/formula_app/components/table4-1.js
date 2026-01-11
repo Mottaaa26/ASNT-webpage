@@ -10,11 +10,10 @@ document.getElementById("btn_table4.1").addEventListener("click", () => {
     for (let field of requiredFields) {
 
         if (!field.value || field.value === "") {
-            if (!field.reportValidity()) {
-                return;
-            }
+            field.reportValidity();
+            alert("Please fill in: " + (field.name || field.id)); // Fallback alert
+            return;
         }
-
     }
 
     // Validate dates
@@ -117,6 +116,7 @@ async function loadTable41() {
     document.getElementById('equipment').value = table_data.equip_type;
 
     if (table_data.equip_type && typeof window.loadComponents === 'function') {
+        // loadComponents is async (waits for JSON fetch)
         await window.loadComponents(table_data.equip_type);
     }
 
@@ -126,18 +126,48 @@ async function loadTable41() {
 
     // Trigger Geometry Load
     if (typeof window.updateGeometryOptions === 'function') {
+        // updateGeometryOptions checks t42Data presence internally.
+        // It should be populated now because loadComponents waited for data.
         window.updateGeometryOptions();
-
-        // Small delay if needed? synchronous updateGeometryOptions should be fine if data loaded
-        // However, if updateGeometryOptions relies on async data that might be missing?
-        // We added a wait inside step1_geom_loader for data, but updateGeometryOptions might return early if data missing.
-        // But since loadComponents waited, data should be there.
     }
 
-    // Set Geometry Value
+    // Set Geometry Value - robust retry logic
     if (table_data.comp_geom_data) {
-        document.getElementById('component_geometry_data').value = table_data.comp_geom_data;
+        let attempts = 0;
+        const maxAttempts = 10;
+        
+        const setGeom = setInterval(() => {
+            const geomSelect = document.getElementById('component_geometry_data');
+            
+            // Check if options are populated (more than just the placeholder)
+            if(geomSelect && geomSelect.options.length > 1) {
+                geomSelect.value = table_data.comp_geom_data;
+                
+                if(geomSelect.value === table_data.comp_geom_data) {
+                    // Success
+                    console.log("Geometry restored successfully:", table_data.comp_geom_data);
+                    clearInterval(setGeom);
+                }
+            }
+            
+            attempts++;
+            if(attempts >= maxAttempts) {
+                console.warn("Failed to restore component_geometry_data after multiple attempts:", table_data.comp_geom_data);
+                clearInterval(setGeom);
+            }
+        }, 100);
     }
+
+    // Restore Cladding/Liner Rows (Explicit check)
+    // setupToggle is run at end of file. It runs BEFORE or AFTER initializeStep1?
+    // initializeStep1 is delayed by polling/DOMReady. setupToggle runs immediately script loads.
+    // So listeners are ready. dispatch should work.
+
+    // Trigger Toggle Logic explicitly
+    // Move this down to ensure values are set? 
+    // They are set above.
+    
+    // Restore Results Message
 
     // Restore Cladding/Liner Rows (Explicit check)
     // Sometimes dispatchEvent isn't enough if listeners are not creating? 

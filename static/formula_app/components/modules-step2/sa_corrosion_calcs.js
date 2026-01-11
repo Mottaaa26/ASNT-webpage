@@ -1,5 +1,5 @@
 
-import { roundToClosestValue } from '../utils.js';
+
 
 /**
  * Function that gets the table based on the material selected and returns the table data

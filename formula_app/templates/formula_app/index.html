@@ -60,7 +60,7 @@
                             <li>
                                 <a href="{% url 'calculation_thinning_df' %}"
                                     class="btn btn-block bg-blue-50 text-blue-950 hover:bg-blue-100 hover-lift text-wrap h-auto min-h-0 py-3 text-sm border-none justify-start">
-                                    Calculation of thinning DF
+                                    Damage Factor (DF)
                                 </a>
                             </li>
                             <li>
@@ -87,11 +87,14 @@
 
 
                 <h1 class="text-2xl sm:text-3xl font-extrabold text-blue-800 mb-6 animate-fade-in flex-shrink-0">
-                    Calculation of thinning DF
+                    Damage Factor (DF)
                 </h1>
 
 
                 <div id="content-scroller" class="w-full flex-1 overflow-y-auto rounded-box bg-gray-50 space-y-8 p-2">
+
+                    <!-- SECTION: Global Component Data (Table 4.1) -->
+                    {% include 'formula_app/includes/component_basic_data.html' %}
 
                     <!-- SECTION: Damage Mechanism Selection (Step 0) -->
                     {% include 'formula_app/includes/modules/damage_mech_selection.html' %}
@@ -112,6 +115,15 @@
                     <!-- 2. SCC Module -->
                     {% include 'formula_app/includes/modules/scc_module.html' %}
 
+                    <!-- 3. External Damage Module -->
+                    <!-- 3. External Damage Module -->
+                    {% include 'formula_app/includes/modules/external_damage_module.html' %}
+
+                    <!-- 4. HTHA Module -->
+                    {% include 'formula_app/includes/modules/htha.html' %}
+
+                    <!-- 5. Brittle Fracture Module -->
+                    {% include 'formula_app/includes/modules/brittle_fracture/brittle_fracture.html' %}
                 </div>
             </section>
 
@@ -135,6 +147,7 @@
         getComponents: "{% url 'api_get_components' %}"
     };
 </script>
+<script src="{% static 'formula_app/components/step1_geom_loader.js' %}"></script>
 <script src="{% static 'formula_app/components/table4-1.js' %}"></script>
 <script src="{% static 'formula_app/data/get-elements.js' %}"></script>
 <script src="{% static 'formula_app/components/step1_calcs.js' %}"></script>
@@ -153,5 +166,12 @@
 <script src="{% static 'formula_app/data/app_main_loader.js' %}"></script>
 <script src="{% static 'formula_app/components/steps_handler.js' %}"></script>
 <script src="{% static 'formula_app/js/module_navigator.js' %}"></script>
-<script type="module" src="{% static 'formula_app/js/scc_interactions.js' %}?v=14"></script>
-{% endblock %}a
+<script type="module" src="{% static 'formula_app/js/scc_interactions.js' %}?v=37"></script>
+<script src="{% static 'formula_app/js/external_damage_interactions.js' %}?v=5"></script>
+<script type="module" src="{% static 'formula_app/js/htha_interactions.js' %}"></script>
+<script type="module" src="{% static 'formula_app/components/external_corrosion_ferritic.js' %}"></script>
+<script src="{% static 'formula_app/components/cui_ferritic.js' %}?v=5"></script>
+<script type="module" src="{% static 'formula_app/components/external_clscc_austenitic.js' %}"></script>
+<script type="module" src="{% static 'formula_app/js/modules/brittle_fracture/interactions.js' %}"></script>
+<script type="module" src="{% static 'formula_app/js/temper_embrittlement_interactions.js' %}"></script>
+{% endblock %}
