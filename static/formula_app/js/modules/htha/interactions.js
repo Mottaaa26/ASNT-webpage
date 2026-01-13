@@ -1,6 +1,6 @@
-import { validateInputs } from './utils.js';
+import { validateInputs } from '../../utils.js';
 
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
     
     // Elements
     const btnCalc = document.getElementById('btn_calc_htha');
@@ -32,6 +32,25 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // UI Buttons
     const btnSaveHide = document.getElementById('btn_htha_save_hide');
+
+    // Data Storage
+    let HTHA_SUSCEPTIBILITY_DATA = {};
+    let HTHA_DF_DATA = {};
+
+    // Load HTHA data from JSON files
+    try {
+        const response = await fetch('/static/formula_app/js/modules/htha/data/htha_susceptibility_data.json');
+        HTHA_SUSCEPTIBILITY_DATA = await response.json();
+    } catch (error) {
+        console.error("Error loading HTHA susceptibility data:", error);
+    }
+
+    try {
+        const response = await fetch('/static/formula_app/js/modules/htha/data/htha_df_data.json');
+        HTHA_DF_DATA = await response.json();
+    } catch (error) {
+        console.error("Error loading HTHA DF data:", error);
+    }
 
     // Auto-load data from Table 4.1
     loadHTHAData();
@@ -108,6 +127,7 @@ document.addEventListener('DOMContentLoaded', () => {
     
     // Save Logic
     function saveHTHAData() {
+        console.log("Saving HTHA Table Data...");
         const data = {
             material: inputMaterial ? inputMaterial.value : "",
             temperature: inputTemp ? inputTemp.value : "",
@@ -117,14 +137,23 @@ document.addEventListener('DOMContentLoaded', () => {
             replacedInKind: inputReplacedInKind ? inputReplacedInKind.value : "",
             materialVerification: inputMaterialVerification ? inputMaterialVerification.value : "",
         };
+        
+        if(!data.material || !data.temperature || !data.pressure) {
+             console.warn("HTHA Save: Missing required fields (Material, Temp, or Pressure).");
+             // Optional: visual feedback
+        }
+
         sessionStorage.setItem('htha_data', JSON.stringify(data));
         updateStep1Summary();
-        checkStep1Completion(); // This checks if Step 2 should show
-        checkStep2Completion(); // This checks if Step 3 should show
-        checkStep3_1Completion(); // Checks if Step 3.2 should show and CALCS
+        checkStep1Completion(); 
+        checkStep2Completion(); 
+        checkStep3_1Completion(); 
         
         // Reveal Step 1 Summary on Save
-        if(step1Section) step1Section.classList.remove('hidden');
+        if(step1Section) {
+            step1Section.classList.remove('hidden');
+            console.log("Revealing Step 1 Summary");
+        }
     }
 
     function calculateSusceptibilityAndShow() {
@@ -174,13 +203,13 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // DF Lookup Table (Derived from htha_df_data.json)
-    const HTHA_DF_DATA = {
-        "Damage Observed": 5000,
-        "High Susceptibility": 5000,
-        "Medium Susceptibility": 2000,
-        "Low Susceptibility": 100,
-        "No Susceptibility": 0
-    };
+    // const HTHA_DF_DATA = { // Now loaded from JSON
+    //     "Damage Observed": 5000,
+    //     "High Susceptibility": 5000,
+    //     "Medium Susceptibility": 2000,
+    //     "Low Susceptibility": 100,
+    //     "No Susceptibility": 0
+    // };
 
     function updateSusceptibilityCard(val) {
         if(!resultDisplay || !resultCard || !resultTitle) return;

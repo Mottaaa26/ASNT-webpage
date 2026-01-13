@@ -1,4 +1,4 @@
-import { validateInputs } from './utils.js';
+import { validateInputs } from '../../utils.js';
 
 
 
@@ -246,58 +246,105 @@ let baseDamageFactorData = null; // Table 2.C.1.3 // Table 2.C.1.2
             console.log("SCC Auto-Populate Data:", data);
 
             // 1. Install Date (Age)
-            if (data.start_date && causticInputs.installDate) {
-                causticInputs.installDate.value = data.start_date;
-                causticInputs.installDate.readOnly = true;
-                causticInputs.installDate.classList.add('bg-gray-100', 'cursor-not-allowed');
+            if (data.start_date) {
+                if (causticInputs.installDate) {
+                    causticInputs.installDate.value = data.start_date;
+                    causticInputs.installDate.readOnly = true;
+                    causticInputs.installDate.classList.add('bg-gray-100', 'cursor-not-allowed');
+                }
+                const reqAge = document.getElementById('req_scc_caustic_age');
+                if (reqAge) {
+                    reqAge.value = "Calculated from Step 3"; // Placeholder or calc logic
+                    reqAge.readOnly = true;
+                    reqAge.classList.add('bg-gray-100');
+                }
                 // Trigger Age Calc
                 if (typeof calculateAgeFromDate === 'function') setTimeout(calculateAgeFromDate, 100);
             }
 
             // 2. Temperature
             const opTemp = data.max_operating_temp || data.operating_temp;
-            if (opTemp && causticInputs.temp) {
-                causticInputs.temp.value = opTemp;
-                causticInputs.temp.readOnly = true;
-                causticInputs.temp.classList.add('bg-gray-100', 'cursor-not-allowed');
+            if (opTemp) {
+                if(causticInputs.temp) {
+                    causticInputs.temp.value = opTemp;
+                    causticInputs.temp.readOnly = true;
+                    causticInputs.temp.classList.add('bg-gray-100', 'cursor-not-allowed');
+                }
+                const reqTemp = document.getElementById('req_scc_caustic_temp');
+                if(reqTemp) {
+                    reqTemp.value = opTemp;
+                    reqTemp.readOnly = true;
+                    reqTemp.classList.add('bg-gray-100', 'cursor-not-allowed');
+                }
             }
 
             // 3. Units
-            if (data.measurement_unit && causticInputs.tempUnit) {
+            if (data.measurement_unit) {
                 const isMetric = data.measurement_unit.toLowerCase() === "celsius";
-                causticInputs.tempUnit.value = isMetric ? "C" : "F";
-                causticInputs.tempUnit.disabled = true;
-                causticInputs.tempUnit.classList.add('bg-gray-100', 'cursor-not-allowed');
+                const unitVal = isMetric ? "C" : "F";
+                
+                if(causticInputs.tempUnit) {
+                    causticInputs.tempUnit.value = unitVal;
+                    causticInputs.tempUnit.disabled = true;
+                    causticInputs.tempUnit.classList.add('bg-gray-100', 'cursor-not-allowed');
+                }
+                
+                const reqUnit = document.getElementById('req_scc_caustic_temp_unit');
+                if(reqUnit) {
+                    reqUnit.value = unitVal;
+                    reqUnit.disabled = true;
+                    reqUnit.classList.add('bg-gray-100', 'cursor-not-allowed');
+                }
             }
 
             // 4. Heat Tracing
-            if (data.heat_tracing && causticInputs.heatTraced) {
-                 // Check if field Matches data
-                 const val = data.heat_tracing; // "Yes", "No"
-                 
+            if (data.heat_tracing) {
+                 const val = data.heat_tracing;
                  // Try to match value
                  let matched = false;
-                 // Normalize "Yes"/"No" case
-                 const validOpts = Array.from(causticInputs.heatTraced.options).map(o => o.value);
-                 
-                 if (validOpts.includes(val)) {
-                     causticInputs.heatTraced.value = val;
-                     matched = true;
-                 } else if (validOpts.includes(val.charAt(0).toUpperCase() + val.slice(1).toLowerCase())) {
-                     causticInputs.heatTraced.value = val.charAt(0).toUpperCase() + val.slice(1).toLowerCase();
-                     matched = true;
+                 // Normalize for existing select
+                 if(causticInputs.heatTraced) {
+                     const validOpts = Array.from(causticInputs.heatTraced.options).map(o => o.value);
+                     if (validOpts.includes(val)) {
+                         causticInputs.heatTraced.value = val;
+                         matched = true;
+                     } else if (validOpts.includes(val.charAt(0).toUpperCase() + val.slice(1).toLowerCase())) {
+                         causticInputs.heatTraced.value = val.charAt(0).toUpperCase() + val.slice(1).toLowerCase();
+                         matched = true;
+                     }
+                     if (matched) {
+                         causticInputs.heatTraced.disabled = true;
+                         causticInputs.heatTraced.classList.add('bg-gray-100', 'cursor-not-allowed');
+                     }
                  }
-                 
-                 if (matched) {
-                     causticInputs.heatTraced.disabled = true;
-                     causticInputs.heatTraced.classList.add('bg-gray-100', 'cursor-not-allowed');
-                 }
+            }
+
+            // 5. Steam Out (Table 4.1 might not have this, check data model)
+            if (data.steam_out) {
+                const reqSteamed = document.getElementById('req_scc_caustic_steamed_out');
+                const stepSteamed = document.getElementById('scc_caustic_steamed_out');
+                
+                let val = data.steam_out;
+                if(val === true) val = 'Yes';
+                if(val === false) val = 'No';
+                
+                if(reqSteamed) {
+                    reqSteamed.value = val;
+                    reqSteamed.disabled = true;
+                }
+                if(stepSteamed) {
+                    stepSteamed.value = val;
+                    stepSteamed.disabled = true;
+                }
             }
 
             // Trigger Update to refresh UI / Graphs
             setTimeout(() => {
                 if (typeof updateCausticLogic === 'function') updateCausticLogic();
             }, 200);
+
+            // Trigger SSC Auto-Populate
+            if (typeof autoPopulateSSC === 'function') autoPopulateSSC(data);
 
         } catch (e) {
             console.error("SCC Auto-Populate Error", e);
@@ -442,6 +489,11 @@ let baseDamageFactorData = null; // Table 2.C.1.3 // Table 2.C.1.2
             causticInputs.valSusceptibility.innerText = susceptibility;
             // causticInputs.divResult.className = `alert mt-4 shadow-lg ${getSusceptibilityClass(susceptibility)}`; // Removed per user request
             
+            // Sync with Table Input
+            const reqSuscept = document.getElementById('req_scc_caustic_susceptibility');
+            if(reqSuscept) reqSuscept.value = susceptibility;
+            
+            
             // 4. Extended Calculations (Now specifically Step 2)
             const divStep2 = document.getElementById('div_scc_caustic_step2');
             
@@ -502,44 +554,20 @@ let baseDamageFactorData = null; // Table 2.C.1.3 // Table 2.C.1.2
             setTimeout(() => msgSaved.classList.add('hidden'), 3000);
         }
 
-        // Reveal Step 3 (Logic for future steps)
+    // Reveal Step 3 (Logic for future steps)
         if(causticInputs.divStep3) {
             causticInputs.divStep3.classList.remove('hidden');
+            
+             // Check if Step 4 data is already ready (e.g. auto-populated age)
+            const ageVal = sessionStorage.getItem('scc_caustic_age');
+            const divStep4 = document.getElementById('div_scc_caustic_step4');
+            if (ageVal && ageVal !== '--' && divStep4) {
+                 divStep4.classList.remove('hidden');
+            }
         }
     }
 
-    // --- Step 3 Logic: Age Calculation ---
-    if(causticInputs.installDate) {
-        causticInputs.installDate.addEventListener('change', calculateAgeFromDate);
-    }
-    
-    function calculateAgeFromDate() {
-        const dateVal = causticInputs.installDate.value;
-        if (!dateVal) return;
 
-        const installDate = new Date(dateVal);
-        const currentDate = new Date();
-        
-        // Calculate difference in milliseconds
-        const diffTime = Math.abs(currentDate - installDate);
-        // Convert to years (approximate using 365.25 days)
-        const diffYears = diffTime / (1000 * 60 * 60 * 24 * 365.25);
-        
-        const age = diffYears.toFixed(2); // 2 decimal places
-        
-        // Update UI
-        if(causticInputs.valAge) {
-            causticInputs.valAge.innerText = age;
-        }
-
-        // Save to Session
-        sessionStorage.setItem('scc_caustic_age', age);
-        console.log(`Step 3 Complete: Age=${age} years.`);
-        
-        // Reveal Step 4 (Placeholder for now)
-        // const divStep4 = document.getElementById('div_scc_caustic_steps_4_6');
-        // if(divStep4) divStep4.classList.remove('hidden');
-    }
 
     // Initialize: Check if session has age
     // (Optional: restore date if needed, but not critical for now)    
@@ -574,14 +602,20 @@ let baseDamageFactorData = null; // Table 2.C.1.3 // Table 2.C.1.2
         if(causticInputs.valAge) {
             causticInputs.valAge.innerText = age;
         }
+        // Sync Table Input
+        const reqAge = document.getElementById('req_scc_caustic_age');
+        if(reqAge) reqAge.value = age;
 
         // Save to Session
         sessionStorage.setItem('scc_caustic_age', age);
         console.log(`Step 3 Complete: Age=${age} years.`);
         
-        // Reveal Step 4
-        const divStep4 = document.getElementById('div_scc_caustic_step4');
-        if(divStep4) divStep4.classList.remove('hidden');
+        // Reveal Step 4 ONLY if Step 3 is visible (meaning we are allowed to proceed)
+        const divStep3 = document.getElementById('div_scc_caustic_step3');
+        if (divStep3 && !divStep3.classList.contains('hidden')) {
+            const divStep4 = document.getElementById('div_scc_caustic_step4');
+            if(divStep4) divStep4.classList.remove('hidden');
+        }
     }
     
     // --- Step 4 Logic: Inspection Effectiveness ---
@@ -636,6 +670,24 @@ let baseDamageFactorData = null; // Table 2.C.1.3 // Table 2.C.1.2
             } else {
                  causticInputs.valFinalEffCat.className = "font-bold text-blue-800";
             }
+            
+            // Sync Table Inputs
+            const reqEff = document.getElementById('req_scc_caustic_insp_eff');
+            const reqCount = document.getElementById('req_scc_caustic_insp_count');
+            
+            if(reqEff) {
+                 // Try to match value or add option if purely display
+                 // Ideally this is a select, but we can just set value if option matches
+                 // Or create a dummy option
+                 const opts = Array.from(reqEff.options);
+                 const hasOpt = opts.some(o => o.value === finalCat);
+                 if(!hasOpt) {
+                     const newOpt = new Option(finalCat, finalCat);
+                     reqEff.add(newOpt);
+                 }
+                 reqEff.value = finalCat;
+            }
+            if(reqCount) reqCount.value = finalCount;
         }
 
         // Save to Session
@@ -714,6 +766,17 @@ let baseDamageFactorData = null; // Table 2.C.1.3 // Table 2.C.1.2
         const steamedOut = causticInputs.steamedOut.value;
 
         if (isNaN(naohConc) || isNaN(temp)) return null;
+
+        if (isNaN(naohConc) || isNaN(temp)) return null;
+
+        // SAVE INPUTS TO SESSION
+        sessionStorage.setItem('scc_caustic_cracks_present', cracksPresent);
+        sessionStorage.setItem('scc_caustic_cracks_removed', cracksRemoved);
+        sessionStorage.setItem('scc_caustic_stress_relieved', stressRelieved);
+        sessionStorage.setItem('scc_caustic_naoh_conc', naohConc);
+        sessionStorage.setItem('scc_caustic_temp', temp);
+        sessionStorage.setItem('scc_caustic_heat_traced', heatTraced);
+        sessionStorage.setItem('scc_caustic_steamed_out', steamedOut);
 
         const areaA = isPointInAreaA(naohConc, temp);
 
@@ -812,8 +875,11 @@ let baseDamageFactorData = null; // Table 2.C.1.3 // Table 2.C.1.2
         sessionStorage.setItem('scc_caustic_base_df', baseDF);
         console.log(`Step 5 Complete: Base DF=${baseDF}`);
         
-        // Trigger Step 6
-        calculateFinalDamageFactor();
+        // Trigger Step 6 only if Age is valid (Step 3 complete)
+        const currentAge = parseFloat(sessionStorage.getItem('scc_caustic_age'));
+        if (!isNaN(currentAge)) {
+            calculateFinalDamageFactor();
+        }
     }
 
     // --- Step 6 Logic: Final Damage Factor ---
@@ -950,11 +1016,49 @@ let baseDamageFactorData = null; // Table 2.C.1.3 // Table 2.C.1.2
             const data = await response.json();
             
             tbody.innerHTML = '';
-            data.forEach(row => {
+            data.forEach((row, index) => {
                const tr = document.createElement('tr');
+               let inputHtml = '';
+               
+               if (row.parameter.includes('Susceptibility')) {
+                   inputHtml = `<input type="text" id="req_scc_ssc_susceptibility" class="input input-bordered input-sm w-full bg-gray-100" placeholder="Calculated..." readonly />`;
+               } else if (row.parameter.includes('Presence of water')) {
+                   inputHtml = `
+                       <select id="req_scc_ssc_water" class="select select-bordered select-sm w-full">
+                           <option value="">Select...</option>
+                           <option value="Yes">Yes</option>
+                           <option value="No">No</option>
+                       </select>`;
+               } else if (row.parameter.includes('H2S content')) {
+                   inputHtml = `<input type="number" id="req_scc_ssc_h2s" class="input input-bordered input-sm w-full" placeholder="ppm" />`;
+               } else if (row.parameter.includes('pH of water')) {
+                   inputHtml = `<input type="number" id="req_scc_ssc_ph" class="input input-bordered input-sm w-full" placeholder="pH" step="0.1" />`;
+               } else if (row.parameter.includes('Presence of cyanides')) {
+                   inputHtml = `
+                       <select id="req_scc_ssc_cyanides" class="select select-bordered select-sm w-full">
+                           <option value="">Select...</option>
+                           <option value="Yes">Yes</option>
+                           <option value="No">No</option>
+                       </select>`;
+               } else if (row.parameter.includes('Max Brinnell hardness')) {
+                   inputHtml = `<input type="number" id="req_scc_ssc_hardness" class="input input-bordered input-sm w-full" placeholder="HB" />`;
+               } else if (row.parameter.includes('Age')) {
+                   inputHtml = `<input type="text" id="req_scc_ssc_age" class="input input-bordered input-sm w-full bg-gray-100" placeholder="Calculated..." readonly />`;
+               } else if (row.parameter.includes('Inspection effectiveness')) {
+                   inputHtml = `
+                       <select id="req_scc_ssc_insp_eff" class="select select-bordered select-sm w-full" disabled>
+                           <option value="">Calculated...</option>
+                       </select>`;
+               } else if (row.parameter.includes('Number of inspections')) {
+                   inputHtml = `<input type="number" id="req_scc_ssc_insp_count" class="input input-bordered input-sm w-full bg-gray-100" placeholder="Calculated..." readonly />`;
+               } else {
+                   inputHtml = `<input type="text" class="input input-bordered input-sm w-full" disabled />`;
+               }
+
                tr.innerHTML = `
                    <td class="font-semibold text-sm">${row.parameter}</td>
                    <td class="text-sm">${row.comment}</td>
+                   <td>${inputHtml}</td>
                `;
                tbody.appendChild(tr);
             });
@@ -1041,8 +1145,120 @@ let baseDamageFactorData = null; // Table 2.C.1.3 // Table 2.C.1.2
         
         if (severity !== 'Unknown') {
             step2Div.classList.remove('hidden');
+            
+            // Auto-trigger Step 2 if Hardness is already present
+            const inpHard = document.getElementById('inp_scc_ssc_hardness');
+            if (inpHard && inpHard.value) {
+                // We don't await this, just trigger it
+                calculateSSCSusceptibility(false);
+            }
         }
+        
+        // Sync Table Inputs
+        const reqH2S = document.getElementById('req_scc_ssc_h2s');
+        const reqPH = document.getElementById('req_scc_ssc_ph');
+        if(reqH2S) reqH2S.value = h2s;
+        if(reqPH) reqPH.value = ph;
+
         console.log(`SSC Step 1 Complete: Severity=${severity} (pH=${ph}, H2S=${h2s})`);
+    }
+
+    // Auto-Populate SSC
+    function autoPopulateSSC(data) {
+        if(!data) return;
+        
+        // 1. pH
+        if (data.ph_water) {
+             const val = data.ph_water;
+             const inpPH = document.getElementById('inp_scc_ssc_ph');
+             const reqPH = document.getElementById('req_scc_ssc_ph');
+             
+             if(inpPH) {
+                 inpPH.value = val;
+                 inpPH.readOnly = true; 
+                 inpPH.classList.add('bg-gray-100', 'cursor-not-allowed');
+             }
+             if(reqPH) {
+                 reqPH.value = val;
+                 reqPH.readOnly = true;
+                 reqPH.classList.add('bg-gray-100');
+             }
+        }
+        
+        // 2. H2S
+        if (data.h2s_content) {
+             const val = data.h2s_content;
+             const inpH2S = document.getElementById('inp_scc_ssc_h2s');
+             const reqH2S = document.getElementById('req_scc_ssc_h2s');
+             
+             if(inpH2S) {
+                 inpH2S.value = val;
+                 inpH2S.readOnly = true;
+                 inpH2S.classList.add('bg-gray-100', 'cursor-not-allowed');
+             }
+             if(reqH2S) {
+                 reqH2S.value = val;
+                 reqH2S.readOnly = true;
+                 reqH2S.classList.add('bg-gray-100');
+             }
+        }
+        
+        // 3. Hardness (if available in Step 0)
+        // Check data model for hardness property? usually "max_brinell_hardness"
+        if (data.max_brinell_hardness) {
+             const val = data.max_brinell_hardness;
+             const inpHard = document.getElementById('inp_scc_ssc_hardness');
+             const reqHard = document.getElementById('req_scc_ssc_hardness');
+             
+             if(inpHard) {
+                 inpHard.value = val;
+                 inpHard.readOnly = true;
+                 inpHard.classList.add('bg-gray-100', 'cursor-not-allowed');
+             }
+             if(reqHard) {
+                 reqHard.value = val;
+                 reqHard.readOnly = true;
+                 reqHard.classList.add('bg-gray-100');
+             }
+        }
+        
+        // 4. Age (Start Date)
+        if (data.start_date) {
+            const inpDate = document.getElementById('inp_scc_ssc_install_date');
+            
+            if(inpDate) {
+                inpDate.value = data.start_date;
+                inpDate.readOnly = true;
+                inpDate.classList.add('bg-gray-100', 'cursor-not-allowed');
+                // Trigger change event to calc age
+                calculateSSCAge();
+            }
+        }
+        
+        // 5. Water / Cyanides (Booleans)
+        if (data.presence_of_water !== undefined) {
+             const val = data.presence_of_water ? "Yes" : "No";
+             const reqWater = document.getElementById('req_scc_ssc_water');
+             if(reqWater) {
+                 reqWater.value = val;
+                 reqWater.disabled = true;
+                 reqWater.classList.add('bg-gray-100');
+             }
+        }
+        if (data.presence_of_cyanides !== undefined) {
+             const val = data.presence_of_cyanides ? "Yes" : "No";
+             const reqCyan = document.getElementById('req_scc_ssc_cyanides');
+             if(reqCyan) {
+                 reqCyan.value = val;
+                 reqCyan.disabled = true;
+                 reqCyan.classList.add('bg-gray-100');
+             }
+        }
+        
+        // Trigger Step 1 Calc if data is present
+        if(data.ph_water && data.h2s_content) {
+            setTimeout(calculateSSCSeverity, 500);
+        }
     }
 
     // --- SSC Step 2 ---
@@ -1059,15 +1275,9 @@ let baseDamageFactorData = null; // Table 2.C.1.3 // Table 2.C.1.2
              
              if(val === 'Yes') {
                  divCracksRemoved.classList.remove('hidden');
-                 // If Removed is not set, wait
-                 if(selCracksRemoved.value === "") {
-                     // Keep current result or hide? Keeping current is fine, but maybe warn?
-                     // Actually, if they say Yes, we probably shouldn't show the "Calculated" result as valid yet
-                     // But for now, let's just show the container.
-                 } else {
-                     // Re-run logic
-                     calculateSSCSusceptibility(true);
-                 }
+                 // Trigger calc immediately to show Step 3 (based on base susc)
+                 // while waiting for Removed answer.
+                 calculateSSCSusceptibility(true);
              } else {
                  divCracksRemoved.classList.add('hidden');
                  if(selCracksRemoved) selCracksRemoved.value = "";
@@ -1083,30 +1293,48 @@ let baseDamageFactorData = null; // Table 2.C.1.3 // Table 2.C.1.2
         });
     }
 
-    if(btnCalcSSCSusceptibility) {
-        // Initial click (not an update)
-        btnCalcSSCSusceptibility.addEventListener('click', () => calculateSSCSusceptibility(false));
+    // New Listeners for Step 2 Inputs (Hardness, PWHT)
+    const inpHardness = document.getElementById('inp_scc_ssc_hardness');
+    const selPWHT = document.getElementById('sel_scc_ssc_pwht');
+
+    if(inpHardness) {
+        inpHardness.addEventListener('input', () => calculateSSCSusceptibility(true));
+        inpHardness.addEventListener('change', () => calculateSSCSusceptibility(true)); 
     }
+    if(selPWHT) {
+        selPWHT.addEventListener('change', () => calculateSSCSusceptibility(true));
+    }
+
+
 
     let sccSusceptibilityData = null;
     async function calculateSSCSusceptibility(isUpdate = false) {
-        const severity = sessionStorage.getItem('scc_ssc_env_severity');
-        if (!severity) {
-            alert("Please complete Step 1 first.");
-            return;
-        }
+    console.log("Starting calculateSSCSusceptibility...");
+    const severity = sessionStorage.getItem('scc_ssc_env_severity');
+    if (!severity) {
+        console.warn("Missing Severity in SessionStorage");
+        alert("Please complete Step 1 first.");
+        return;
+    }
 
-        // Clear previous errors
-    const errDiv = document.getElementById('err_scc_ssc_step1');
-    if (errDiv) errDiv.classList.add('hidden');
+    // Clear previous errors
+    const errDiv = document.getElementById('err_scc_ssc_step2'); // Changed to step 2 specific if exists, or just rely on validate inputs
+    // if (errDiv) errDiv.classList.add('hidden'); // Assuming step 1 error div was reused erroneously
 
     const inpHardness = document.getElementById('inp_scc_ssc_hardness');
-    if (!validateInputs([inpHardness], document.getElementById('div_scc_ssc_step1'))) {
+    console.log("Validating Hardness Input:", inpHardness.value);
+    
+    // Fix: Validate against Step 2 container, not Step 1
+    if (!validateInputs([inpHardness], document.getElementById('div_scc_ssc_step2'))) {
+        console.warn("Validation Failed for Hardness");
         return;
     }
 
     const hardnessStr = inpHardness.value;
     const hardness = parseFloat(hardnessStr);
+    const pwht = document.getElementById('sel_scc_ssc_pwht').value;
+    const cracksPresent = document.getElementById('sel_scc_ssc_cracks_present').value;
+    const cracksRemoved = document.getElementById('sel_scc_ssc_cracks_removed').value;
     
     // Check if hardness is valid number specifically
     if (isNaN(hardness)) {
@@ -1193,18 +1421,78 @@ let baseDamageFactorData = null; // Table 2.C.1.3 // Table 2.C.1.2
 
         sessionStorage.setItem('scc_ssc_susceptibility', val);
         console.log(`SSC Step 2 Complete: Susceptibility=${val}`);
+        
+        // Sync Table Inputs
+        const reqSusc = document.getElementById('req_scc_ssc_susceptibility');
+        if(reqSusc) reqSusc.value = val;
+        
+        const inpHard = document.getElementById('inp_scc_ssc_hardness');
+        const reqHard = document.getElementById('req_scc_ssc_hardness');
+        if(reqHard && inpHard) reqHard.value = inpHard.value;
+
 
         // Unlock Step 3
         const step3Div = document.getElementById('div_scc_ssc_step3');
-        // Only unlock if not FFS and not Unknown
-        if (val !== 'Unknown' && val !== 'FFS Required') {
+        const cracksSelected = document.getElementById('sel_scc_ssc_cracks_present').value;
+
+        // Only unlock if not FFS, not Unknown, AND cracks option is selected
+        if (val !== 'Unknown' && val !== 'FFS Required' && cracksSelected !== "") {
              step3Div.classList.remove('hidden');
              // Auto-Calculate Step 3
              calculateSSCSeverityIndex();
         } else {
              step3Div.classList.add('hidden');
              document.getElementById('div_scc_ssc_step4').classList.add('hidden');
+             document.getElementById('div_scc_ssc_step5').classList.add('hidden');
+             document.getElementById('div_scc_ssc_step6').classList.add('hidden');
+             document.getElementById('div_scc_ssc_step7').classList.add('hidden');
         }
+    }
+
+    // --- Caustic Confirm Table Data Button ---
+    const btnConfirmCaustic = document.getElementById('btn_scc_caustic_confirm_table');
+    if(btnConfirmCaustic) {
+        btnConfirmCaustic.addEventListener('click', () => {
+             // 1. Sync Table Inputs to hidden fields
+             const reqConc = document.getElementById('req_scc_caustic_naoh_conc');
+             const reqTemp = document.getElementById('req_scc_caustic_temp');
+             const reqUnit = document.getElementById('req_scc_caustic_temp_unit');
+             const reqSteam = document.getElementById('req_scc_caustic_steamed_out');
+             const reqAge = document.getElementById('req_scc_caustic_age'); // Readonly?
+             
+             // Target Hidden Inputs
+             const inpConc = document.getElementById('scc_caustic_naoh_conc');
+             const inpTemp = document.getElementById('scc_caustic_temp');
+             const inpUnit = document.getElementById('scc_caustic_temp_unit');
+             const inpSteam = document.getElementById('scc_caustic_steamed_out');
+             // Age/InstallDate mapping?
+             // Since table has "Age" (Result), and Step 3 has "Date", we can't easily sync DATE from AGE.
+             // But if we had an "Install Date" input in the table, we could.
+             // For now, allow Step 3 to be the master for Age.
+             
+             if(reqConc && inpConc) inpConc.value = reqConc.value;
+             // Trigger input event to update graph if possible?
+             if(inpConc) inpConc.dispatchEvent(new Event('input'));
+             
+             if(reqTemp && inpTemp) inpTemp.value = reqTemp.value;
+             if(reqUnit && inpUnit) inpUnit.value = reqUnit.value;
+             if(reqSteam && inpSteam) inpSteam.value = reqSteam.value;
+             
+             // 2. Reveal Step 1 (Inputs)
+             const divInputs = document.getElementById('div_scc_caustic_inputs');
+             if(divInputs) {
+                 divInputs.classList.remove('hidden');
+                 divInputs.scrollIntoView({ behavior: 'smooth', block: 'start' });
+             }
+
+             // 3. Trigger initial calculations (Graph logic)
+             // We need to call checkCausticGraph() or similar if defined.
+             // Searching for graph logic... likely implicitly called by 'input' events above.
+             // But let's explicitly trigger if available in scope.
+             // checkCausticGraph(); // Can't call if not defined in this scope or export.
+             // Dispatching 'input' to inpConc and inpTemp should trigger it if listeners are set up.
+             if(inpTemp) inpTemp.dispatchEvent(new Event('input'));
+        });
     }
 
     // --- SSC Step 3 ---
@@ -1253,37 +1541,104 @@ let baseDamageFactorData = null; // Table 2.C.1.3 // Table 2.C.1.2
         sessionStorage.setItem('scc_ssc_svi', svi);
         console.log(`SSC Step 3 Complete: Svi=${svi}`);
         
+
+        
         // Unlock Step 4
         const step4Div = document.getElementById('div_scc_ssc_step4');
         step4Div.classList.remove('hidden');
+        
+        // Trigger Step 4/5 Logic
+        // If age is already calculated (or date is present), we should make sure Step 5 is visible
+        if(document.getElementById('inp_scc_ssc_install_date').value) {
+            calculateSSCAge();
+        }
+    }
+
+    // --- SSC Confirm Table Data Button ---
+    const btnConfirmSSC = document.getElementById('btn_scc_ssc_confirm_table');
+    if(btnConfirmSSC) {
+        btnConfirmSSC.addEventListener('click', () => {
+             // 1. Sync Table Inputs to Steps
+             const reqPH = document.getElementById('req_scc_ssc_ph');
+             const reqH2S = document.getElementById('req_scc_ssc_h2s');
+             const reqHard = document.getElementById('req_scc_ssc_hardness');
+             const reqAge = document.getElementById('req_scc_ssc_age');
+             // Future: reqWater, reqCyanides
+             
+             // Step 1 Inputs
+             const inpPH = document.getElementById('inp_scc_ssc_ph');
+             const inpH2S = document.getElementById('inp_scc_ssc_h2s');
+             
+             if(reqPH && inpPH) inpPH.value = reqPH.value;
+             if(reqH2S && inpH2S) inpH2S.value = reqH2S.value;
+             
+             // Step 2 Inputs
+             const inpHard = document.getElementById('inp_scc_ssc_hardness');
+             if(reqHard && inpHard) inpHard.value = reqHard.value;
+             
+             // Step 4 Inputs (If Age is manually entered? Age is calc, so date is what matters)
+             // If user entered Age directly in table (it's readonly in my code, so maybe not)
+             // But if they entered Date in Step 0, it's already popped.
+             
+             // 2. Reveal Step 1
+             const divStep1 = document.getElementById('div_scc_ssc_step1');
+             if(divStep1) {
+                 divStep1.classList.remove('hidden');
+                 divStep1.scrollIntoView({ behavior: 'smooth', block: 'start' });
+             }
+
+             // 4. Trigger Step 4 Calc if date present (or ensure it ran)
+             if(document.getElementById('inp_scc_ssc_install_date').value) {
+                 calculateSSCAge();
+             }
+
+             // 3. Trigger initial calculations if data is present
+             if(inpPH.value && inpH2S.value) {
+                 calculateSSCSeverity(); // This cascades to Step 2 if valid
+             }
+        });
     }
 
     // --- SSC Step 4: Time in Service ---
     
     // Auto-Calculate Age based on Date Input
+    // Auto-Calculate Age based on Date Input
     const inpSSCDate = document.getElementById('inp_scc_ssc_install_date');
+    
+    function calculateSSCAge() {
+        const dateVal = inpSSCDate.value;
+        if(!dateVal) return;
+
+        const installDate = new Date(dateVal);
+        const today = new Date();
+        let age = today.getFullYear() - installDate.getFullYear();
+        const m = today.getMonth() - installDate.getMonth();
+        if (m < 0 || (m === 0 && today.getDate() < installDate.getDate())) {
+            age--;
+        }
+        
+        // Allow 0 but not negative
+        if(age < 0) age = 0;
+
+        const valAgeSpan = document.getElementById('val_scc_ssc_age');
+        if(valAgeSpan) valAgeSpan.textContent = age;
+        
+        sessionStorage.setItem('scc_ssc_age', age);
+        
+        // Unlock Step 5
+         document.getElementById('div_scc_ssc_step5').classList.remove('hidden');
+         
+         // Sync Table
+         const reqAge = document.getElementById('req_scc_ssc_age');
+         if(reqAge) reqAge.value = age;
+         
+         // Trigger Step 7 (Final DF) update if possible?
+         // calculateSSCFinalDamage(); // We'll add this later or let Step 6 trigger it
+    }
+
     if(inpSSCDate) {
-        inpSSCDate.addEventListener('change', (e) => {
-            const dateVal = e.target.value;
-            if(!dateVal) return;
-
-            const installDate = new Date(dateVal);
-            const today = new Date();
-            let age = today.getFullYear() - installDate.getFullYear();
-            const m = today.getMonth() - installDate.getMonth();
-            if (m < 0 || (m === 0 && today.getDate() < installDate.getDate())) {
-                age--;
-            }
-            
-            // Allow 0 but not negative
-            if(age < 0) age = 0;
-
-            document.getElementById('val_scc_ssc_age').textContent = age;
-            sessionStorage.setItem('scc_ssc_age', age);
-            
-            // Unlock Step 5
-             document.getElementById('div_scc_ssc_step5').classList.remove('hidden');
-        });
+        inpSSCDate.addEventListener('change', calculateSSCAge);
+        inpSSCDate.addEventListener('input', calculateSSCAge);
     }
 
     // --- SSC Step 5: Inspection Effectiveness ---
@@ -1413,6 +1768,21 @@ let baseDamageFactorData = null; // Table 2.C.1.3 // Table 2.C.1.2
         // Unlock Step 6
         document.getElementById('div_scc_ssc_step6').classList.remove('hidden');
         
+        // Sync Table Inputs
+        const reqEff = document.getElementById('req_scc_ssc_insp_eff');
+        const reqCount = document.getElementById('req_scc_ssc_insp_count');
+        
+        if(reqEff) {
+             const opts = Array.from(reqEff.options);
+             const hasOpt = opts.some(o => o.value === finalEffCat);
+             if(!hasOpt) {
+                 const newOpt = new Option(finalEffCat, finalEffCat);
+                 reqEff.add(newOpt);
+             }
+             reqEff.value = finalEffCat;
+        }
+        if(reqCount) reqCount.value = finalEffCount;
+
         // Auto-Calculate Step 6
         calculateSSCBaseDamageFactor();
     }
@@ -3680,7 +4050,95 @@ if (selAmineSteamedDea) {
     selAmineSteamedDea.addEventListener('change', updateAmineStep1Flow);
 }
 
+// --- Amine Helper: Hide Downstream Steps ---
+function hideAmineStepsFrom(step) {
+    if (step <= 2) {
+        const divStep2 = document.getElementById('div_amine_step2');
+        if (divStep2) divStep2.classList.add('hidden');
+    }
+    if (step <= 3) {
+        const divStep3 = document.getElementById('div_amine_step3');
+        if (divStep3) divStep3.classList.add('hidden');
+    }
+    if (step <= 4) {
+        const divStep4 = document.getElementById('div_amine_step4');
+        if (divStep4) divStep4.classList.add('hidden');
+    }
+    if (step <= 5) {
+        const divStep5 = document.getElementById('div_amine_step5');
+        if (divStep5) divStep5.classList.add('hidden');
+    }
+    if (step <= 6) {
+        const divStep6 = document.getElementById('div_amine_step6');
+        if (divStep6) divStep6.classList.add('hidden');
+    }
+}
+
+// --- Amine Confirm Table Button ---
+const btnConfirmAmine = document.getElementById('btn_amine_confirm_table');
+if (btnConfirmAmine) {
+    btnConfirmAmine.addEventListener('click', () => {
+        // Sync Inputs
+        const reqSolution = document.getElementById('req_amine_solution');
+        const reqTemp = document.getElementById('req_amine_temp');
+        const reqUnit = document.getElementById('req_amine_temp_unit');
+        const reqSteam = document.getElementById('req_amine_steam_out');
+
+        const selLean = document.getElementById('sel_amine_lean');
+        const selMea = document.getElementById('sel_amine_mea_dipa');
+        const selDea = document.getElementById('sel_amine_dea');
+        
+        // Target Inputs (Both paths)
+        const inputsTemp = [document.getElementById('inp_amine_temp_mea'), document.getElementById('inp_amine_temp_dea')];
+        const selectsUnit = [document.getElementById('sel_amine_temp_unit_mea'), document.getElementById('sel_amine_temp_unit_dea')];
+        const selectsSteam = [document.getElementById('sel_amine_steamed_mea'), document.getElementById('sel_amine_steamed_dea')];
+
+        // 1. Solution Sync
+        if (reqSolution && selLean && selMea && selDea) {
+             const sol = reqSolution.value;
+             if (sol === 'Lean') {
+                 selLean.value = 'Yes';
+                 selMea.value = 'No';
+                 selDea.value = 'No';
+             } else if (sol === 'MEA_DIPA') {
+                 selLean.value = 'Yes';
+                 selMea.value = 'Yes';
+             } else if (sol === 'DEA') {
+                 selLean.value = 'Yes';
+                 selMea.value = 'No';
+                 selDea.value = 'Yes';
+             } else if (sol === 'Other') {
+                 selLean.value = 'Yes';
+                 selMea.value = 'No';
+                 selDea.value = 'No';
+             }
+        }
+
+        // 2. Temp Sync
+        if (reqTemp && reqTemp.value) {
+            inputsTemp.forEach(inp => { if(inp) inp.value = reqTemp.value; });
+        }
+        if (reqUnit && reqUnit.value) {
+            selectsUnit.forEach(sel => { if(sel) sel.value = reqUnit.value; });
+        }
+
+        // 3. Steam Sync
+        if (reqSteam && reqSteam.value) {
+            selectsSteam.forEach(sel => { if(sel) sel.value = reqSteam.value; });
+        }
+
+        // Reveal Step 1
+        const divStep1 = document.getElementById('div_amine_step1');
+        if (divStep1) {
+            divStep1.classList.remove('hidden');
+            divStep1.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+    });
+}
+
 function updateAmineStep1Flow() {
+    hideAmineStepsFrom(2); // Auto-hide downstream steps
+    hideAmineStepsFrom(2); // Auto-hide downstream steps
     const cracksPresent = selAmineCracksPresent.value;
     const cracksRemoved = selAmineCracksRemoved.value;
     const stressRelieved = selAmineStressRelieved.value;
@@ -4012,44 +4470,54 @@ function displayAmineResult(susceptibility, note) {
     calculateAmineSeverityIndex(susceptibility);
 }
 
+// Auto-populate Amine Temperature from Table 4.1 (General Data)
+function autoPopulateAmineFromTable41() {
+    const table41DataStr = sessionStorage.getItem('table4.1_data');
+    if (!table41DataStr) return;
+
+    try {
+        const data = JSON.parse(table41DataStr);
+        const temp = data.operating_temp;
+        let unit = data.measurement_unit; // 'farenheit' or 'celsius'
+
+        // Map Unit
+        if (unit && unit.toLowerCase().includes('farenheit') || unit === 'farenheit' || unit === 'F') unit = 'F'; 
+        else if (unit && unit.toLowerCase().includes('celsius') || unit === 'C') unit = 'C';
+        else unit = '';
+
+        const inpTemp = document.getElementById('req_amine_temp');
+        const selUnit = document.getElementById('req_amine_temp_unit');
+
+        if (inpTemp && (temp !== undefined && temp !== null && temp !== "")) {
+            inpTemp.value = temp;
+        }
+        if (selUnit && unit) {
+            selUnit.value = unit;
+        }
+    } catch (e) {
+        console.error("Error parsing Table 4.1 data for Amine:", e);
+    }
+}
+
+// Trigger auto-populate on load
+if (document.getElementById('req_amine_temp')) {
+    autoPopulateAmineFromTable41();
+}
+
 });
 
 // ============================================================================
 // HSC-HF (Hydrogen Stress Cracking in Hydrofluoric Acid) Module
 // ============================================================================
 
-// Load HSC-HF Required Data Table
-if (document.getElementById('table_scc_hsc_hf_required_data')) {
-    loadHSCHFRequiredData();
-}
+// Load HSC-HF Required Data - REMOVED (Static HTML used now)
+// if (document.getElementById('table_scc_hsc_hf_required_data')) {
+//     loadHSCHFRequiredData();
+// }
 
-async function loadHSCHFRequiredData() {
-    try {
-        const response = await fetch('/static/formula_app/data/json/scc_hsc_hf_required_data.json');
-        if (!response.ok) throw new Error('Failed to load HSC-HF required data');
-        const data = await response.json();
-        
-        const tbody = document.getElementById('tbody_scc_hsc_hf_required_data');
-        if (!tbody) return;
-        
-        tbody.innerHTML = '';
-        
-        data.required_data.forEach(item => {
-            const row = document.createElement('tr');
-            row.innerHTML = `
-                <td class="font-semibold">${item.parameter}</td>
-                <td class="text-sm">${item.comment}</td>
-            `;
-            tbody.appendChild(row);
-        });
-    } catch (error) {
-        console.error('Error loading HSC-HF required data:', error);
-        const tbody = document.getElementById('tbody_scc_hsc_hf_required_data');
-        if (tbody) {
-            tbody.innerHTML = '<tr><td colspan="2" class="text-center text-red-600">Error loading required data</td></tr>';
-        }
-    }
-}
+// if (document.getElementById('div_scc_hsc_hf_step1')) {
+//    loadHSCHFRequiredData();
+// }
 
 // Load HSC-HF Susceptibility Data
 let hscHFSusceptibilityData = null;
@@ -4114,6 +4582,29 @@ const inpHSCHFHardness = document.getElementById('inp_hsc_hf_hardness');
 const selHSCHFPWHT = document.getElementById('sel_hsc_hf_pwht');
 const btnHSCHFCalcSusceptibility = document.getElementById('btn_hsc_hf_calc_susceptibility');
 
+function hideHSCHFStepsFrom(step) {
+    if (step <= 2) {
+        const divStep2 = document.getElementById('div_scc_hsc_hf_step2');
+        if (divStep2) divStep2.classList.add('hidden');
+    }
+    if (step <= 3) {
+        const divStep3 = document.getElementById('div_scc_hsc_hf_step3');
+        if (divStep3) divStep3.classList.add('hidden');
+    }
+    if (step <= 4) {
+        const divStep4 = document.getElementById('div_scc_hsc_hf_step4');
+        if (divStep4) divStep4.classList.add('hidden');
+    }
+    if (step <= 5) {
+        const divStep5 = document.getElementById('div_scc_hsc_hf_step5');
+        if (divStep5) divStep5.classList.add('hidden');
+    }
+    if (step <= 6) {
+        const divStep6 = document.getElementById('div_scc_hsc_hf_step6');
+        if (divStep6) divStep6.classList.add('hidden');
+    }
+}
+
 // Question 1: Cracks present?
 if (selHSCHFCracksPresent) {
     selHSCHFCracksPresent.addEventListener('change', () => {
@@ -4130,6 +4621,10 @@ if (selHSCHFCracksPresent) {
         divTableLookup.classList.add('hidden');
         divResult.classList.add('hidden');
         
+        hideHSCHFStepsFrom(2); // Hide Steps 2-6
+        
+        // Reset selects
+        
         // Reset selects
         if (selHSCHFCracksRemoved) selHSCHFCracksRemoved.value = '';
         if (selHSCHFHFPresent) selHSCHFHFPresent.value = '';
@@ -4138,10 +4633,17 @@ if (selHSCHFCracksPresent) {
         if (selHSCHFCracksPresent.value === 'Yes') {
             // Show "Cracks removed?" question and High Susceptibility
             divCracksRemoved.classList.remove('hidden');
-            displayHSCHFResult('High', 'Cracks are present. High susceptibility to HSC-HF.');
+            if (selHSCHFCracksRemoved && selHSCHFCracksRemoved.value) {
+                selHSCHFCracksRemoved.dispatchEvent(new Event('change'));
+            } else {
+                 displayHSCHFResult('High', 'Cracks are present. High susceptibility to HSC-HF.');
+            }
         } else if (selHSCHFCracksPresent.value === 'No') {
             // No cracks → Show "HF present?" question
             divHFPresent.classList.remove('hidden');
+            if (selHSCHFHFPresent && selHSCHFHFPresent.value) {
+                selHSCHFHFPresent.dispatchEvent(new Event('change'));
+            }
         }
     });
 }
@@ -4170,6 +4672,8 @@ if (selHSCHFHFPresent) {
         divCarbonSteel.classList.add('hidden');
         divTableLookup.classList.add('hidden');
         
+        hideHSCHFStepsFrom(2); // Hide Steps 2-6
+        
         // Reset selects
         if (selHSCHFCarbonSteel) selHSCHFCarbonSteel.value = '';
         
@@ -4181,6 +4685,9 @@ if (selHSCHFHFPresent) {
             divCarbonSteel.classList.remove('hidden');
             // Hide result until Carbon Steel is answered
             divResult.classList.add('hidden');
+            if (selHSCHFCarbonSteel && selHSCHFCarbonSteel.value) {
+                selHSCHFCarbonSteel.dispatchEvent(new Event('change'));
+            }
         }
     });
 }
@@ -4193,6 +4700,8 @@ if (selHSCHFCarbonSteel) {
         // Hide table lookup
         divTableLookup.classList.add('hidden');
         
+        hideHSCHFStepsFrom(2); // Hide Steps 2-6
+        
         if (selHSCHFCarbonSteel.value === 'No') {
             // Not Carbon Steel → Not Susceptible
             displayHSCHFResult('Not Susceptible', 'Material is not Carbon Steel. Component is not susceptible to HSC-HF.');
@@ -4200,6 +4709,35 @@ if (selHSCHFCarbonSteel) {
             // Carbon Steel → Show Table 2.C.7.2 lookup
             divTableLookup.classList.remove('hidden');
         }
+    });
+}
+
+// --- HSC-HF Confirm Table Data Button ---
+const btnConfirmHSCHF = document.getElementById('btn_hsc_hf_confirm_table');
+if(btnConfirmHSCHF) {
+    btnConfirmHSCHF.addEventListener('click', () => {
+         // Sync Table Inputs to Steps
+         const reqHF = document.getElementById('req_hsc_hf_hf_present');
+         const reqCS = document.getElementById('req_hsc_hf_carbon_steel');
+         const reqHardness = document.getElementById('req_hsc_hf_hardness');
+         const reqPWHT = document.getElementById('req_hsc_hf_pwht');
+
+         const selHF = document.getElementById('sel_hsc_hf_hf_present');
+         const selCS = document.getElementById('sel_hsc_hf_carbon_steel');
+         const inpHardness = document.getElementById('inp_hsc_hf_hardness');
+         const selPWHT = document.getElementById('sel_hsc_hf_pwht');
+
+         if(reqHF && selHF) selHF.value = reqHF.value;
+         if(reqCS && selCS) selCS.value = reqCS.value;
+         if(reqHardness && inpHardness) inpHardness.value = reqHardness.value;
+         if(reqPWHT && selPWHT) selPWHT.value = reqPWHT.value;
+
+         // Reveal Step 1
+         const divStep1 = document.getElementById('div_scc_hsc_hf_step1');
+         if(divStep1) {
+             divStep1.classList.remove('hidden');
+             divStep1.scrollIntoView({ behavior: 'smooth', block: 'start' });
+         }
     });
 }
 
@@ -4362,7 +4900,11 @@ function calculateHSCHFAge() {
     
     // Show Step 4
     const divStep4 = document.getElementById('div_scc_hsc_hf_step4');
-    if (divStep4) divStep4.classList.remove('hidden');
+    if (divStep4) {
+        divStep4.classList.remove('hidden');
+        // Ensure it's visible
+        divStep4.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
 }
 
 // HSC-HF Step 4: Inspection History
@@ -4537,35 +5079,41 @@ function calculateHSCHFFinalDamageFactor() {
 // PASCC (Polythionic Acid SCC) MODULE  
 // ============================================================================
 
-// Load PASCC Required Data
-if (document.getElementById('table_scc_pascc_required_data')) {
-    loadPASCCRequiredData();
+// PASCC Required Data is now static HTML with inputs.
+// loadPASCCRequiredData() removed to prevent overwriting.
+
+// Auto-populate PASCC Temperature from Table 4.1 (General Data)
+function autoPopulatePASCCFromTable41() {
+    const table41DataStr = sessionStorage.getItem('table4.1_data');
+    if (!table41DataStr) return;
+
+    try {
+        const data = JSON.parse(table41DataStr);
+        const temp = data.operating_temp;
+        let unit = data.measurement_unit; // 'farenheit' or 'celsius'
+
+        // Map Unit
+        if (unit && unit.toLowerCase().includes('farenheeit') || unit === 'farenheit' || unit === 'F') unit = 'F'; // Handle potential typos or variations
+        else if (unit && unit.toLowerCase().includes('celsius') || unit === 'C') unit = 'C';
+        else unit = '';
+
+        const inpTemp = document.getElementById('req_pascc_temp');
+        const selUnit = document.getElementById('req_pascc_temp_unit');
+
+        if (inpTemp && (temp !== undefined && temp !== null && temp !== "")) {
+            inpTemp.value = temp;
+        }
+        if (selUnit && unit) {
+            selUnit.value = unit;
+        }
+    } catch (e) {
+        console.error("Error parsing Table 4.1 data for PASCC:", e);
+    }
 }
 
-async function loadPASCCRequiredData() {
-    try {
-        const response = await fetch('/static/formula_app/data/json/scc_pascc_required_data.json');
-        if (!response.ok) throw new Error('HTTP error ' + response.status);
-        const data = await response.json();
-        
-        const tbody = document.getElementById('tbody_scc_pascc_required_data');
-        if (!tbody) return;
-        
-        tbody.innerHTML = '';
-        data.required_data.forEach(item => {
-            const row = tbody.insertRow();
-            row.innerHTML = `
-                <td class="font-medium">${item.parameter}</td>
-                <td class="text-sm text-gray-600">${item.comment}</td>
-            `;
-        });
-    } catch (e) {
-        console.error('Failed to load PASCC required data:', e);
-        const tbody = document.getElementById('tbody_scc_pascc_required_data');
-        if (tbody) {
-            tbody.innerHTML = '<tr><td colspan="2" class="text-center text-red-500">Error loading data</td></tr>';
-        }
-    }
+// Call on load if elements exist
+if (document.getElementById('req_pascc_temp')) {
+    autoPopulatePASCCFromTable41();
 }
 
 // Load PASCC Susceptibility Data
@@ -4658,8 +5206,14 @@ if (selPASCCCracksPresent) {
         if (selPASCCCracksPresent.value === 'Yes') {
             // Show "Cracks removed?" question (don't display result yet)
             divCracksRemoved.classList.remove('hidden');
+            if (selPASCCCracksRemoved && selPASCCCracksRemoved.value) {
+                 selPASCCCracksRemoved.dispatchEvent(new Event('change'));
+            }
         } else if (selPASCCCracksPresent.value === 'No') {
             divExposedOperation.classList.remove('hidden');
+            if (selPASCCExposedOperation && selPASCCExposedOperation.value) {
+                 selPASCCExposedOperation.dispatchEvent(new Event('change'));
+            }
         }
     });
 }
@@ -4697,8 +5251,16 @@ if (selPASCCExposedOperation) {
         
         if (selPASCCExposedOperation.value === 'Yes') {
             divTableLookup.classList.remove('hidden');
+            // Trigger calculation if inputs are ready?
+            // inpPASCCTemp, etc. might be populated. 
+            // Let user click calculate? Or trigger it?
+            // User usually has to click Calculate. But if we auto-populated inputs...
+            // Let's just reveal the table lookup. The inputs are there.
         } else if (selPASCCExposedOperation.value === 'No') {
             divExposedShutdown.classList.remove('hidden');
+             if (selPASCCExposedShutdown && selPASCCExposedShutdown.value) {
+                 selPASCCExposedShutdown.dispatchEvent(new Event('change'));
+            }
         }
     });
 }
@@ -5194,4 +5756,210 @@ if (document.readyState === 'loading') {
 } else {
     calculateGoverningSCCDF();
 }
+
+// --- Persistence Restoration ---
+function loadSavedSSCResults() {
+    // Step 1: Severity
+    const severity = sessionStorage.getItem('scc_ssc_env_severity');
+    if (severity) {
+        const resultDiv = document.getElementById('div_scc_ssc_step1_result');
+        const resultSpan = document.getElementById('val_scc_ssc_env_severity');
+        if (resultDiv && resultSpan) {
+            resultSpan.textContent = severity;
+            resultSpan.className = 'font-bold ml-1';
+            if(severity === 'High') resultSpan.classList.add('text-red-600');
+            else if(severity === 'Medium') resultSpan.classList.add('text-orange-500');
+            else if(severity === 'Low') resultSpan.classList.add('text-yellow-600');
+            else resultSpan.classList.add('text-green-600');
+            
+            resultDiv.classList.remove('hidden');
+            
+            // Unlock Step 2
+            const divStep1 = document.getElementById('div_scc_ssc_step1');
+            if(divStep1) divStep1.classList.remove('hidden');
+            const divStep2 = document.getElementById('div_scc_ssc_step2');
+            if(divStep2) divStep2.classList.remove('hidden');
+        }
+    }
+
+    // Step 2: Susceptibility
+    const susc = sessionStorage.getItem('scc_ssc_susceptibility');
+    if (susc) {
+        const resultDiv = document.getElementById('div_scc_ssc_step2_result');
+        const resultSpan = document.getElementById('val_scc_ssc_susceptibility');
+            if (resultDiv && resultSpan) {
+            resultSpan.textContent = susc;
+            resultSpan.className = 'font-bold ml-1';
+            if(susc === 'FFS Required') resultSpan.classList.add('text-red-800', 'bg-red-100', 'px-2', 'rounded');
+            else if(susc === 'High') resultSpan.classList.add('text-red-600');
+            else if(susc === 'Medium') resultSpan.classList.add('text-orange-500');
+            else if(susc === 'Low') resultSpan.classList.add('text-yellow-600');
+            else resultSpan.classList.add('text-green-600');
+
+            resultDiv.classList.remove('hidden');
+            
+            // Unlock Step 3
+            // Assuming if we have a saved susceptibility, we potentially unlocked Step 3
+            // BUT we must check cracks selection as per recent logic change
+            const cracksSelected = document.getElementById('sel_scc_ssc_cracks_present');
+            if(cracksSelected && cracksSelected.value !== '') {
+                 const step3Div = document.getElementById('div_scc_ssc_step3');
+                 if(step3Div) step3Div.classList.remove('hidden');
+            }
+            }
+    }
+
+    // Step 3: SVI
+    const svi = sessionStorage.getItem('scc_ssc_svi');
+    if (svi) {
+            const resultDiv = document.getElementById('div_scc_ssc_step3_result');
+            const resultSpan = document.getElementById('val_scc_ssc_svi');
+            if (resultDiv && resultSpan) {
+                resultSpan.textContent = svi;
+                resultDiv.classList.remove('hidden');
+                
+                // Unlock Step 4
+                const step3Div = document.getElementById('div_scc_ssc_step3');
+                if(step3Div) step3Div.classList.remove('hidden');
+                const step4Div = document.getElementById('div_scc_ssc_step4');
+                if(step4Div) step4Div.classList.remove('hidden');
+            }
+    }
+
+    // Step 4: Age
+    const age = sessionStorage.getItem('scc_ssc_age');
+    if (age) {
+            const valAgeSpan = document.getElementById('val_scc_ssc_age');
+            if(valAgeSpan) valAgeSpan.textContent = age;
+            
+            // Unlock Step 5
+            const step5Div = document.getElementById('div_scc_ssc_step5');
+            if(step5Div) step5Div.classList.remove('hidden');
+    }
+}
+
+function loadSavedCausticResults() {
+    const finalDF = sessionStorage.getItem('scc_caustic_final_df');
+    const baseDF = sessionStorage.getItem('scc_caustic_base_df');
+    
+    // Restore Inputs First (to ensure UI matches state)
+    // We need to save inputs in calculateCausticSusceptibility for this to work perfectly.
+    // Assuming we start saving them or they are already saved? 
+    // Checking code... we are NOT saving 'cracksPresent' explicitly to session in calculateCausticSusceptibility.
+    // We need to add saving logic there first? Or just rely on the fact that if finalDF exists, we *should* have valid state?
+    // But if browser refreshed, UI inputs are empty.
+    
+    // Let's TRY to restore inputs if they happen to be there (we need to update saving logic likely).
+    // BUT for now, let's just be safer about unhiding.
+    
+    const divInputs = document.getElementById('div_scc_caustic_inputs');
+    
+    // Recovery Check: If "Cracks Present" is empty in UI, we should probably NOT show Step 3/4 yet 
+    // unless we can restore it.
+    const cracksSelect = document.getElementById('scc_caustic_cracks_present');
+    
+    // Restore Input Value First
+    const savedCracks = sessionStorage.getItem('scc_caustic_cracks_present');
+    if (savedCracks && cracksSelect) {
+        cracksSelect.value = savedCracks;
+        // Trigger change to update dependent dropdown visibility (Removed, Stress Relieved)?
+        // We might need to manually unhide dependent input divs too or trigger event.
+        // For simplicity, let's trigger the event:
+        cracksSelect.dispatchEvent(new Event('change'));
+    }
+
+    if (finalDF) {
+         if(divInputs) divInputs.classList.remove('hidden');
+
+        // Only unhide downstream steps if we have inputs or if we are sure?
+        // Actually, if we just unhide Inputs, and the user hasn't selected anything, it's weird to show Step 3.
+        
+        if (cracksSelect && cracksSelect.value !== '') {
+             const divStep2 = document.getElementById('div_scc_caustic_step2');
+             if(divStep2) divStep2.classList.remove('hidden');
+
+             const divStep3 = document.getElementById('div_scc_caustic_step3');
+             if(divStep3) divStep3.classList.remove('hidden');
+             
+             // ... and so on
+        } else {
+            // Cracks empty? Hide downstream to be safe.
+            // But we want to persist! 
+            // So we MUST restore Cracks value if we want to persist.
+            // But I don't have it saved!
+            // I will add saving logic for inputs in the next tool call.
+            // For now, let's AT LEAST hide Step 3/4 if Cracks is empty to stop "showing steps ahead of time".
+        }
+
+         // Populate Values (always safe to populate text)
+         document.getElementById('scc_caustic_base_df_val').innerText = sessionStorage.getItem('scc_caustic_base_df') || '--';
+         document.getElementById('scc_caustic_final_df_val').innerText = finalDF;
+         
+         const age = sessionStorage.getItem('scc_caustic_age');
+         if(age) document.getElementById('scc_caustic_age_val').innerText = age;
+         
+         const susc = sessionStorage.getItem('scc_caustic_susceptibility');
+         if(susc) document.getElementById('scc_caustic_susceptibility_val').innerText = susc;
+
+         const svi = sessionStorage.getItem('scc_caustic_svi');
+         if(svi) document.getElementById('scc_caustic_svi_val').innerText = svi;
+    }
+}
+
+// Call restoration on load
+loadSavedSSCResults();
+// Call restoration on load
+loadSavedSSCResults();
+loadSavedCausticResults();
+
+
+    // --- PASCC Confirm Table Data Button ---
+    const btnConfirmPASCC = document.getElementById('btn_scc_pascc_confirm_table');
+    if(btnConfirmPASCC) {
+        btnConfirmPASCC.addEventListener('click', () => {
+             // 1. Sync Table Inputs to Steps
+             const reqThermal = document.getElementById('req_pascc_thermal_history');
+             const reqTemp = document.getElementById('req_pascc_temp');
+             const reqTempUnit = document.getElementById('req_pascc_temp_unit');
+             const reqMaterial = document.getElementById('req_pascc_material');
+             const reqOp = document.getElementById('req_pascc_exposed_operation');
+             const reqShut = document.getElementById('req_pascc_exposed_shutdown');
+             const reqDown = document.getElementById('req_pascc_downtime_protection');
+
+             // Target Inputs
+             const inpThermal = document.getElementById('sel_pascc_thermal_history');
+             const inpTemp = document.getElementById('inp_pascc_temp');
+             const inpTempUnit = document.getElementById('sel_pascc_temp_unit');
+             const inpMaterial = document.getElementById('sel_pascc_material');
+             const inpOp = document.getElementById('sel_pascc_exposed_operation');
+             const inpShut = document.getElementById('sel_pascc_exposed_shutdown');
+             const inpDown = document.getElementById('sel_pascc_downtime_protection');
+
+             if(reqThermal && inpThermal) inpThermal.value = reqThermal.value;
+             // Do NOT trigger change events here to prevent cascading reveals (progressive disclosure)
+
+             if(reqTemp && inpTemp) inpTemp.value = reqTemp.value;
+             if(reqTempUnit && inpTempUnit) inpTempUnit.value = reqTempUnit.value;
+             // if(inpTemp) inpTemp.dispatchEvent(new Event('input')); // Removed to prevent premature calculation
+
+             if(reqMaterial && inpMaterial) inpMaterial.value = reqMaterial.value;
+             // if(inpMaterial) inpMaterial.dispatchEvent(new Event('change'));
+
+             if(reqOp && inpOp) inpOp.value = reqOp.value;
+             // if(inpOp) inpOp.dispatchEvent(new Event('change'));
+
+             if(reqShut && inpShut) inpShut.value = reqShut.value;
+             // if(inpShut) inpShut.dispatchEvent(new Event('change'));
+
+             if(reqDown && inpDown) inpDown.value = reqDown.value;
+             // if(inpDown) inpDown.dispatchEvent(new Event('change'));
+
+             // 2. Reveal Step 1
+             const divStep1 = document.getElementById('div_scc_pascc_step1');
+             if(divStep1) {
+                 divStep1.classList.remove('hidden');
+                 divStep1.scrollIntoView({ behavior: 'smooth', block: 'start' });
+             }
+        });
+    }
 
